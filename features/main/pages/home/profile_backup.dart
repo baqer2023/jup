@@ -1,0 +1,738 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class ProfilePage extends StatefulWidget {
+  final String token;
+  
+  const ProfilePage({super.key, required this.token});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+
+  static void showProfileDialog(String token) {
+    final context = Get.context!;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: _fetchProfileStatic(token),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            
+            if (snapshot.hasError || !snapshot.hasData) {
+              return AlertDialog(
+                title: const Text('خطا'),
+                content: const Text('دریافت اطلاعات پروفایل با خطا مواجه شد.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('بستن'),
+                  ),
+                ],
+              );
+            }
+
+            final profile = snapshot.data!;
+            return _buildProfileDialogStatic(context, profile, token);
+          },
+        );
+      },
+    );
+  }
+
+  static Future<Map<String, dynamic>?> _fetchProfileStatic(String token) async {
+    try {
+      final url = Uri.parse('http://45.149.76.245:8080/api/user/profile');
+      final response = await http.post(url, headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+
+      if (response.statusCode == 200) {
+        return json.decode(utf8.decode(response.bodyBytes));
+      } else {
+        throw Exception('Failed to load profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching profile: $e');
+    }
+  }
+
+  static Widget _buildProfileDialogStatic(BuildContext context, Map<String, dynamic> profile, String token) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white,
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          return SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeaderStatic(context),
+                  _buildFormStatic(context, setState, profile, token),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static Widget _buildHeaderStatic(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        gradient: LinearGradient(
+          colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: const Icon(Icons.close, color: Colors.white),
+          ),
+          const Spacer(),
+          const Text('کاربر مدیر', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 8),
+          const Icon(Icons.verified_user, color: Colors.white),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildFormStatic(BuildContext context, StateSetter setState, Map<String, dynamic> profile, String token) {
+    final emailController = TextEditingController(text: profile['email'] ?? '');
+    final phoneController = TextEditingController(text: profile['phoneNumber'] ?? '');
+    final firstNameController = TextEditingController(text: profile['firstName'] ?? '');
+    final lastNameController = TextEditingController(text: profile['lastName'] ?? '');
+    String? selectedCity = profile['city'];
+    final String? id = profile['id'];
+    final List<String> cities = ['تهران', 'اصفهان', 'شیراز', 'مشهد', 'تبریز'];
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildTextFieldStatic('ایمیل', emailController),
+            const SizedBox(height: 12),
+            _buildTextFieldStatic('شماره همراه', phoneController, enabled: false),
+            const SizedBox(height: 12),
+            _buildTextFieldStatic('نام', firstNameController),
+            const SizedBox(height: 12),
+            _buildTextFieldStatic('نام خانوادگی', lastNameController),
+            const SizedBox(height: 12),
+            _buildCityDropdownStatic(setState, selectedCity, cities),
+            const SizedBox(height: 24),
+            _buildSaveButtonStatic(context, emailController, phoneController, firstNameController, lastNameController, selectedCity, id, token),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildTextFieldStatic(String label, TextEditingController controller, {bool enabled = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, textAlign: TextAlign.right),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          textAlign: TextAlign.right,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
+      ],
+    );
+  }
+
+  static Widget _buildCityDropdownStatic(StateSetter setState, String? selectedCity, List<String> cities) {
+    return Row(
+      children: [
+        const Expanded(child: Text('شهر', textAlign: TextAlign.right)),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: DropdownButtonFormField<String>(
+            value: selectedCity != null && cities.contains(selectedCity) ? selectedCity : null,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            hint: const Text('انتخاب شهر', textAlign: TextAlign.right),
+            items: cities.map((city) => DropdownMenuItem(
+              value: city, 
+              child: Text(city, textAlign: TextAlign.right)
+            )).toList(),
+            onChanged: (value) => setState(() => selectedCity = value),
+            alignment: AlignmentDirectional.centerEnd,
+            dropdownColor: Colors.white,
+            style: const TextStyle(color: Colors.black),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _buildSaveButtonStatic(BuildContext context, TextEditingController emailController, TextEditingController phoneController, TextEditingController firstNameController, TextEditingController lastNameController, String? selectedCity, String? id, String token) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2196F3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        onPressed: () async {
+          final success = await _updateProfileStatic(emailController, phoneController, firstNameController, lastNameController, selectedCity, id, token);
+          if (success) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('تغییرات با موفقیت ثبت شد')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('خطا در ثبت تغییرات')),
+            );
+          }
+        },
+        child: const Text('ثبت تغییرات', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  static Future<bool> _updateProfileStatic(TextEditingController emailController, TextEditingController phoneController, TextEditingController firstNameController, TextEditingController lastNameController, String? selectedCity, String? id, String token) async {
+    try {
+      final url = Uri.parse('http://45.149.76.245:8080/api/user/updateProfile');
+      final body = json.encode({
+        'email': emailController.text.trim(),
+        'phoneNumber': phoneController.text.trim(),
+        'firstName': firstNameController.text.trim(),
+        'lastName': lastNameController.text.trim(),
+        'id': id,
+        'city': selectedCity,
+      });
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: utf8.encode(body),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late TextEditingController emailController;
+  late TextEditingController phoneController;
+  late TextEditingController firstNameController;
+  late TextEditingController lastNameController;
+  String? selectedCity;
+  String? id;
+  final List<String> cities = ['تهران', 'اصفهان', 'شیراز', 'مشهد', 'تبریز'];
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController();
+    phoneController = TextEditingController();
+    firstNameController = TextEditingController();
+    lastNameController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    phoneController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    super.dispose();
+  }
+
+  static Future<Map<String, dynamic>?> _fetchProfileStatic(String token) async {
+    try {
+      final url = Uri.parse('http://45.149.76.245:8080/api/user/profile');
+      final response = await http.post(url, headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+
+      if (response.statusCode == 200) {
+        return json.decode(utf8.decode(response.bodyBytes));
+      } else {
+        throw Exception('Failed to load profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching profile: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> _fetchProfile() async {
+    try {
+      final url = Uri.parse('http://45.149.76.245:8080/api/user/profile');
+      final response = await http.post(url, headers: {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+
+      if (response.statusCode == 200) {
+        return json.decode(utf8.decode(response.bodyBytes));
+      } else {
+        throw Exception('Failed to load profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching profile: $e');
+    }
+  }
+
+  Future<bool> _updateProfile() async {
+    try {
+      final url = Uri.parse('http://45.149.76.245:8080/api/user/updateProfile');
+      final body = json.encode({
+        'email': emailController.text.trim(),
+        'phoneNumber': phoneController.text.trim(),
+        'firstName': firstNameController.text.trim(),
+        'lastName': lastNameController.text.trim(),
+        'id': id,
+        'city': selectedCity,
+      });
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: utf8.encode(body),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static void showProfileDialog(String token) {
+    final context = Get.context!;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: _fetchProfileStatic(token),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            
+            if (snapshot.hasError || !snapshot.hasData) {
+              return AlertDialog(
+                title: const Text('خطا'),
+                content: const Text('دریافت اطلاعات پروفایل با خطا مواجه شد.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('بستن'),
+                  ),
+                ],
+              );
+            }
+
+            final profile = snapshot.data!;
+            return _buildProfileDialogStatic(context, profile, token);
+          },
+        );
+      },
+    );
+  }
+
+  void _showProfileDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: _fetchProfile(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            
+            if (snapshot.hasError || !snapshot.hasData) {
+              return AlertDialog(
+                title: const Text('خطا'),
+                content: const Text('دریافت اطلاعات پروفایل با خطا مواجه شد.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('بستن'),
+                  ),
+                ],
+              );
+            }
+
+            final profile = snapshot.data!;
+            _initializeControllers(profile);
+
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: Colors.white,
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return SizedBox(
+                    width: 400,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildHeader(),
+                          _buildForm(setState),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  static Widget _buildProfileDialogStatic(BuildContext context, Map<String, dynamic> profile, String token) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white,
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          return SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeaderStatic(context),
+                  _buildFormStatic(context, setState, profile, token),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static Widget _buildHeaderStatic(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        gradient: LinearGradient(
+          colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: const Icon(Icons.close, color: Colors.white),
+          ),
+          const Spacer(),
+          const Text('کاربر مدیر', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 8),
+          const Icon(Icons.verified_user, color: Colors.white),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildFormStatic(BuildContext context, StateSetter setState, Map<String, dynamic> profile, String token) {
+    final emailController = TextEditingController(text: profile['email'] ?? '');
+    final phoneController = TextEditingController(text: profile['phoneNumber'] ?? '');
+    final firstNameController = TextEditingController(text: profile['firstName'] ?? '');
+    final lastNameController = TextEditingController(text: profile['lastName'] ?? '');
+    String? selectedCity = profile['city'];
+    final String? id = profile['id'];
+    final List<String> cities = ['تهران', 'اصفهان', 'شیراز', 'مشهد', 'تبریز'];
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildTextFieldStatic('ایمیل', emailController),
+            const SizedBox(height: 12),
+            _buildTextFieldStatic('شماره همراه', phoneController, enabled: false),
+            const SizedBox(height: 12),
+            _buildTextFieldStatic('نام', firstNameController),
+            const SizedBox(height: 12),
+            _buildTextFieldStatic('نام خانوادگی', lastNameController),
+            const SizedBox(height: 12),
+            _buildCityDropdownStatic(setState, selectedCity, cities),
+            const SizedBox(height: 24),
+            _buildSaveButtonStatic(context, emailController, phoneController, firstNameController, lastNameController, selectedCity, id, token),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildTextFieldStatic(String label, TextEditingController controller, {bool enabled = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, textAlign: TextAlign.right),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          textAlign: TextAlign.right,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
+      ],
+    );
+  }
+
+  static Widget _buildCityDropdownStatic(StateSetter setState, String? selectedCity, List<String> cities) {
+    return Row(
+      children: [
+        const Expanded(child: Text('شهر', textAlign: TextAlign.right)),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: DropdownButtonFormField<String>(
+            value: selectedCity != null && cities.contains(selectedCity) ? selectedCity : null,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            hint: const Text('انتخاب شهر', textAlign: TextAlign.right),
+            items: cities.map((city) => DropdownMenuItem(
+              value: city, 
+              child: Text(city, textAlign: TextAlign.right)
+            )).toList(),
+            onChanged: (value) => setState(() => selectedCity = value),
+            alignment: AlignmentDirectional.centerEnd,
+            dropdownColor: Colors.white,
+            style: const TextStyle(color: Colors.black),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _buildSaveButtonStatic(BuildContext context, TextEditingController emailController, TextEditingController phoneController, TextEditingController firstNameController, TextEditingController lastNameController, String? selectedCity, String? id, String token) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2196F3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        onPressed: () async {
+          final success = await _updateProfileStatic(emailController, phoneController, firstNameController, lastNameController, selectedCity, id, token);
+          if (success) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('تغییرات با موفقیت ثبت شد')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('خطا در ثبت تغییرات')),
+            );
+          }
+        },
+        child: const Text('ثبت تغییرات', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  static Future<bool> _updateProfileStatic(TextEditingController emailController, TextEditingController phoneController, TextEditingController firstNameController, TextEditingController lastNameController, String? selectedCity, String? id, String token) async {
+    try {
+      final url = Uri.parse('http://45.149.76.245:8080/api/user/updateProfile');
+      final body = json.encode({
+        'email': emailController.text.trim(),
+        'phoneNumber': phoneController.text.trim(),
+        'firstName': firstNameController.text.trim(),
+        'lastName': lastNameController.text.trim(),
+        'id': id,
+        'city': selectedCity,
+      });
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: utf8.encode(body),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  void _initializeControllers(Map<String, dynamic> profile) {
+    emailController.text = profile['email'] ?? '';
+    phoneController.text = profile['phoneNumber'] ?? '';
+    firstNameController.text = profile['firstName'] ?? '';
+    lastNameController.text = profile['lastName'] ?? '';
+    id = profile['id'];
+    selectedCity = profile['city'];
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        gradient: LinearGradient(
+          colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: const Icon(Icons.close, color: Colors.white),
+          ),
+          const Spacer(),
+          const Text('کاربر مدیر', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 8),
+          const Icon(Icons.verified_user, color: Colors.white),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForm(StateSetter setState) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildTextField('ایمیل', emailController),
+            const SizedBox(height: 12),
+            _buildTextField('شماره همراه', phoneController, enabled: false),
+            const SizedBox(height: 12),
+            _buildTextField('نام', firstNameController),
+            const SizedBox(height: 12),
+            _buildTextField('نام خانوادگی', lastNameController),
+            const SizedBox(height: 12),
+            _buildCityDropdown(setState),
+            const SizedBox(height: 24),
+            _buildSaveButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, {bool enabled = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, textAlign: TextAlign.right),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          textAlign: TextAlign.right,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCityDropdown(StateSetter setState) {
+    return Row(
+      children: [
+        const Expanded(child: Text('شهر', textAlign: TextAlign.right)),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: DropdownButtonFormField<String>(
+            value: selectedCity != null && cities.contains(selectedCity) ? selectedCity : null,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            hint: const Text('انتخاب شهر', textAlign: TextAlign.right),
+            items: cities.map((city) => DropdownMenuItem(
+              value: city, 
+              child: Text(city, textAlign: TextAlign.right)
+            )).toList(),
+            onChanged: (value) => setState(() => selectedCity = value),
+            alignment: AlignmentDirectional.centerEnd,
+            dropdownColor: Colors.white,
+            style: const TextStyle(color: Colors.black),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2196F3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        onPressed: () async {
+          final success = await _updateProfile();
+          if (success) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('تغییرات با موفقیت ثبت شد')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('خطا در ثبت تغییرات')),
+            );
+          }
+        },
+        child: const Text('ثبت تغییرات', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.account_circle, size: 32, color: Colors.white),
+      onPressed: _showProfileDialog,
+      tooltip: 'پروفایل',
+    );
+  }
+}
