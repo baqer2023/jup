@@ -18,8 +18,7 @@ class ReliableSocket extends GetxService {
 
   final RxMap<String, bool> deviceConnectionStatus = <String, bool>{}.obs;
   final RxMap<String, DateTime> lastDeviceActivity = <String, DateTime>{}.obs;
-  final RxMap<int, Map<String, dynamic>> subscriptionData =
-      <int, Map<String, dynamic>>{}.obs;
+  final RxMap<int, Map<String, dynamic>> subscriptionData = <int, Map<String, dynamic>>{}.obs;
 
   int _generateRandomCmdId() {
     final rand = Random();
@@ -27,8 +26,7 @@ class ReliableSocket extends GetxService {
   }
 
   Future<void> connect() async {
-    final url =
-        'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
+    final url = 'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
 
     while (!_running) {
       try {
@@ -57,35 +55,16 @@ class ReliableSocket extends GetxService {
     final List<Map<String, dynamic>> attrSubCmds = [];
 
     for (final deviceId in deviceIds) {
-      // SERVER_SCOPE
-      final serverCmdId = _generateRandomCmdId();
-      _subscriptionToDeviceMap[serverCmdId] = deviceId;
-      attrSubCmds.add({
-        "entityType": "DEVICE",
-        "entityId": deviceId,
-        "scope": "SERVER_SCOPE",
-        "cmdId": serverCmdId,
-      });
-
-      // SHARED_SCOPE
-      final sharedCmdId = _generateRandomCmdId();
-      _subscriptionToDeviceMap[sharedCmdId] = deviceId;
-      attrSubCmds.add({
-        "entityType": "DEVICE",
-        "entityId": deviceId,
-        "scope": "SHARED_SCOPE",
-        "cmdId": sharedCmdId,
-      });
-
-      // CLIENT_SCOPE
-      final clientCmdId = _generateRandomCmdId();
-      _subscriptionToDeviceMap[clientCmdId] = deviceId;
-      attrSubCmds.add({
-        "entityType": "DEVICE",
-        "entityId": deviceId,
-        "scope": "CLIENT_SCOPE",
-        "cmdId": clientCmdId,
-      });
+      for (final scope in ['SERVER_SCOPE', 'SHARED_SCOPE', 'CLIENT_SCOPE']) {
+        final cmdId = _generateRandomCmdId();
+        _subscriptionToDeviceMap[cmdId] = deviceId;
+        attrSubCmds.add({
+          "entityType": "DEVICE",
+          "entityId": deviceId,
+          "scope": scope,
+          "cmdId": cmdId,
+        });
+      }
     }
 
     _ws?.add(jsonEncode({
@@ -96,35 +75,40 @@ class ReliableSocket extends GetxService {
   }
 
   void _onMessage(dynamic message) {
+    if (message is! String) return;
+
     try {
       final parsed = jsonDecode(message);
       if (parsed is Map && parsed['errorCode'] == 0) {
         final subscriptionId = parsed['subscriptionId'] as int;
-        final Map<String, dynamic> safeParsed = Map<String, dynamic>.from(parsed);
+        final safeParsed = Map<String, dynamic>.from(parsed);
 
+        // آپدیت subscriptionData
         subscriptionData[subscriptionId] = {
           ...?subscriptionData[subscriptionId],
           ...safeParsed
         };
 
-        // بررسی active/inactive
         final data = safeParsed['data'] as Map<String, dynamic>?;
-        if (data != null && data.containsKey('active')) {
-          final deviceId = _subscriptionToDeviceMap[subscriptionId];
-          if (deviceId != null) {
-            final activeList = data['active'] as List<dynamic>;
-            if (activeList.isNotEmpty) {
-              final timestamp = activeList.first[0] as int;
-              final isActive = activeList.first[1].toString() == 'true';
-              deviceConnectionStatus[deviceId] = isActive;
-              lastDeviceActivity[deviceId] =
-                  DateTime.fromMillisecondsSinceEpoch(timestamp);
+        if (data != null) {
+          data.forEach((key, val) {
+            if (val is List && val.isNotEmpty) {
+              final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? key;
+
+              // آخرین وضعیت کلید
+              final lastEntry = val.last;
+              final timestamp = lastEntry[0] as int;
+              final statusValue = lastEntry[1].toString();
+              final isActive = statusValue.toLowerCase().contains('on') || statusValue.toLowerCase() == 'true';
+
+              deviceConnectionStatus[deviceId] = true;
+              lastDeviceActivity[deviceId] = DateTime.fromMillisecondsSinceEpoch(timestamp);
             }
-          }
+          });
         }
       }
-    } catch (e) {
-      print('⚠️ Could not parse JSON: $message');
+    } catch (e, stack) {
+      print('⚠️ Could not parse JSON: $message\nError: $e\nStack: $stack');
     }
   }
 

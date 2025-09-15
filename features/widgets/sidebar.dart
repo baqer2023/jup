@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:my_app32/features/devices/pages/device_page.dart';
+// import 'package:my_app32/features/devices/pages/device_page.dart';
 import 'package:my_app32/features/main/pages/main/main_controller.dart';
 import 'package:my_app32/features/main/repository/home_repository.dart';
 
@@ -78,8 +78,8 @@ class Sidebar extends StatelessWidget {
               ),
               onTap: () {
                 // بستن Drawer و رفتن به صفحه DeviceView
-                Navigator.pop(context);
-                Get.to(() => const DeviceView());
+                // Navigator.pop(context);
+                // Get.to(() => const DeviceView());
               },
             ),
 
