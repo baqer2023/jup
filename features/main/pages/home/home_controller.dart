@@ -12,10 +12,10 @@ import 'package:my_app32/features/main/models/home/create_dashboard_response_mod
 
 import 'package:my_app32/features/main/models/home/get_current_user_response_model.dart';
 import 'package:my_app32/features/main/models/home/get_dashboards_request_model.dart';
-import 'package:my_app32/features/main/models/devices/remove_device_request_model.dart';
-import 'package:my_app32/features/main/models/devices/register_device_request_model.dart';
+// import 'package:my_app32/features/main/models/devices/remove_device_request_model.dart';
+// import 'package:my_app32/features/main/models/devices/register_device_request_model.dart';
 import 'package:my_app32/features/main/repository/home_repository.dart';
-import 'package:my_app32/features/main/pages/home/home_devices_controller.dart';
+// import 'package:my_app32/features/main/pages/home/home_devices_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -134,22 +134,22 @@ class HomeController extends GetxController with AppUtilsMixin {
             .toList();
 
         // Update the HomeDevicesController with new device IDs and colors
-        final homeDevicesController = Get.find<HomeDevicesController>();
-        homeDevicesController.updateDeviceIds(deviceIds);
+        // final homeDevicesController = Get.find<HomeDevicesController>();
+        // homeDevicesController.updateDeviceIds(deviceIds);
 
-        // Update device colors for each device
-        for (final device in deviceList) {
-          final deviceId = device['deviceId']?.toString();
-          if (deviceId != null && device['ledColor'] != null) {
-            homeDevicesController.updateDeviceColors(
-              deviceId,
-              device['ledColor'],
-            );
-          }
-        }
+        // // Update device colors for each device
+        // for (final device in deviceList) {
+        //   final deviceId = device['deviceId']?.toString();
+        //   if (deviceId != null && device['ledColor'] != null) {
+        //     homeDevicesController.updateDeviceColors(
+        //       deviceId,
+        //       device['ledColor'],
+        //     );
+        //   }
+        // }
 
         // Force refresh device states to get accurate initial state
-        await homeDevicesController.forceRefreshDeviceStates();
+        // await homeDevicesController.forceRefreshDeviceStates();
 
         // Force UI update
         deviceList.refresh();
@@ -177,8 +177,8 @@ class HomeController extends GetxController with AppUtilsMixin {
       await fetchDevicesFromNewApi();
 
       // Refresh device states
-      final homeDevicesController = Get.find<HomeDevicesController>();
-      await homeDevicesController.refreshDeviceStates();
+      // final homeDevicesController = Get.find<HomeDevicesController>();
+      // await homeDevicesController.refreshDeviceStates();
 
       // Refresh dashboard data
       await getDashboard();
@@ -212,54 +212,6 @@ class HomeController extends GetxController with AppUtilsMixin {
     }
   }
 
-  Future<void> registerDevice(String serialNumber, String label) async {
-    try {
-      final requestModel = RegisterDeviceRequestModel(
-        serialNumber: serialNumber,
-        label: label,
-      );
-
-      final response = await http.post(
-        Uri.parse('http://45.149.76.245:8080/api/deviceWithSn'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(requestModel.toJson()),
-      );
-
-      if (response.statusCode == 200) {
-        // Refresh the device list after successful registration
-        await fetchDevicesFromNewApi();
-        Get.snackbar(
-          'Success',
-          'دستگاه جدید ثبت شد',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      } else {
-        final errorData = json.decode(response.body);
-        final errorMessage =
-            errorData['message'] ?? 'Failed to register device';
-        Get.snackbar(
-          'Error',
-          errorMessage,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to register device: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  }
 
   Future<void> removeDevice(String deviceId) async {
     try {

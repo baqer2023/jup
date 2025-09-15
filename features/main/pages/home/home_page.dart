@@ -1,11 +1,11 @@
 import 'package:my_app32/app/services/realable_controller.dart';
-import 'package:my_app32/features/main/pages/devices/devices_controller.dart';
-import 'package:my_app32/features/main/pages/home/home_devices_controller.dart';
+// import 'package:my_app32/features/main/pages/home/home_devices_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/app/core/app_constants.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
 import 'package:my_app32/app/services/weather_service.dart';
+import 'package:my_app32/features/main/pages/home/base_scafold.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
 import 'package:my_app32/features/widgets/weather.dart';
@@ -16,166 +16,99 @@ import 'dart:convert';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-mixin DevicesControllerMixin {
-  DevicesController get devicesController => Get.find<DevicesController>();
-}
 
-mixin HomeDevicesControllerMixin {
-  HomeDevicesController get homeDevicesController =>
-      Get.find<HomeDevicesController>();
-}
 
-class HomePage extends BaseView<HomeController>
-    with DevicesControllerMixin, HomeDevicesControllerMixin {
+// mixin HomeDevicesControllerMixin {
+//   HomeDevicesController get homeDevicesController =>
+//       Get.find<HomeDevicesController>();
+// }
+
+
+class HomePage extends BaseView<HomeController> {
   const HomePage({super.key});
 
   @override
   Widget body() {
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        endDrawer: const Sidebar(),
-        appBar: AppBar(
-          title: Row(
-            children: [
-              Obx(() {
-                return Row(
-                  children: [
-                    if (controller.isRefreshing.value)
-                      Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue, width: 1),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.blue,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'بروزرسانی',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                );
-              }),
-              GestureDetector(
-                onTap: () {
-                  ProfilePage.showProfileDialog(controller.token);
-                },
-                child: const Icon(
-                  Icons.account_circle,
-                  size: 32,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(64),
-            child: Container(
-              height: 56,
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TabBar(
-                indicator: BoxDecoration(
-                  color: const Color(0xFF0676C8),
-                  borderRadius: BorderRadius.circular(24),
+      child: BaseScaffold(
+        title: 'خانه', // عنوان اپ‌بار سمت راست
+        body: Column(
+          children: [
+            // اپ‌بار سفارشی با TabBar
+            PreferredSize(
+              preferredSize: const Size.fromHeight(64),
+              child: Container(
+                height: 56,
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0676C8).withOpacity(0.12),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                labelColor: Colors.white,
-                unselectedLabelColor: const Color(0xFF0676C8),
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
-                dividerColor: Colors.transparent,
-                indicatorPadding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 6,
-                ),
-                tabs: [
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: const Text('خانه'),
-                    ),
+                child: TabBar(
+                  indicator: BoxDecoration(
+                    color: const Color(0xFF0676C8),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0676C8).withOpacity(0.12),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: const Text('شرکت'),
-                    ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: const Color(0xFF0676C8),
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: const Text('ویلا'),
-                    ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
                   ),
+                  tabs: const [
+                    Tab(child: Text('خانه')),
+                    Tab(child: Text('شرکت')),
+                    Tab(child: Text('ویلا')),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildMainContent(),
+                  const Center(child: Text('To be Built Soon')),
+                  const Center(child: Text('Under Construction')),
                 ],
               ),
             ),
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildMainContent(),
-            const Center(child: Text('To be Built Soon')),
-            const Center(child: Text('Under Construction')),
           ],
         ),
+        actions: [
+          // IconButton(
+          //   icon: const Icon(Icons.account_circle),
+          //   onPressed: () {
+          //     ProfilePage.showProfileDialog(controller.token);
+          //   },
+          // ),
+          // سایر آیکون‌ها و دکمه‌های اضافی
+        ],
       ),
     );
   }
 
   Widget _buildMainContent() {
     return RefreshIndicator(
-      onRefresh: () async {
-        await controller.refreshAllData();
-      },
+      onRefresh: () async => await controller.refreshAllData(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -205,6 +138,7 @@ class HomePage extends BaseView<HomeController>
       ),
     );
   }
+
 
 Widget _buildSmartDevicesGrid() {
   return Obx(() {

@@ -8,12 +8,10 @@ class TokenRefreshService extends GetxService {
 
   final UserStoreService _userStore = Get.find<UserStoreService>();
 
-  // Check if token is expired (you can adjust this logic based on your token structure)
   bool _isTokenExpired(String? token) {
     if (token == null) return true;
 
     try {
-      // Decode JWT token to check expiration
       final parts = token.split('.');
       if (parts.length != 3) return true;
 
@@ -28,11 +26,10 @@ class TokenRefreshService extends GetxService {
       return now >= exp;
     } catch (e) {
       print('Error checking token expiration: $e');
-      return true;
+      return true; // اگر decode نشد فرض می‌کنیم توکن نامعتبره
     }
   }
 
-  // Refresh token using the API
   Future<bool> refreshToken() async {
     try {
       final refreshToken = await _userStore.getRefreshToken();
@@ -44,17 +41,14 @@ class TokenRefreshService extends GetxService {
 
       final response = await http.post(
         Uri.parse('http://45.149.76.245:8080/api/auth/token'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $refreshToken',
-        },
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'refreshToken': refreshToken}),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
         if (data['token'] != null && data['refreshToken'] != null) {
-          // Save new tokens
           await _userStore.saveToken(data['token']);
           await _userStore.saveRefreshToken(data['refreshToken']);
 
@@ -74,7 +68,6 @@ class TokenRefreshService extends GetxService {
     }
   }
 
-  // Check and refresh token if needed
   Future<bool> checkAndRefreshToken() async {
     final currentToken = await _userStore.getToken();
 
@@ -92,7 +85,6 @@ class TokenRefreshService extends GetxService {
     }
   }
 
-  // Force refresh token (for manual refresh)
   Future<bool> forceRefreshToken() async {
     return await refreshToken();
   }

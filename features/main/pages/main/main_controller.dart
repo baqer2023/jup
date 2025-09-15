@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_app32/app/bindings/add_device_binding.dart';
 import 'package:my_app32/app/routes/app_routes.dart';
 import 'package:my_app32/app/theme/app_colors.dart';
 // import 'package:my_app32/features/add_device/pages/add_device_page.dart';
@@ -90,7 +89,7 @@ class MainController extends GetxController {
 
               try {
                 final homeController = Get.find<HomeController>();
-                await homeController.registerDevice(serialNumber, label);
+                // await homeController.registerDevice(serialNumber, label);
               } finally {
                 Navigator.pop(Get.context!);
                 serialNumberController.clear();
@@ -260,10 +259,10 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
 
       try {
         final homeController = Get.find<HomeController>();
-        await homeController.registerDevice(
-          _serialNumberController.text.trim(),
-          _labelController.text.trim(),
-        );
+        // await homeController.registerDevice(
+        //   _serialNumberController.text.trim(),
+        //   _labelController.text.trim(),
+        // );
 
         Navigator.pop(context);
         Get.snackbar(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:my_app32/features/devices/pages/device_page.dart';
 import 'package:my_app32/features/main/pages/main/main_controller.dart';
 import 'package:my_app32/features/main/repository/home_repository.dart';
+
 
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
@@ -19,21 +21,19 @@ class Sidebar extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // بخش لوگو و SVG ها
+            // بخش لوگو
             DrawerHeader(
               padding: EdgeInsets.zero,
               decoration: const BoxDecoration(color: Colors.white),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // لوگوی اصلی کل عرض
                   SvgPicture.asset(
                     'assets/svg/jupin.svg',
                     fit: BoxFit.fill,
                     width: double.infinity,
                     height: 80,
                   ),
-                  // سه SVG روی هم و عرض کامل
                   SizedBox(
                     height: 60,
                     child: Stack(
@@ -48,7 +48,8 @@ class Sidebar extends StatelessWidget {
                 ],
               ),
             ),
-            // آیتم‌های سایدبار
+
+            // داشبورد
             ListTile(
               leading: const Icon(Icons.dashboard, color: Colors.black87),
               title: const Text(
@@ -59,8 +60,12 @@ class Sidebar extends StatelessWidget {
                 ),
                 textAlign: TextAlign.right,
               ),
-              onTap: () {},
+              onTap: () {
+                // بعداً می‌تونی اینجا هم بفرستی به DashboardView
+              },
             ),
+
+            // دستگاه‌ها
             ListTile(
               leading: const Icon(Icons.devices, color: Colors.black87),
               title: const Text(
@@ -71,10 +76,17 @@ class Sidebar extends StatelessWidget {
                 ),
                 textAlign: TextAlign.right,
               ),
-              onTap: () {},
+              onTap: () {
+                // بستن Drawer و رفتن به صفحه DeviceView
+                Navigator.pop(context);
+                Get.to(() => const DeviceView());
+              },
             ),
+
+            // سناریوها
             ListTile(
-              leading: const Icon(Icons.edit_calendar_outlined, color: Colors.black87),
+              leading:
+                  const Icon(Icons.edit_calendar_outlined, color: Colors.black87),
               title: const Text(
                 'سناریوها',
                 style: TextStyle(
@@ -85,6 +97,8 @@ class Sidebar extends StatelessWidget {
               ),
               onTap: () {},
             ),
+
+            // مشتری‌ها
             ListTile(
               leading: const Icon(Icons.person, color: Colors.black87),
               title: const Text(
@@ -97,6 +111,8 @@ class Sidebar extends StatelessWidget {
               ),
               onTap: () {},
             ),
+
+            // گروه‌ها
             ListTile(
               leading: const Icon(Icons.group, color: Colors.black87),
               title: const Text(
@@ -109,8 +125,10 @@ class Sidebar extends StatelessWidget {
               ),
               onTap: () {},
             ),
+
             const Divider(),
-            // آیتم خروج
+
+            // خروج
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text(

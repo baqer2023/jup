@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/main/pages/alarms/alarms_page.dart';
-import 'package:my_app32/features/main/pages/devices/devices_page.dart';
+
 import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'package:my_app32/features/main/pages/more/more_page.dart';
 import 'package:my_app32/features/main/repository/home_repository.dart';
@@ -25,7 +25,6 @@ class MainPage extends StatelessWidget {
               children: const [
                 HomePage(),
                 AlarmsPage(),
-                DevicesPage(),
                 MorePage(),
               ],
             ),

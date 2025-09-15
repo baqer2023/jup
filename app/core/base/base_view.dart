@@ -32,14 +32,15 @@ abstract class BaseView<Controller extends GetxController> extends StatelessWidg
 
   Controller get controller => GetInstance().find<Controller>();
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(child: body()),
-      floatingActionButton: floatingActionButton(),
-      resizeToAvoidBottomInset: resizeToAvoidBottomInset(),
-    );
-  }
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: SafeArea(child: body()), // ← اینجا context اضافه شد
+    floatingActionButton: floatingActionButton(),
+    resizeToAvoidBottomInset: resizeToAvoidBottomInset(),
+  );
+}
+
 
   Widget body();
 

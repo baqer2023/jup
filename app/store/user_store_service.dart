@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/app/core/app_constants.dart';
@@ -25,36 +24,37 @@ class UserStoreService {
   }
 
   Future<String?> getToken() async {
-    String? result = await _secureStorage.read(key: AppConstants.TOKEN);
-    return result;
+    return await _secureStorage.read(key: AppConstants.TOKEN);
   }
 
   Future<String?> getRefreshToken() async {
-    String? result = await _secureStorage.read(key: AppConstants.REFRESH_TOKEN);
-    return result;
+    return await _secureStorage.read(key: AppConstants.REFRESH_TOKEN);
   }
 
-  void deleteToken() async =>
-      await _secureStorage.delete(key: AppConstants.TOKEN);
+  Future<void> deleteToken() async {
+    await _secureStorage.delete(key: AppConstants.TOKEN);
+  }
 
-  void deleteRefreshToken() async =>
-      await _secureStorage.delete(key: AppConstants.REFRESH_TOKEN);
+  Future<void> deleteRefreshToken() async {
+    await _secureStorage.delete(key: AppConstants.REFRESH_TOKEN);
+  }
 
-  Future<void> save({required String key, required dynamic value}) async =>
-      await _storage.write(key, value);
+  Future<void> save({required String key, required dynamic value}) async {
+    await _storage.write(key, value);
+  }
 
   dynamic get({required String key}) {
-    var result = _storage.read(key);
-    if (result == null) {
-      return null;
-    }
-    return result;
+    return _storage.read(key);
   }
 
-  Future<void> delete({required String key}) async => _storage.remove(key);
+Future<void> delete({required String key}) async {
+  _storage.remove(key); // اگه void باشه → بدون await
+}
 
-  void deleteAll() {
-    _storage.removeAll();
-    _secureStorage.deleteAll();
-  }
+
+Future<void> deleteAll() async {
+  _storage.removeAll();              // این void هست → await لازم نداره
+  await _secureStorage.deleteAll();  // این Future<void> هست → باید await بشه
+}
+
 }
