@@ -74,43 +74,59 @@ class ReliableSocket extends GetxService {
     }));
   }
 
-  void _onMessage(dynamic message) {
-    if (message is! String) return;
+void _onMessage(dynamic message) {
+  if (message is! String) return;
 
-    try {
-      final parsed = jsonDecode(message);
-      if (parsed is Map && parsed['errorCode'] == 0) {
-        final subscriptionId = parsed['subscriptionId'] as int;
-        final safeParsed = Map<String, dynamic>.from(parsed);
+  try {
+    final parsed = jsonDecode(message);
+    if (parsed is Map && parsed['errorCode'] == 0) {
+      final subscriptionId = parsed['subscriptionId'] as int;
+      final safeParsed = Map<String, dynamic>.from(parsed);
 
-        // آپدیت subscriptionData
-        subscriptionData[subscriptionId] = {
-          ...?subscriptionData[subscriptionId],
-          ...safeParsed
-        };
+      // آپدیت subscriptionData
+      subscriptionData[subscriptionId] = {
+        ...?subscriptionData[subscriptionId],
+        ...safeParsed
+      };
 
-        final data = safeParsed['data'] as Map<String, dynamic>?;
-        if (data != null) {
-          data.forEach((key, val) {
-            if (val is List && val.isNotEmpty) {
-              final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? key;
+      final data = safeParsed['data'] as Map<String, dynamic>?;
 
-              // آخرین وضعیت کلید
-              final lastEntry = val.last;
-              final timestamp = lastEntry[0] as int;
-              final statusValue = lastEntry[1].toString();
-              final isActive = statusValue.toLowerCase().contains('on') || statusValue.toLowerCase() == 'true';
+      // فقط وقتی دیتا شامل active و inactivityAlarmTime باشه
+      if (data != null &&
+          data.containsKey('active') &&
+          data.containsKey('inactivityAlarmTime')) {
+        final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
 
-              deviceConnectionStatus[deviceId] = true;
-              lastDeviceActivity[deviceId] = DateTime.fromMillisecondsSinceEpoch(timestamp);
-            }
-          });
+        /// active
+        final activeList = data['active'];
+        if (activeList is List && activeList.isNotEmpty) {
+          final lastEntry = activeList.last;
+          final timestamp = lastEntry[0] as int;
+          final statusValue = lastEntry[1].toString();
+          final isActive = statusValue.toLowerCase() == 'true';
+
+          deviceConnectionStatus[deviceId] = isActive;
+          lastDeviceActivity[deviceId] =
+              DateTime.fromMillisecondsSinceEpoch(timestamp);
+        }
+
+        /// inactivityAlarmTime (آپدیت تایم آخرین فعالیت)
+        final inactivityList = data['inactivityAlarmTime'];
+        if (inactivityList is List && inactivityList.isNotEmpty) {
+          final lastEntry = inactivityList.last;
+          final inactivityTimestamp = int.tryParse(lastEntry[1].toString());
+          if (inactivityTimestamp != null) {
+            lastDeviceActivity[deviceId] =
+                DateTime.fromMillisecondsSinceEpoch(inactivityTimestamp);
+          }
         }
       }
-    } catch (e, stack) {
-      print('⚠️ Could not parse JSON: $message\nError: $e\nStack: $stack');
     }
+  } catch (e, stack) {
+    print('⚠️ Could not parse JSON: $message\nError: $e\nStack: $stack');
   }
+}
+
 
   Future<void> disconnect() async {
     _heartbeatTimer?.cancel();

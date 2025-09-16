@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 import 'package:my_app32/app/core/app_constants.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
 import 'package:my_app32/app/services/weather_service.dart';
+import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
+import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
 import 'package:my_app32/features/widgets/weather.dart';
 import 'package:my_app32/features/widgets/category_selector_widget.dart';
@@ -24,161 +26,153 @@ class HomePage extends BaseView<HomeController> {
   Widget body() {
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        endDrawer: const Sidebar(),
-        appBar: AppBar(
-          title: Row(
+      child: Builder(builder: (context) {
+        final tabController = DefaultTabController.of(context);
+        return Scaffold(
+          endDrawer: const Sidebar(),
+appBar: CustomAppBar(
+  isRefreshing: controller.isRefreshing,
+),
+
+
+          body: TabBarView(
             children: [
-              Obx(() {
-                return Row(
-                  children: [
-                    if (controller.isRefreshing.value)
-                      Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue, width: 1),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.blue,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'بروزرسانی',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                );
-              }),
-              GestureDetector(
-                onTap: () {
-                  ProfilePage.showProfileDialog(controller.token);
-                },
-                child: const Icon(
-                  Icons.account_circle,
-                  size: 32,
-                  color: Colors.white,
-                ),
-              ),
+              _buildMainContent(),
+              const Center(child: Text('To be Built Soon')),
+              const Center(child: Text('Under Construction')),
             ],
           ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(64),
-            child: Container(
-              height: 56,
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TabBar(
-                indicator: BoxDecoration(
-                  color: const Color(0xFF0676C8),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0676C8).withOpacity(0.12),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor: const Color(0xFF0676C8),
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
-                dividerColor: Colors.transparent,
-                indicatorPadding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 6,
-                ),
-                tabs: [
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: const Text('خانه'),
-                    ),
-                  ),
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: const Text('شرکت'),
-                    ),
-                  ),
-                  Tab(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: const Text('ویلا'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildMainContent(),
-            const Center(child: Text('To be Built Soon')),
-            const Center(child: Text('Under Construction')),
-          ],
-        ),
-      ),
+        );
+      }),
     );
   }
 
-  Widget _buildMainContent() {
-    return RefreshIndicator(
-      onRefresh: () async {
-        await controller.refreshAllData();
-      },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          children: [
-            _buildWeatherSection(),
-            const CategorySelectorWidget(),
-            _buildSmartDevicesGrid(),
-          ],
+
+Widget _buildMainContent() {
+  // Reactive variable برای نگه داشتن مکان انتخاب شده
+  // final RxString selectedLocationId = ''.obs;
+
+  return Obx(() {
+final locations = controller.userLocations;
+final devices = controller.deviceList;
+
+return RefreshIndicator(
+  onRefresh: controller.refreshAllData,
+  child: SingleChildScrollView(
+    physics: const AlwaysScrollableScrollPhysics(),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16),
+        _buildWeatherSection(),
+        const SizedBox(height: 24),
+
+        // دکمه‌ها و عنوان
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.lightBlue.shade400,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    child: const Text('ثبت دستگاه'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.yellow.shade700,
+                      side: BorderSide(color: Colors.yellow.shade700, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    child: const Text('افزودن مکان'),
+                  ),
+                ],
+              ),
+              const Text(
+                'دستگاه‌ها',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+        const SizedBox(height: 16),
+        const Divider(thickness: 2),
+        const SizedBox(height: 16),
+
+        // لیست مکان‌ها با انتخاب فعال
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: locations.map((loc) {
+              return Obx(() {
+                final isSelected = controller.selectedLocationId.value == loc.id;
+                return GestureDetector(
+                  onTap: () {
+                    controller.selectedLocationId.value = loc.id;
+                    controller.fetchDevicesByLocation(loc.id);
+                  },
+                  child: Chip(
+                    label: Text(
+                      loc.title,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    backgroundColor: isSelected ? Colors.blue.shade400 : Colors.blue.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                );
+              });
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // لیست دیوایس‌ها
+        if (devices.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text(
+                'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          )
+        else
+          _buildSmartDevicesGrid(),
+      ],
+    ),
+  ),
+);
+
+  });
+}
+
+
+
+
+
 
   Widget _buildWeatherSection() {
     return Padding(
@@ -196,28 +190,41 @@ class HomePage extends BaseView<HomeController> {
       ),
     );
   }
+
+
+// ------------------- Smart Devices Grid -------------------
 Widget _buildSmartDevicesGrid() {
   return Obx(() {
-    final devices = controller.deviceList;
-    if (devices.isEmpty) return const Center(child: CircularProgressIndicator());
+    final devices = controller.deviceList; // RxList<DeviceItem>
 
-    final deviceIds = devices
-        .map((d) => d['deviceId']?.toString() ?? '')
-        .where((id) => id.isNotEmpty)
-        .toList();
-
-    // رجیستر کردن ReliableSocketController
-    if (!Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')) {
-      Get.put(
-        ReliableSocketController(controller.token, deviceIds),
-        tag: 'smartDevicesController',
-        permanent: true,
+    // ۱️⃣ بررسی انتخاب مکان
+    if (devices.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Text(
+            'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
       );
     }
 
-    final reliableController =
-        Get.find<ReliableSocketController>(tag: 'smartDevicesController');
+    // ۲️⃣ جمع‌آوری deviceIds
+    final deviceIds = devices.map((d) => d.deviceId).toList();
 
+    // ۳️⃣ رجیستر کردن ReliableSocketController
+    if (Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')) {
+      Get.delete<ReliableSocketController>(tag: 'smartDevicesController');
+    }
+
+    final reliableController = Get.put(
+      ReliableSocketController(controller.token, deviceIds),
+      tag: 'smartDevicesController',
+      permanent: true,
+    );
+
+    // ۴️⃣ نمایش Grid دیوایس‌ها
     return Padding(
       padding: const EdgeInsets.all(16),
       child: GridView.builder(
@@ -232,77 +239,60 @@ Widget _buildSmartDevicesGrid() {
         ),
         itemBuilder: (context, index) {
           final device = devices[index];
-          final deviceId = device['deviceId'] as String;
-          final title = device['title'] ?? 'بدون نام';
 
           return Obx(() {
-            final deviceData = reliableController.latestDeviceDataById[deviceId];
+            final deviceData = reliableController.latestDeviceDataById[device.deviceId];
 
+            // مقداردهی پیش‌فرض
             bool switch1On = false;
             bool switch2On = false;
             Color iconColor1 = Colors.grey;
             Color iconColor2 = Colors.grey;
 
             if (deviceData != null) {
-              // آخرین داده هر کلید Touch_W / Touch_D
-              final lastKey1 = [
+              // وضعیت کلیدها
+              final key1Entries = [
                 if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
                 if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
               ];
-              if (lastKey1.isNotEmpty) {
-                lastKey1.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
-                switch1On = lastKey1.first[1].toString().contains('On');
+              if (key1Entries.isNotEmpty) {
+                key1Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+                switch1On = key1Entries.first[1].toString().contains('On');
               }
 
-              final lastKey2 = [
+              final key2Entries = [
                 if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
                 if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
               ];
-              if (lastKey2.isNotEmpty) {
-                lastKey2.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
-                switch2On = lastKey2.first[1].toString().contains('On');
+              if (key2Entries.isNotEmpty) {
+                key2Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+                switch2On = key2Entries.first[1].toString().contains('On');
               }
 
-              // LED Colors
+              // رنگ LED
               if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
                 final ledJson = deviceData['ledColor'][0][1];
                 if (ledJson is String) {
                   final ledMap = jsonDecode(ledJson);
                   iconColor1 = switch1On
-                      ? Color.fromARGB(
-                          255,
-                          ledMap['touch1']['on']['r'],
-                          ledMap['touch1']['on']['g'],
-                          ledMap['touch1']['on']['b'])
-                      : Color.fromARGB(
-                          255,
-                          ledMap['touch1']['off']['r'],
-                          ledMap['touch1']['off']['g'],
-                          ledMap['touch1']['off']['b']);
+                      ? Color.fromARGB(255, ledMap['touch1']['on']['r'], ledMap['touch1']['on']['g'], ledMap['touch1']['on']['b'])
+                      : Color.fromARGB(255, ledMap['touch1']['off']['r'], ledMap['touch1']['off']['g'], ledMap['touch1']['off']['b']);
                   iconColor2 = switch2On
-                      ? Color.fromARGB(
-                          255,
-                          ledMap['touch2']['on']['r'],
-                          ledMap['touch2']['on']['g'],
-                          ledMap['touch2']['on']['b'])
-                      : Color.fromARGB(
-                          255,
-                          ledMap['touch2']['off']['r'],
-                          ledMap['touch2']['off']['g'],
-                          ledMap['touch2']['off']['b']);
+                      ? Color.fromARGB(255, ledMap['touch2']['on']['r'], ledMap['touch2']['on']['g'], ledMap['touch2']['on']['b'])
+                      : Color.fromARGB(255, ledMap['touch2']['off']['r'], ledMap['touch2']['off']['g'], ledMap['touch2']['off']['b']);
                 }
               }
             }
 
             return _buildSmartDeviceCard(
-              title: title,
-              deviceId: deviceId,
+              title: device.title,
+              deviceId: device.deviceId,
               switch1On: switch1On,
               switch2On: switch2On,
               iconColor1: iconColor1,
               iconColor2: iconColor2,
               onToggle: (switchNumber, value) async {
-                await reliableController.toggleSwitch(value, switchNumber, deviceId);
+                await reliableController.toggleSwitch(value, switchNumber, device.deviceId);
               },
             );
           });
@@ -313,6 +303,7 @@ Widget _buildSmartDevicesGrid() {
 }
 
 
+// ------------------- Smart Device Card -------------------
 Widget _buildSmartDeviceCard({
   required String title,
   required String deviceId,
@@ -336,6 +327,7 @@ Widget _buildSmartDeviceCard({
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // 🔹 عنوان + وضعیت آنلاین/آفلاین
           Obx(() {
             final isOnline = reliableController.isDeviceConnected(deviceId);
             final lastSeen = reliableController.getLastActivity(deviceId);
@@ -379,16 +371,28 @@ Widget _buildSmartDeviceCard({
                       color: Colors.grey,
                     ),
                   ),
-                ]
+                ],
               ],
             );
           }),
           const SizedBox(height: 12),
+
+          // 🔹 کلیدها
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildSwitchColumn(1, switch1On, iconColor1, onToggle),
-              _buildSwitchColumn(2, switch2On, iconColor2, onToggle),
+              _buildSwitchColumn(
+                deviceId: deviceId,
+                switchNumber: 1,
+                color: iconColor1,
+                onToggle: onToggle,
+              ),
+              _buildSwitchColumn(
+                deviceId: deviceId,
+                switchNumber: 2,
+                color: iconColor2,
+                onToggle: onToggle,
+              ),
             ],
           ),
         ],
@@ -397,43 +401,99 @@ Widget _buildSmartDeviceCard({
   );
 }
 
-Widget _buildSwitchColumn(
-    int switchNumber, bool isOn, Color color, Function(int, bool) onToggle) {
-  return Column(
-    children: [
-      Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: isOn
-                ? [color.withOpacity(0.7), color]
-                : [Colors.grey.shade300, Colors.grey.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            if (isOn)
-              BoxShadow(
-                color: color.withOpacity(0.5),
-                blurRadius: 8,
-                spreadRadius: 2,
+// ------------------- ستون کلید -------------------
+Widget _buildSwitchColumn({
+  required String deviceId,
+  required int switchNumber,
+  required Color color,
+  required Function(int switchNumber, bool value) onToggle,
+}) {
+  final reliableController = Get.find<ReliableSocketController>(
+    tag: 'smartDevicesController',
+  );
+
+  return Obx(() {
+    final deviceData = reliableController.latestDeviceDataById[deviceId];
+    bool isOn = false;
+
+    if (deviceData != null) {
+      final keyEntries = [
+        if (switchNumber == 1) ...?deviceData['Touch_W1'] ?? [], 
+        if (switchNumber == 1) ...?deviceData['Touch_D1'] ?? [],
+        if (switchNumber == 2) ...?deviceData['Touch_W2'] ?? [],
+        if (switchNumber == 2) ...?deviceData['Touch_D2'] ?? [],
+      ];
+
+      if (keyEntries.isNotEmpty) {
+        keyEntries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+        isOn = keyEntries.first[1].toString().contains('On');
+      }
+    }
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 🔹 دایره رنگ LED
+            Container(
+              width: 16,
+              height: 16,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                boxShadow: [
+                  if (isOn)
+                    BoxShadow(
+                      color: color.withOpacity(0.6),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    ),
+                ],
               ),
+            ),
+
+            // 🔹 دکمه پاور
+            GestureDetector(
+              onTap: () => onToggle(switchNumber, !isOn),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isOn ? Colors.lightBlueAccent : Colors.grey.shade400,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.power_settings_new,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ),
           ],
         ),
-        padding: const EdgeInsets.all(12),
-        child: const Icon(Icons.lightbulb, color: Colors.white, size: 32),
-      ),
-      const SizedBox(height: 8),
-      Switch(
-        value: isOn,
-        onChanged: (value) => onToggle(switchNumber, value),
-        activeColor: color,
-        inactiveThumbColor: color,
-        inactiveTrackColor: color.withOpacity(0.5),
-      ),
-    ],
-  );
+        const SizedBox(height: 8),
+        Text(
+          "کلید $switchNumber",
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  });
 }
+
+
+
+
+
+
 
 
   Widget _buildLoadingDeviceCard({required String title}) {
