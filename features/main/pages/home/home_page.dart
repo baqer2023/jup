@@ -6,6 +6,7 @@ import 'package:my_app32/app/core/app_constants.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
 import 'package:my_app32/app/services/weather_service.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
+import 'package:my_app32/features/main/pages/home/Add_device_page.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
@@ -75,32 +76,36 @@ return RefreshIndicator(
             children: [
               Row(
                 children: [
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlue.shade400,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    ),
-                    child: const Text('ثبت دستگاه'),
-                  ),
+                 ElevatedButton(
+  onPressed: () {
+    Get.to(() => const AddDevicePage());
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.lightBlue.shade400,
+    foregroundColor: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  ),
+  child: const Text('ثبت دستگاه'),
+),
+
                   const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.yellow.shade700,
-                      side: BorderSide(color: Colors.yellow.shade700, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    ),
-                    child: const Text('افزودن مکان'),
+              ElevatedButton(
+                onPressed: _showAddLocationDialog, // اینجا تابع مدال را فراخوانی می‌کنیم
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.yellow.shade700,
+                  side: BorderSide(color: Colors.yellow.shade700, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                child: const Text('افزودن مکان'),
+              ),
+
                 ],
               ),
               const Text(
@@ -490,6 +495,97 @@ Widget _buildSwitchColumn({
 }
 
 
+void _showAddLocationDialog() {
+  final TextEditingController nameController = TextEditingController();
+
+  showDialog(
+    context: Get.context!,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white, // پس‌زمینه مدال
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 10, // سایه ملایم
+        title: const Text(
+          'افزودن مکان',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 18,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'نام مکان',
+                  hintText: 'نام مکان را وارد کنید',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.yellow),
+              ),
+            ),
+            child: const Text(
+              'انصراف',
+              style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty) {
+                Get.snackbar(
+                  'خطا',
+                  'لطفاً نام مکان را وارد کنید',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+              await controller.addLocation(name);
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'ثبت',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
 
 
 
@@ -740,4 +836,7 @@ class _ColorPreviewPicker extends StatelessWidget {
       ],
     );
   }
+
+
+  
 }

@@ -178,4 +178,39 @@ Future<void> removeDevice(String deviceId) async {
   }
 }
 
+
+
+
+Future<void> addLocation(String title) async {
+  if (title.trim().isEmpty) {
+    Get.snackbar('خطا', 'لطفاً نام مکان را وارد کنید',
+        backgroundColor: Colors.red, colorText: Colors.white);
+    return;
+  }
+
+  try {
+    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/addDashboard');
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json'
+    };
+    final data = json.encode({"title": title.trim()});
+
+    final response = await http.post(url, headers: headers, body: data);
+
+    if (response.statusCode == 200) {
+      Get.snackbar('موفقیت', 'مکان با موفقیت اضافه شد',
+          backgroundColor: Colors.green, colorText: Colors.white);
+      await fetchUserLocations(); // بازخوانی لیست مکان‌ها
+    } else {
+      Get.snackbar('خطا', 'ثبت مکان موفقیت‌آمیز نبود: ${response.statusCode}',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  } catch (e) {
+    Get.snackbar('خطا', 'خطا در افزودن مکان: $e',
+        backgroundColor: Colors.red, colorText: Colors.white);
+  }
+}
+
+
 }
