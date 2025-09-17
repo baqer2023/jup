@@ -48,13 +48,14 @@ class TokenRefreshService extends GetxService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        if (data['token'] != null && data['refreshToken'] != null) {
-          await _userStore.saveToken(data['token']);
-          await _userStore.saveRefreshToken(data['refreshToken']);
+      if (data['token'] != null && data['refreshToken'] != null) {
+        await _userStore.saveToken(data['token']);
+        await _userStore.saveRefreshToken(data['refreshToken']);
 
-          print('Token refreshed successfully');
-          return true;
-        } else {
+        final check = await _userStore.getToken();
+        print('✅ Token refreshed and saved: $check');
+        return true;
+      }else {
           print('Invalid response format for token refresh');
           return false;
         }

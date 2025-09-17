@@ -6,11 +6,22 @@ import 'package:my_app32/app/bindings/main_binding.dart';
 import 'package:my_app32/app/core/languages/app_localization.dart';
 import 'package:my_app32/app/routes/app_pages.dart';
 import 'package:my_app32/app/routes/app_routes.dart';
+import 'package:my_app32/app/services/token_refresh_service.dart';
 import 'package:my_app32/app/theme/app_theme.dart';
+import 'package:my_app32/app/store/user_store_service.dart';
+import 'package:my_app32/app/services/storage_service.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // راه‌اندازی GetStorage
   await GetStorage.init();
+
+  // رجیستر سرویس‌ها
+  Get.put<UserStoreService>(UserStoreService(StorageService()), permanent: true);
+  Get.put<TokenRefreshService>(TokenRefreshService(), permanent: true);
+
   runApp(const MyApp());
 }
 

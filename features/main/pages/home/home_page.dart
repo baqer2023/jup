@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:my_app32/app/services/realable_controller.dart';
 
 import 'package:flutter/material.dart';
@@ -200,9 +201,8 @@ return RefreshIndicator(
 // ------------------- Smart Devices Grid -------------------
 Widget _buildSmartDevicesGrid() {
   return Obx(() {
-    final devices = controller.deviceList; // RxList<DeviceItem>
+    final devices = controller.deviceList;
 
-    // ۱️⃣ بررسی انتخاب مکان
     if (devices.isEmpty) {
       return const Center(
         child: Padding(
@@ -215,10 +215,8 @@ Widget _buildSmartDevicesGrid() {
       );
     }
 
-    // ۲️⃣ جمع‌آوری deviceIds
     final deviceIds = devices.map((d) => d.deviceId).toList();
 
-    // ۳️⃣ رجیستر کردن ReliableSocketController
     if (Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')) {
       Get.delete<ReliableSocketController>(tag: 'smartDevicesController');
     }
@@ -229,7 +227,6 @@ Widget _buildSmartDevicesGrid() {
       permanent: true,
     );
 
-    // ۴️⃣ نمایش Grid دیوایس‌ها
     return Padding(
       padding: const EdgeInsets.all(16),
       child: GridView.builder(
@@ -248,14 +245,12 @@ Widget _buildSmartDevicesGrid() {
           return Obx(() {
             final deviceData = reliableController.latestDeviceDataById[device.deviceId];
 
-            // مقداردهی پیش‌فرض
             bool switch1On = false;
             bool switch2On = false;
             Color iconColor1 = Colors.grey;
             Color iconColor2 = Colors.grey;
 
             if (deviceData != null) {
-              // وضعیت کلیدها
               final key1Entries = [
                 if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
                 if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
@@ -274,20 +269,49 @@ Widget _buildSmartDevicesGrid() {
                 switch2On = key2Entries.first[1].toString().contains('On');
               }
 
-              // رنگ LED
               if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
-                final ledJson = deviceData['ledColor'][0][1];
-                if (ledJson is String) {
-                  final ledMap = jsonDecode(ledJson);
-                  iconColor1 = switch1On
-                      ? Color.fromARGB(255, ledMap['touch1']['on']['r'], ledMap['touch1']['on']['g'], ledMap['touch1']['on']['b'])
-                      : Color.fromARGB(255, ledMap['touch1']['off']['r'], ledMap['touch1']['off']['g'], ledMap['touch1']['off']['b']);
-                  iconColor2 = switch2On
-                      ? Color.fromARGB(255, ledMap['touch2']['on']['r'], ledMap['touch2']['on']['g'], ledMap['touch2']['on']['b'])
-                      : Color.fromARGB(255, ledMap['touch2']['off']['r'], ledMap['touch2']['off']['g'], ledMap['touch2']['off']['b']);
+                final ledEntry = deviceData['ledColor'][0][1];
+                Map<String, dynamic> ledMap;
+
+                if (ledEntry is String) {
+                  ledMap = jsonDecode(ledEntry);
+                } else if (ledEntry is Map<String, dynamic>) {
+                  ledMap = ledEntry;
+                } else {
+                  ledMap = {};
                 }
+
+                iconColor1 = switch1On
+                    ? Color.fromARGB(
+                        255,
+                        ledMap['touch1']['on']['r'],
+                        ledMap['touch1']['on']['g'],
+                        ledMap['touch1']['on']['b'],
+                      )
+                    : Color.fromARGB(
+                        255,
+                        ledMap['touch1']['off']['r'],
+                        ledMap['touch1']['off']['g'],
+                        ledMap['touch1']['off']['b'],
+                      );
+
+                iconColor2 = switch2On
+                    ? Color.fromARGB(
+                        255,
+                        ledMap['touch2']['on']['r'],
+                        ledMap['touch2']['on']['g'],
+                        ledMap['touch2']['on']['b'],
+                      )
+                    : Color.fromARGB(
+                        255,
+                        ledMap['touch2']['off']['r'],
+                        ledMap['touch2']['off']['g'],
+                        ledMap['touch2']['off']['b'],
+                      );
               }
             }
+
+            final isSingleKey = device.deviceTypeName == 'key-1';
 
             return _buildSmartDeviceCard(
               title: device.title,
@@ -299,6 +323,8 @@ Widget _buildSmartDevicesGrid() {
               onToggle: (switchNumber, value) async {
                 await reliableController.toggleSwitch(value, switchNumber, device.deviceId);
               },
+              isSingleKey: isSingleKey,
+              device: device, // دستگاه را پاس می‌دهیم
             );
           });
         },
@@ -307,20 +333,19 @@ Widget _buildSmartDevicesGrid() {
   });
 }
 
-
 // ------------------- Smart Device Card -------------------
 Widget _buildSmartDeviceCard({
   required String title,
   required String deviceId,
   required bool switch1On,
-  required bool switch2On,
+  bool? switch2On,
   required Color iconColor1,
-  required Color iconColor2,
+  Color? iconColor2,
   required Function(int switchNumber, bool value) onToggle,
+  required bool isSingleKey,
+  required DeviceItem device, // ← اضافه شد تا دستگاه برای تنظیمات پیشرفته داشته باشیم
 }) {
-  final reliableController = Get.find<ReliableSocketController>(
-    tag: 'smartDevicesController',
-  );
+  final reliableController = Get.find<ReliableSocketController>(tag: 'smartDevicesController');
 
   return Card(
     color: Colors.white,
@@ -332,57 +357,62 @@ Widget _buildSmartDeviceCard({
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 🔹 عنوان + وضعیت آنلاین/آفلاین
+          // عنوان + وضعیت آنلاین + منوی سه نقطه
           Obx(() {
             final isOnline = reliableController.isDeviceConnected(deviceId);
             final lastSeen = reliableController.getLastActivity(deviceId);
-
-            return Column(
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      isOnline ? Icons.circle : Icons.circle_outlined,
-                      color: isOnline ? Colors.green : Colors.red,
-                      size: 12,
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(isOnline ? Icons.circle : Icons.circle_outlined,
+                            color: isOnline ? Colors.green : Colors.red, size: 12),
+                        const SizedBox(width: 6),
+                        Text(isOnline ? "آنلاین" : "آفلاین",
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: isOnline ? Colors.green : Colors.red)),
+                      ],
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isOnline ? "آنلاین" : "آفلاین",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: isOnline ? Colors.green : Colors.red,
-                      ),
-                    ),
+                    if (!isOnline && lastSeen != null) ...[
+                      const SizedBox(height: 4),
+                      Text("آخرین فعالیت: ${lastSeen.toLocal()}",
+                          style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    ],
                   ],
                 ),
-                if (!isOnline && lastSeen != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    "آخرین فعالیت: ${lastSeen.toLocal()}",
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
+PopupMenuButton<int>(
+  icon: const Icon(Icons.more_vert, color: Colors.black87),
+  onSelected: (value) {
+    if (value == 0) { 
+      // وقتی روی تنظیمات پیشرفته کلیک شد، دیالوگ رنگ باز میشه
+      showLedColorDialog(device: device, token: controller.token);
+    }
+    // سایر گزینه‌ها را می‌توانید اینجا اضافه کنید
+  },
+  itemBuilder: (context) => [
+    const PopupMenuItem(value: 0, child: Text('تنظیمات پیشرفته')),
+    const PopupMenuItem(value: 1, child: Text('ویرایش کلید')),
+    const PopupMenuItem(value: 2, child: Text('فعال کردن قفل کودک')),
+    const PopupMenuItem(value: 3, child: Text('بازنشانی به تنظیمات کارخانه')),
+    const PopupMenuItem(value: 4, child: Text('حذف موقت', style: TextStyle(color: Colors.red))),
+    const PopupMenuItem(value: 5, child: Text('حذف کامل', style: TextStyle(color: Colors.red))),
+  ],
+),
+
               ],
             );
           }),
           const SizedBox(height: 12),
 
-          // 🔹 کلیدها
+          // کلیدها
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -392,12 +422,13 @@ Widget _buildSmartDeviceCard({
                 color: iconColor1,
                 onToggle: onToggle,
               ),
-              _buildSwitchColumn(
-                deviceId: deviceId,
-                switchNumber: 2,
-                color: iconColor2,
-                onToggle: onToggle,
-              ),
+              if (!isSingleKey)
+                _buildSwitchColumn(
+                  deviceId: deviceId,
+                  switchNumber: 2,
+                  color: iconColor2 ?? Colors.grey,
+                  onToggle: onToggle,
+                ),
             ],
           ),
         ],
@@ -405,6 +436,7 @@ Widget _buildSmartDeviceCard({
     ),
   );
 }
+
 
 // ------------------- ستون کلید -------------------
 Widget _buildSwitchColumn({
@@ -422,12 +454,18 @@ Widget _buildSwitchColumn({
     bool isOn = false;
 
     if (deviceData != null) {
-      final keyEntries = [
-        if (switchNumber == 1) ...?deviceData['Touch_W1'] ?? [], 
-        if (switchNumber == 1) ...?deviceData['Touch_D1'] ?? [],
-        if (switchNumber == 2) ...?deviceData['Touch_W2'] ?? [],
-        if (switchNumber == 2) ...?deviceData['Touch_D2'] ?? [],
-      ];
+      // فقط کلید مربوطه را بررسی می‌کنیم
+      final keyEntries = switchNumber == 1
+          ? [
+              if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
+              if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
+            ]
+          : switchNumber == 2
+              ? [
+                  if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
+                  if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
+                ]
+              : [];
 
       if (keyEntries.isNotEmpty) {
         keyEntries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
@@ -440,7 +478,7 @@ Widget _buildSwitchColumn({
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 🔹 دایره رنگ LED
+            // دایره رنگ LED
             Container(
               width: 16,
               height: 16,
@@ -459,7 +497,7 @@ Widget _buildSwitchColumn({
               ),
             ),
 
-            // 🔹 دکمه پاور
+            // دکمه پاور
             GestureDetector(
               onTap: () => onToggle(switchNumber, !isOn),
               child: Container(
@@ -493,6 +531,7 @@ Widget _buildSwitchColumn({
     );
   });
 }
+
 
 
 void _showAddLocationDialog() {
@@ -673,6 +712,7 @@ void _showAddLocationDialog() {
     );
   }
 
+  
   Widget _buildNoDevicesFound() {
     return Center(
       child: LayoutBuilder(
@@ -705,18 +745,169 @@ void _showAddLocationDialog() {
       ),
     );
   }
+
+
+// ------------------- Advanced Settings Dialog -------------------
+void showLedColorDialog({
+  required DeviceItem device,
+  required String token,
+}) {
+  final reliableController = Get.find<ReliableSocketController>(tag: 'smartDevicesController');
+  final deviceData = reliableController.latestDeviceDataById[device.deviceId];
+  final isSingleKey = device.deviceTypeName == 'key-1';
+
+  // Reactive colors
+  Rx<Color> touch1On = const Color(0xFF2196F3).obs;
+  Rx<Color> touch1Off = const Color(0xFF9E9E9E).obs;
+  Rx<Color> touch2On = const Color(0xFF4CAF50).obs;
+  Rx<Color> touch2Off = const Color(0xFF9E9E9E).obs;
+
+  // مقداردهی اولیه از داده دستگاه
+  if (deviceData != null && deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
+    try {
+      final ledEntry = deviceData['ledColor'][0][1];
+      Map<String, dynamic> ledMap = ledEntry is String ? jsonDecode(ledEntry) : (ledEntry as Map<String, dynamic>);
+
+      if (ledMap['touch1'] != null) {
+        touch1On.value = Color.fromARGB(
+          255,
+          (ledMap['touch1']['on']['r'] as int).clamp(0, 255),
+          (ledMap['touch1']['on']['g'] as int).clamp(0, 255),
+          (ledMap['touch1']['on']['b'] as int).clamp(0, 255),
+        );
+        touch1Off.value = Color.fromARGB(
+          255,
+          (ledMap['touch1']['off']['r'] as int).clamp(0, 255),
+          (ledMap['touch1']['off']['g'] as int).clamp(0, 255),
+          (ledMap['touch1']['off']['b'] as int).clamp(0, 255),
+        );
+      }
+
+      if (!isSingleKey && ledMap['touch2'] != null) {
+        touch2On.value = Color.fromARGB(
+          255,
+          (ledMap['touch2']['on']['r'] as int).clamp(0, 255),
+          (ledMap['touch2']['on']['g'] as int).clamp(0, 255),
+          (ledMap['touch2']['on']['b'] as int).clamp(0, 255),
+        );
+        touch2Off.value = Color.fromARGB(
+          255,
+          (ledMap['touch2']['off']['r'] as int).clamp(0, 255),
+          (ledMap['touch2']['off']['g'] as int).clamp(0, 255),
+          (ledMap['touch2']['off']['b'] as int).clamp(0, 255),
+        );
+      }
+    } catch (_) {}
+  }
+
+  showDialog(
+    context: Get.context!,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Center(
+          child: Text('تنظیمات پیشرفته', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Obx(() => _ColorPreviewPicker(label: 'کلید ۱ روشن', color: touch1On.value, onPick: (c) => touch1On.value = c)),
+              Obx(() => _ColorPreviewPicker(label: 'کلید ۱ خاموش', color: touch1Off.value, onPick: (c) => touch1Off.value = c)),
+              if (!isSingleKey) ...[
+                const SizedBox(height: 8),
+                Obx(() => _ColorPreviewPicker(label: 'کلید ۲ روشن', color: touch2On.value, onPick: (c) => touch2On.value = c)),
+                Obx(() => _ColorPreviewPicker(label: 'کلید ۲ خاموش', color: touch2Off.value, onPick: (c) => touch2Off.value = c)),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('انصراف', style: TextStyle(color: Colors.black54)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final dio = Dio();
+                final headers = {
+                  'Authorization': 'Bearer $token',
+                  'Content-Type': 'application/json',
+                };
+
+                // JSON دقیقاً مثل چیزی که سرور انتظار داره
+                final data = {
+                  "ledColor": {
+                    "touch1": {
+                      "on": {"r": touch1On.value.red, "g": touch1On.value.green, "b": touch1On.value.blue},
+                      "off": {"r": touch1Off.value.red, "g": touch1Off.value.green, "b": touch1Off.value.blue},
+                    },
+                    if (!isSingleKey)
+                      "touch2": {
+                        "on": {"r": touch2On.value.red, "g": touch2On.value.green, "b": touch2On.value.blue},
+                        "off": {"r": touch2Off.value.red, "g": touch2Off.value.green, "b": touch2Off.value.blue},
+                      }
+                  }
+                };
+
+                final response = await dio.post(
+                  'https://jupiniot.ir/api/plugins/telemetry/DEVICE/${device.deviceId}/attributes/SHARED_SCOPE',
+                  options: Options(headers: headers),
+                  data: jsonEncode(data),
+                );
+
+                if (response.statusCode == 200) {
+                  Get.snackbar('موفق', 'رنگ کلید با موفقیت تغییر کرد', backgroundColor: Colors.green);
+                  Navigator.of(context).pop();
+                } else {
+                  Get.snackbar('خطا', 'خطا در تغییر رنگ: ${response.statusMessage}', backgroundColor: Colors.red);
+                }
+              } catch (e) {
+                Get.snackbar('خطا', 'خطا در ارتباط با سرور: $e', backgroundColor: Colors.red);
+              }
+            },
+            child: const Text('ثبت'),
+          ),
+        ],
+      );
+    },
+  );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+// ------------------- Color Picker Widget -------------------
 class _ColorPreviewPicker extends StatelessWidget {
   final String label;
   final Color color;
   final ValueChanged<Color> onPick;
+
   const _ColorPreviewPicker({
     required this.label,
     required this.color,
     required this.onPick,
     Key? key,
   }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -729,82 +920,56 @@ class _ColorPreviewPicker extends StatelessWidget {
               builder: (context) {
                 return AlertDialog(
                   backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: const Center(
+                    child: Text('تغییر رنگ کلید', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   ),
-                  title: Center(
-                    child: Text(
-                      'تغییر رنگ کلید',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 60,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: tempColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.black26, width: 2),
+                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
+                          ),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          child: ColorPicker(
+                            pickerColor: tempColor,
+                            onColorChanged: (c) => tempColor = c,
+                            showLabel: false,
+                            pickerAreaHeightPercent: 0.8,
+                            enableAlpha: false,
+                            displayThumbColor: true,
+                            portraitOnly: true,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: tempColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.black26, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 260,
-                        child: ColorPicker(
-                          pickerColor: tempColor,
-                          onColorChanged: (c) => tempColor = c,
-                          showLabel: false,
-                          pickerAreaHeightPercent: 0.8,
-                          enableAlpha: false,
-                          displayThumbColor: true,
-                          portraitOnly: true,
-                        ),
-                      ),
-                    ],
-                  ),
                   actionsAlignment: MainAxisAlignment.spaceBetween,
-                  actionsPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   actions: [
                     TextButton(
-                      child: const Text(
-                        'انصراف',
-                        style: TextStyle(color: Colors.black54),
-                      ),
+                      child: const Text('انصراف', style: TextStyle(color: Colors.black54)),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: tempColor,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 10,
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                         elevation: 2,
                       ),
-                      child: const Text(
-                        'تایید',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      child: const Text('تایید', style: TextStyle(fontWeight: FontWeight.bold)),
                       onPressed: () => Navigator.of(context).pop(tempColor),
                     ),
                   ],
@@ -821,13 +986,7 @@ class _ColorPreviewPicker extends StatelessWidget {
               color: color,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.black26),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
-                ),
-              ],
+              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1))],
             ),
           ),
         ),
@@ -836,7 +995,4 @@ class _ColorPreviewPicker extends StatelessWidget {
       ],
     );
   }
-
-
-  
 }

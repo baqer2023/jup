@@ -2,14 +2,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_app32/app/store/user_store_service.dart';
+import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
+import 'package:dio/dio.dart';
 
 class AddDevicePage extends StatelessWidget {
   const AddDevicePage({super.key});
 
-  static const String apiUrl = "https://your-api-endpoint.com/addDevice";
 
   @override
   Widget build(BuildContext context) {
@@ -18,60 +20,81 @@ class AddDevicePage extends StatelessWidget {
     final RxString selectedDashboardId = ''.obs;
 
     final homeController = Get.find<HomeController>();
+    final dio = Dio();
 
-    Future<void> submitDevice() async {
-      final serial = serialController.text.trim();
-      final name = deviceNameController.text.trim();
-      final dashboardId = selectedDashboardId.value;
 
-      if (serial.isEmpty || name.isEmpty || dashboardId.isEmpty) {
-        Get.snackbar(
-          'خطا',
-          'لطفاً همه فیلدها و مکان را انتخاب کنید',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
+Future<void> submitDevice() async {
+  final serial = serialController.text.trim();
+  final name = deviceNameController.text.trim();
+  final dashboardId = selectedDashboardId.value;
 
-      final payload = {
-        "serialNumber": serial,
-        "label": name,
-        "dashboardId": dashboardId,
-      };
+  if (serial.isEmpty || name.isEmpty || dashboardId.isEmpty) {
+    Get.snackbar(
+      'خطا',
+      'لطفاً همه فیلدها و مکان را انتخاب کنید',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+    return;
+  }
 
-      try {
-        final response = await http.post(
-          Uri.parse(apiUrl),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        );
+  final token = await UserStoreService.to.getToken();
+  if (token == null) {
+    Get.snackbar('خطا', 'توکن معتبر پیدا نشد');
+    return;
+  }
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          Get.snackbar(
-            'موفقیت',
-            'دستگاه با موفقیت ثبت شد',
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
-          Get.back(); // برگشت به صفحه قبل
-        } else {
-          Get.snackbar(
-            'خطا',
-            'ثبت دستگاه موفقیت‌آمیز نبود: ${response.statusCode}',
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-        }
-      } catch (e) {
-        Get.snackbar(
-          'خطا',
-          'مشکل در ارتباط با سرور: $e',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
+  final headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+
+  final data = {
+    "serialNumber": serial,
+    "label": name,
+    "dashboardId": dashboardId,
+  };
+
+  try {
+    final response = await dio.post(
+      'http://45.149.76.245:8080/api/addDevice',
+      data: data,
+      options: Options(headers: headers),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      Get.snackbar(
+        'موفقیت',
+        'دستگاه با موفقیت ثبت شد',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      // 🔹 آپدیت لیست دستگاه‌ها در HomeController
+      final homeController = Get.find<HomeController>();
+      await homeController.refreshAllData();
+
+      // 🔹 برگرد به HomePage
+      Get.offAll(() => const HomePage());
+    } else {
+      Get.snackbar(
+        'خطا',
+        'ثبت دستگاه موفقیت‌آمیز نبود: ${response.statusCode}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
+  } catch (e) {
+    Get.snackbar(
+      'خطا',
+      'مشکل در ارتباط با سرور: $e',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  }
+}
+
+
 
     return Scaffold(
       endDrawer: const Sidebar(),
@@ -102,6 +125,7 @@ class AddDevicePage extends StatelessWidget {
             // 🔹 لیست مکان‌ها
      Obx(() {
   final locations = homeController.userLocations;
+  print('Error refreshing data: $locations');
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -110,7 +134,9 @@ class AddDevicePage extends StatelessWidget {
           spacing: 12,
           runSpacing: 8,
           children: locations.map((loc) {
+            
             final isSelected = selectedDashboardId.value == loc.id;
+            
             return GestureDetector(
               onTap: () => selectedDashboardId.value = loc.id,
               child: Chip(

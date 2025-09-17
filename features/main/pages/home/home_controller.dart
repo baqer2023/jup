@@ -102,10 +102,10 @@ Future<void> fetchDevicesByLocation(String dashboardId) async {
 
     if (response.statusCode == 200) {
       final raw = json.decode(response.body);
-
       print("Raw response: $raw");
 
       if (raw is List) {
+        // فقط Map<String, dynamic> ها رو نگه می‌داره
         final safeData = raw
             .whereType<Map<String, dynamic>>()
             .map((d) => DeviceItem.fromJson(d))
@@ -129,6 +129,7 @@ Future<void> fetchDevicesByLocation(String dashboardId) async {
     deviceList.clear();
   }
 }
+
 
 
 
@@ -189,7 +190,7 @@ Future<void> addLocation(String title) async {
   }
 
   try {
-    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/addDashboard');
+    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/addOrUpdate');
     final headers = {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json'
