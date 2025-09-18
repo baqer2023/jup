@@ -830,44 +830,66 @@ void showLedColorDialog({
           ),
           ElevatedButton(
             onPressed: () async {
-              try {
-                final dio = Dio();
-                final headers = {
-                  'Authorization': 'Bearer $token',
-                  'Content-Type': 'application/json',
-                };
+                  try {
+                    var headers = {
+                      'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIwOTIwMjI0NzA5MSIsInVzZXJJZCI6IjhiMmNhMjYwLThjMTctMTFmMC04MWFiLWViZWE4MWE3NWI2OSIsInNjb3BlcyI6WyJURU5BTlRfQURNSU4iXSwic2Vzc2lvbklkIjoiZjY3ZjliZjMtYzk2OC00YzE3LWJlMGMtZmEzZDgwYzNmZDc4IiwiZXhwIjoxNzU4MjY5OTMzLCJpc3MiOiJ0aGluZ3Nib2FyZC5pbyIsImlhdCI6MTc1ODE4MzUzMywiZW5hYmxlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6IjhhNTYzZjkwLThjMTctMTFmMC04MWFiLWViZWE4MWE3NWI2OSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.EjGxGxDAJF-dp5-1MGtqF7cV8dM_bHxaWJ636VhLTNCpUF04OFk9eb_HRBTaRoi2xvyuG_Xrve-siB-ykNuK-Q',
+                      'Content-Type': 'application/json'
+                    };
 
-                // JSON دقیقاً مثل چیزی که سرور انتظار داره
-                final data = {
-                  "ledColor": {
-                    "touch1": {
-                      "on": {"r": touch1On.value.red, "g": touch1On.value.green, "b": touch1On.value.blue},
-                      "off": {"r": touch1Off.value.red, "g": touch1Off.value.green, "b": touch1Off.value.blue},
-                    },
-                    if (!isSingleKey)
-                      "touch2": {
-                        "on": {"r": touch2On.value.red, "g": touch2On.value.green, "b": touch2On.value.blue},
-                        "off": {"r": touch2Off.value.red, "g": touch2Off.value.green, "b": touch2Off.value.blue},
+                    var data = json.encode({
+                      "deviceId": device.deviceId,
+                      "request": {
+                        "ledColor": {
+                          "touch1": {
+                            "on": {
+                              "r": touch1On.value.red,
+                              "g": touch1On.value.green,
+                              "b": touch1On.value.blue
+                            },
+                            "off": {
+                              "r": touch1Off.value.red,
+                              "g": touch1Off.value.green,
+                              "b": touch1Off.value.blue
+                            }
+                          },
+                          if (!isSingleKey)
+                            "touch2": {
+                              "on": {
+                                "r": touch2On.value.red,
+                                "g": touch2On.value.green,
+                                "b": touch2On.value.blue
+                              },
+                              "off": {
+                                "r": touch2Off.value.red,
+                                "g": touch2Off.value.green,
+                                "b": touch2Off.value.blue
+                              }
+                            }
+                        }
                       }
+                    });
+
+                    var dio = Dio();
+                    var response = await dio.request(
+                      'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
+                      options: Options(
+                        method: 'POST',
+                        headers: headers,
+                      ),
+                      data: data,
+                    );
+
+                    if (response.statusCode == 200) {
+                      Get.snackbar('موفق', 'رنگ کلید با موفقیت تغییر کرد', backgroundColor: Colors.green);
+                      Navigator.of(context).pop();
+                    } else {
+                      Get.snackbar('خطا', 'خطا در تغییر رنگ: ${response.statusMessage}', backgroundColor: Colors.red);
+                    }
+                  } catch (e) {
+                    Get.snackbar('خطا', 'خطا در ارتباط با سرور: $e', backgroundColor: Colors.red);
                   }
-                };
+                },
 
-                final response = await dio.post(
-                  'https://jupiniot.ir/api/plugins/telemetry/DEVICE/${device.deviceId}/attributes/SHARED_SCOPE',
-                  options: Options(headers: headers),
-                  data: jsonEncode(data),
-                );
-
-                if (response.statusCode == 200) {
-                  Get.snackbar('موفق', 'رنگ کلید با موفقیت تغییر کرد', backgroundColor: Colors.green);
-                  Navigator.of(context).pop();
-                } else {
-                  Get.snackbar('خطا', 'خطا در تغییر رنگ: ${response.statusMessage}', backgroundColor: Colors.red);
-                }
-              } catch (e) {
-                Get.snackbar('خطا', 'خطا در ارتباط با سرور: $e', backgroundColor: Colors.red);
-              }
-            },
             child: const Text('ثبت'),
           ),
         ],

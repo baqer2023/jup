@@ -30,7 +30,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               final token = snapshot.data ?? '';
               return GestureDetector(
                 onTap: () {
-                  print('Token received: $token');
                   if (token.isNotEmpty) {
                     ProfilePage.showProfileDialog(token);
                   }
@@ -95,18 +94,39 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   /// هندل خروج
-  void _handleLogout(BuildContext context) {
-    Get.defaultDialog(
-      title: "خروج",
-      middleText: "آیا مطمئن هستید که می‌خواهید خارج شوید؟",
-      textCancel: "خیر",
-      textConfirm: "بله",
-      confirmTextColor: Colors.white,
-      onConfirm: () {
-        Get.offAllNamed("/login");
-      },
-    );
-  }
+void _handleLogout(BuildContext context) {
+  Get.defaultDialog(
+    title: "خروج",
+    titleStyle: const TextStyle(
+      color: Colors.black,
+      fontWeight: FontWeight.bold,
+      fontSize: 18,
+    ),
+    middleText: "آیا مطمئن هستید که می‌خواهید خارج شوید؟",
+    middleTextStyle: const TextStyle(
+      color: Colors.black87,
+      fontSize: 14,
+    ),
+    backgroundColor: Colors.white,
+    textCancel: "خیر",
+    textConfirm: "بله",
+    confirmTextColor: Colors.white,
+    cancelTextColor: Colors.black,
+    buttonColor: Colors.blue, // رنگ دکمه تأیید
+    onConfirm: () async {
+      // بستن دیالوگ
+      Get.back();
+
+      // پاک کردن توکن‌ها
+      await UserStoreService.to.deleteToken();
+      await UserStoreService.to.deleteRefreshToken();
+
+      // رفتن به صفحه لاگین
+      Get.offAllNamed("/login");
+    },
+  );
+}
+
 
   /// هندل اعلان‌ها
   void _handleNotifications(BuildContext context) {

@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:my_app32/features/main/pages/main/main_controller.dart';
 import 'package:my_app32/features/main/repository/home_repository.dart';
 
-
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
 
@@ -77,7 +76,6 @@ class Sidebar extends StatelessWidget {
                 textAlign: TextAlign.right,
               ),
               onTap: () {
-                // بستن Drawer و رفتن به صفحه DeviceView
                 // Navigator.pop(context);
                 // Get.to(() => const DeviceView());
               },
@@ -85,8 +83,7 @@ class Sidebar extends StatelessWidget {
 
             // سناریوها
             ListTile(
-              leading:
-                  const Icon(Icons.edit_calendar_outlined, color: Colors.black87),
+              leading: const Icon(Icons.edit_calendar_outlined, color: Colors.black87),
               title: const Text(
                 'سناریوها',
                 style: TextStyle(
@@ -128,19 +125,7 @@ class Sidebar extends StatelessWidget {
 
             const Divider(),
 
-            // خروج
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text(
-                'خروج',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontFamily: 'IranYekan',
-                ),
-                textAlign: TextAlign.right,
-              ),
-              onTap: () => controller.onTapLogOut(),
-            ),
+            // 🚫 خروج اینجا حذف شده
           ],
         ),
       ),
