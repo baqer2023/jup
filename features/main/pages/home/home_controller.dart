@@ -1,5 +1,7 @@
 // import 'package:flutter/foundation.dart';
+import 'package:my_app32/app/models/weather_models.dart';
 import 'package:my_app32/app/services/token_refresh_service.dart';
+import 'package:my_app32/app/services/weather_service.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/models/home/get_dashboards_response_model.dart';
 import 'package:flutter/material.dart';
@@ -36,20 +38,37 @@ class HomeController extends GetxController with AppUtilsMixin {
   String token = '';
 RxList<DeviceItem> deviceList = <DeviceItem>[].obs;
 RxString selectedLocationId = ''.obs;
-
+late Future<WeatherData> weatherFuture;
 
 
   @override
   void onInit() {
     super.onInit();
     _initializeToken();
+
+
+    // مقدار اولیه آب‌وهوا
+    weatherFuture = WeatherApiService(
+      apiKey: 'e6f7286f932ef4636fdfb82a45266d17',
+    ).getWeather(lat: 35.7219, lon: 51.3347);
   }
+
+
+  
 
   Future<void> _initializeToken() async {
     token = await UserStoreService.to.getToken() ?? '';
     if (token.isNotEmpty) {
       await fetchUserLocations();
     }
+  }
+
+ // برای رفرش دستی
+  Future<void> refreshWeather() async {
+    weatherFuture = WeatherApiService(
+      apiKey: 'e6f7286f932ef4636fdfb82a45266d17',
+    ).getWeather(lat: 35.7219, lon: 51.3347);
+    update(); // باعث میشه ویجت‌هایی که به controller گوش میدن دوباره ساخته بشن
   }
 
   // ------------------- User Locations -------------------
@@ -142,6 +161,7 @@ Future<void> fetchDevicesByLocation(String dashboardId) async {
       await tokenService.checkAndRefreshToken();
       await fetchUserLocations();
       deviceList.clear();
+      await refreshWeather();
     } catch (e) {
       print('Error refreshing data: $e');
     } finally {
