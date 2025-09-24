@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:my_app32/features/groups/pages/CreateGroupStep1Page.dart';
+
+class GroupsPage extends StatelessWidget {
+  const GroupsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // نمونه داده‌ها
+    final groups = <String>[].obs; // اگر خالی باشه، پیام نمایش داده میشه
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("گروه‌ها")),
+      body: Obx(() {
+        if (groups.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 180,
+                    child: SvgPicture.asset('assets/svg/NGroupF.svg', fit: BoxFit.fill),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "تا کنون گروهی ایجاد نشده‌است، جهت ایجاد گروه جدید روی دکمه زیر کلیک کنید",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.to(() => const CreateGroupStep1Page());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 16),
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                    child: const Text("ایجاد گروه جدید"),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // نمایش لیست گروه‌ها اگر موجود باشد
+        return ListView.builder(
+          itemCount: groups.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text(groups[index]),
+            );
+          },
+        );
+      }),
+    );
+  }
+}

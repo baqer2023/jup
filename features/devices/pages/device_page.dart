@@ -1,55 +1,31 @@
-import 'package:dio/dio.dart';
-import 'package:my_app32/app/services/realable_controller.dart';
+import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:my_app32/app/core/app_constants.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
-import 'package:my_app32/app/services/weather_service.dart';
+import 'package:my_app32/app/services/realable_controller.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/pages/home/Add_device_page.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
-import 'package:my_app32/features/widgets/weather.dart';
-import 'package:my_app32/features/widgets/category_selector_widget.dart';
-import 'package:my_app32/features/main/pages/home/profile.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-class HomePage extends BaseView<HomeController> {
-  const HomePage({super.key});
+class DevicesPage extends BaseView<HomeController> {
+  const DevicesPage({super.key});
 
   @override
   Widget body() {
-    return DefaultTabController(
-      length: 3,
-      child: Builder(
-        builder: (context) {
-          final tabController = DefaultTabController.of(context);
-          return Scaffold(
-            endDrawer: const Sidebar(),
-            appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
-
-            body: TabBarView(
-              children: [
-                _buildMainContent(),
-                const Center(child: Text('To be Built Soon')),
-                const Center(child: Text('Under Construction')),
-              ],
-            ),
-          );
-        },
-      ),
+    return Scaffold(
+      endDrawer: const Sidebar(),
+      appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
+      body: _buildDevicesContent(),
     );
   }
 
-  Widget _buildMainContent() {
-    // Reactive variable برای نگه داشتن مکان انتخاب شده
-    // final RxString selectedLocationId = ''.obs;
-
+  Widget _buildDevicesContent() {
     return Obx(() {
       final locations = controller.userLocations;
       final devices = controller.deviceList;
@@ -61,8 +37,6 @@ class HomePage extends BaseView<HomeController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16),
-              _buildWeatherSection(),
               const SizedBox(height: 24),
 
               // دکمه‌ها و عنوان
@@ -90,11 +64,9 @@ class HomePage extends BaseView<HomeController> {
                           ),
                           child: const Text('ثبت دستگاه'),
                         ),
-
                         const SizedBox(width: 12),
                         ElevatedButton(
-                          onPressed:
-                              _showAddLocationDialog, // اینجا تابع مدال را فراخوانی می‌کنیم
+                          onPressed: _showAddLocationDialog,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.yellow.shade700,
@@ -128,7 +100,7 @@ class HomePage extends BaseView<HomeController> {
               const Divider(thickness: 2),
               const SizedBox(height: 16),
 
-              // لیست مکان‌ها با انتخاب فعال
+              // لیست مکان‌ها
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SizedBox(
@@ -185,7 +157,7 @@ class HomePage extends BaseView<HomeController> {
               ),
               const SizedBox(height: 16),
 
-             // لیست دستگاه‌ها
+              // لیست دستگاه‌ها
               if (devices.isEmpty)
                  Center(
     child: Padding(
@@ -223,19 +195,9 @@ class HomePage extends BaseView<HomeController> {
     });
   }
 
-  Widget _buildWeatherSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SizedBox(
-        width: double.infinity,
-        child: WeatherDisplay(
-          weatherFuture: controller.weatherFuture, // ⬅️ از کنترلر بخون
-        ),
-      ),
-    );
-  }
 
-  // ------------------- Smart Devices Grid -------------------
+
+ // ------------------- Smart Devices Grid -------------------
   Widget _buildSmartDevicesGrid() {
     return Obx(() {
       final devices = controller.deviceList;
@@ -1058,6 +1020,8 @@ Widget _buildSwitchRow({
   }
 }
 
+
+
 // ------------------- Color Picker Widget -------------------
 class _ColorPreviewPicker extends StatelessWidget {
   final String label;
@@ -1193,3 +1157,4 @@ class _ColorPreviewPicker extends StatelessWidget {
     );
   }
 }
+
