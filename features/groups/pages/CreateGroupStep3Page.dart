@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 class CreateGroupStep3Page extends StatelessWidget {
   final String groupName;
   final String groupDescription;
-  final List<String> devices;
+  final String groupId;
 
   const CreateGroupStep3Page({
     super.key,
     required this.groupName,
     required this.groupDescription,
-    required this.devices,
+    required this.groupId,
   });
 
   @override

@@ -34,11 +34,14 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
   String tokenGroup = '';
   RxString selectedLocationIdGroup = 'all'.obs;
   late Future<WeatherData> weatherFutureGroup;
+  var groups = <Map<String, dynamic>>[].obs;
+  var isLoading = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _initializeTokenGroup();
+    initializeTokenGroup();
+  
 
     // مقدار اولیه آب‌وهوا
     weatherFutureGroup = WeatherApiService(
@@ -46,10 +49,11 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
     ).getWeather(lat: 35.7219, lon: 51.3347);
   }
 
-  Future<void> _initializeTokenGroup() async {
+  Future<void> initializeTokenGroup() async {
     tokenGroup = await UserStoreService.to.getToken() ?? '';
     if (tokenGroup.isNotEmpty) {
       await fetchUserLocationsGroup();
+      await fetchGroups(); // fetchGroups بعد از آماده شدن توکن
     }
   }
 
@@ -256,4 +260,135 @@ Future<void> fetchAllDevicesGroup() async {
           backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
+  // -----------------------------------------------------------
+
+  Future<String?> saveGroup(String title, String description) async {
+  if (title.trim().isEmpty) {
+    Get.snackbar("خطا", "نام گروه را وارد کنید");
+    return null;
+  }
+
+  try {
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json'
+    };
+
+    final data = json.encode({
+      "title": title,
+      "description": description,
+    });
+
+    var dio = Dio();
+    var response = await dio.request(
+      'http://45.149.76.245:8080/api/customer/save',
+      options: Options(method: 'POST', headers: headers),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      final raw = response.data;
+      final savedId = raw["id"]?.toString() ?? raw["customerId"]?.toString();
+      if (savedId != null) {
+        Get.snackbar("موفقیت", "گروه با موفقیت ثبت شد");
+        return savedId;
+      } else {
+        Get.snackbar("خطا", "آی‌دی از سرور دریافت نشد");
+      }
+    } else {
+      Get.snackbar("خطا", response.statusMessage ?? "خطای ناشناخته");
+    }
+  } catch (e) {
+    Get.snackbar("خطا", e.toString());
+  }
+  return null;
+}
+
+
+
+Future<bool> assignDevicesPayload(List<Map<String, dynamic>> payload) async {
+  if (payload.isEmpty) {
+    Get.snackbar('خطا', 'هیچ دستگاهی برای ارسال موجود نیست');
+    return false;
+  }
+
+  try {
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json',
+    };
+
+    final data = json.encode(payload);
+    print('assignToCustomer payload json: $data');
+
+    var dio = Dio();
+    final response = await dio.request(
+      'http://45.149.76.245:8080/api/device/assignToCustomer',
+      options: Options(method: 'POST', headers: headers),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      Get.snackbar('موفق', 'دستگاه‌ها با موفقیت اختصاص داده شدند');
+      print('assignToCustomer response: ${response.data}');
+      return true;
+    } else {
+      Get.snackbar('خطا', response.statusMessage ?? 'خطای سرور');
+      print('assignToCustomer failed: ${response.statusMessage}');
+      return false;
+    }
+  } catch (e, st) {
+    print('Error in assignDevicesPayload: $e');
+    print(st);
+    Get.snackbar('خطا', e.toString());
+    return false;
+  }
+}
+
+
+
+
+
+ Future<void> fetchGroups() async {
+    try {
+      isLoading.value = true;
+
+      final headers = {
+        'Authorization': 'Bearer $tokenGroup',
+        'Content-Type': 'application/json'
+      };
+      final data = json.encode({
+        "sortProperty": "createdTime",
+        "pageSize": 10,
+        "page": 0,
+        "sortOrder": "ASC"
+      });
+
+      var dio = Dio();
+      final response = await dio.request(
+        'http://45.149.76.245:8080/api/customers/list',
+        options: Options(method: 'POST', headers: headers),
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        final dataList = response.data['data'] as List;
+        groups.value = dataList.map((e) => {
+          "id": e['id'],
+          "title": e['title'],
+        }).toList();
+      } else {
+        Get.snackbar('خطا', 'دریافت گروه‌ها ناموفق بود');
+      }
+    } catch (e) {
+      Get.snackbar('خطا', 'خطا در دریافت گروه‌ها: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+
+
+
+
 }
