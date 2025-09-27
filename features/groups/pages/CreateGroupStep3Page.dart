@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:my_app32/features/groups/controllers/group_controller.dart';
 
 class CreateGroupStep3Page extends StatelessWidget {
   final String groupName;
@@ -15,13 +16,7 @@ class CreateGroupStep3Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final members = <String>[
-      "کاربر ۱",
-      "کاربر ۲",
-      "کاربر ۳",
-    ].obs;
-
-    final selectedMembers = <String>[].obs;
+    final controller = Get.find<HomeControllerGroup>();
 
     return Scaffold(
       appBar: AppBar(title: const Text("ایجاد گروه - مرحله ۳")),
@@ -29,56 +24,97 @@ class CreateGroupStep3Page extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const Text("اعضای گروه را انتخاب کنید:"),
+            const Text("افزودن مشتری جدید به گروه"),
             const SizedBox(height: 16),
-            Expanded(
-              child: Obx(
-                () => ListView.builder(
-                  itemCount: members.length,
-                  itemBuilder: (context, index) {
-                    final member = members[index];
-                    final isSelected = selectedMembers.contains(member);
 
-                    return ListTile(
-                      title: Text(member),
-                      trailing: Checkbox(
-                        value: isSelected,
-                        onChanged: (val) {
-                          if (val == true) {
-                            selectedMembers.add(member);
-                          } else {
-                            selectedMembers.remove(member);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text("قبلی"),
-                ),
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text("انصراف"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // ثبت گروه و اعضا
-                    Get.snackbar("موفقیت", "گروه $groupName با موفقیت ایجاد شد");
-                    Get.back(); // برگشت به صفحه گروه‌ها
-                  },
-                  child: const Text("ثبت"),
-                ),
-              ],
+            ElevatedButton.icon(
+              onPressed: () {
+                _showAddCustomerDialog(context, controller);
+              },
+              icon: const Icon(Icons.person_add),
+              label: const Text("افزودن مشتری جدید"),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAddCustomerDialog(
+      BuildContext context, HomeControllerGroup controller) {
+    final firstNameCtrl = TextEditingController();
+    final lastNameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController(text: "98");
+    final codeCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("افزودن مشتری جدید"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: firstNameCtrl,
+                decoration: const InputDecoration(labelText: "نام"),
+              ),
+              TextField(
+                controller: lastNameCtrl,
+                decoration: const InputDecoration(labelText: "نام خانوادگی"),
+              ),
+              TextField(
+                controller: phoneCtrl,
+                decoration:
+                    const InputDecoration(labelText: "شماره موبایل (با 98 یا 0)"),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: codeCtrl,
+                      decoration: const InputDecoration(labelText: "کد تایید"),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final phone = phoneCtrl.text.trim();
+                      if (phone.isNotEmpty) {
+                        await controller.sendVerificationCode(phone);
+                      }
+                    },
+                    child: const Text("ارسال کد"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text("انصراف"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final success = await controller.addNewCustomer(
+                customerId: groupId,
+                firstName: firstNameCtrl.text.trim(),
+                lastName: lastNameCtrl.text.trim(),
+                phoneNumber: phoneCtrl.text.trim(),
+                verificationCode: codeCtrl.text.trim(),
+              );
+
+              if (success) {
+                Get.back(); // بستن مدال
+                Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
+              }
+            },
+            child: const Text("ثبت"),
+          ),
+        ],
       ),
     );
   }

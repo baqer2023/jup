@@ -36,6 +36,8 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
   late Future<WeatherData> weatherFutureGroup;
   var groups = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
+  // لیست کاربران یک گروه
+var groupUsers = <Map<String, dynamic>>[].obs;
 
   @override
   void onInit() {
@@ -387,6 +389,152 @@ Future<bool> assignDevicesPayload(List<Map<String, dynamic>> payload) async {
     }
   }
   
+
+
+
+
+
+// ------------------- Customers / Users -------------------
+
+/// گرفتن لیست مشتریان (کاربران) یک گروه
+Future<void> fetchGroupUsers(String customerId) async {
+  try {
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json'
+    };
+
+    final data = json.encode({
+      "sortProperty": "createdTime",
+      "pageSize": 10,
+      "page": 0,
+      "sortOrder": "ASC",
+      "customerId": customerId,
+    });
+
+    var dio = Dio();
+    final response = await dio.request(
+      'http://45.149.76.245:8080/api/customer/userInfos/list',
+      options: Options(method: 'POST', headers: headers),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      final users = response.data['data'] as List;
+      groupUsers.value = users.map((e) => {
+        "id": e['id'],
+        "firstName": e['firstName'],
+        "lastName": e['lastName'],
+        "phoneNumber": e['phoneNumber'],
+      }).toList();
+      print("✅ Users fetched: ${groupUsers.length}");
+    } else {
+      Get.snackbar('خطا', response.statusMessage ?? 'ناموفق در گرفتن لیست مشتریان');
+    }
+  } catch (e, st) {
+    print('❌ Error fetching group users: $e');
+    print(st);
+  }
+}
+
+/// ارسال کد تایید به شماره موبایل
+Future<bool> sendVerificationCode(String phoneNumber) async {
+  try {
+    // اگر شماره با 98 شروع شد → تبدیل به 0
+    if (phoneNumber.startsWith("98")) {
+      phoneNumber = "0${phoneNumber.substring(2)}";
+    }
+
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json',
+    };
+
+    final data = json.encode({"phoneNumber": phoneNumber});
+
+    print("📩 Sending request with: $data");
+
+    var dio = Dio();
+    final response = await dio.request(
+      'http://45.149.76.245:8080/api/user/customer/sendVerificationCode',
+      options: Options(method: 'POST', headers: headers),
+      data: data,
+    );
+
+    print("📥 Response: ${response.statusCode} => ${response.data}");
+
+    if (response.statusCode == 200) {
+      Get.snackbar("موفقیت", "کد تایید ارسال شد");
+      return true;
+    } else {
+      Get.snackbar("خطا", response.statusMessage ?? "خطای ارسال کد");
+      return false;
+    }
+  } catch (e, st) {
+    print("❌ Exception: $e");
+    print(st);
+    Get.snackbar("خطا", e.toString());
+    return false;
+  }
+}
+
+
+/// افزودن نهایی مشتری جدید
+Future<bool> addNewCustomer({
+  required String customerId,
+  required String firstName,
+  required String lastName,
+  required String phoneNumber,
+  required String verificationCode,
+}) async {
+  try {
+    // شماره به فرمت با صفر
+    if (phoneNumber.startsWith("98")) {
+      phoneNumber = "0${phoneNumber.substring(2)}";
+    }
+
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json',
+    };
+
+    final data = json.encode({
+      "customerId": customerId,
+      "firstName": firstName,
+      "lastName": lastName,
+      "phoneNumber": phoneNumber,
+      "verifyCode": verificationCode, // 👈 تغییر اصلی
+    });
+
+    print("📤 Add customer payload: $data");
+
+    var dio = Dio();
+    final response = await dio.request(
+      'http://45.149.76.245:8080/api/user/signup',
+      options: Options(method: 'POST', headers: headers),
+      data: data,
+    );
+
+    print("📥 Response: ${response.statusCode} => ${response.data}");
+
+    if (response.statusCode == 200) {
+      Get.snackbar("موفقیت", "مشتری جدید با موفقیت اضافه شد");
+      return true;
+    } else {
+      Get.snackbar("خطا", response.statusMessage ?? "خطای افزودن مشتری");
+      return false;
+    }
+  } catch (e, st) {
+    print("❌ Exception: $e");
+    print(st);
+    Get.snackbar("خطا", e.toString());
+    return false;
+  }
+}
+
+
+
+
 
 
 

@@ -2,15 +2,23 @@ import 'dart:convert';
 
 class DeviceItem {
   final String title;
+  final String sn;
+  final String dashboardTitle;
+  final String dashboardId;
+  final String dateCreation;
   final String deviceId;
   final String type;
   final bool onlineStatus;
-  final String deviceTypeName; // این خط باید باشه
+  final String deviceTypeName;
   final String deviceTypeCode;
-  final Map<String, dynamic>? ledColor; // ← تغییر داده شد
+  final Map<String, dynamic>? ledColor;
 
   DeviceItem({
     required this.title,
+    required this.sn,
+    required this.dashboardTitle,
+    required this.dashboardId,
+    required this.dateCreation,
     required this.deviceId,
     required this.type,
     required this.onlineStatus,
@@ -36,6 +44,10 @@ class DeviceItem {
 
     return DeviceItem(
       title: json['title'] ?? '',
+      sn: json['sn'] ?? '',
+      dashboardTitle: json['dashboardTitle'] ?? '',
+      dashboardId: json['dashboardId'] ?? '',
+      dateCreation: json['dateCreation'] ?? '',
       deviceId: json['deviceId'] ?? '',
       type: json['type'] ?? '',
       onlineStatus: json['onlineStatus'] ?? false,
@@ -43,5 +55,21 @@ class DeviceItem {
       deviceTypeCode: json['deviceTypeCode'] ?? '',
       ledColor: led,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "title": title,
+      "sn": sn,
+      "dashboardTitle": dashboardTitle,
+      "dashboardId": dashboardId,
+      "dateCreation": dateCreation,
+      "deviceId": deviceId,
+      "type": type,
+      "onlineStatus": onlineStatus,
+      "deviceTypeName": deviceTypeName,
+      "deviceTypeCode": deviceTypeCode,
+      "ledColor": ledColor,
+    };
   }
 }

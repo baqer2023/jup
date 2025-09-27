@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
 import 'package:my_app32/app/services/realable_controller.dart';
+import 'package:my_app32/features/config/device_config_page.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/pages/home/Add_device_page.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
@@ -437,17 +438,30 @@ Widget _buildSmartDeviceCard({
                     Align(
                       alignment: Alignment.bottomLeft,
                       child: PopupMenuButton<int>(
-                        icon: const Icon(Icons.more_vert, size: 20, color: Colors.black87),
-                        onSelected: (value) {
-                          if (value == 0) showLedColorDialog(device: device);
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 0,
-                            child: Text('تنظیمات پیشرفته'),
-                          ),
-                        ],
-                      ),
+  icon: const Icon(Icons.more_vert, size: 20, color: Colors.black87),
+  onSelected: (value) {
+    if (value == 0) {
+      showLedColorDialog(device: device);
+    } else if (value == 1) {
+      Get.to(() => DeviceConfigPage(
+            sn: device.sn,
+            deviceId: device.deviceId,
+          ));
+    }
+  },
+  itemBuilder: (context) => [
+    const PopupMenuItem(
+      value: 0,
+      child: Text('تنظیمات پیشرفته'),
+    ),
+    const PopupMenuItem(
+      value: 1,
+      child: Text('پیکربندی'),
+    ),
+  ],
+)
+
+,
                     ),
                     const Spacer(),
                     Obx(() {
