@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
-import 'package:my_app32/features/groups/pages/CreateGroupStep2Page.dart';
+import 'package:my_app32/features/groups/models/customer_device_model.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
+import 'CreateGroupStep2Page.dart';
 
 class GroupDevicesPage extends StatefulWidget {
   final String groupName;
@@ -22,85 +23,95 @@ class GroupDevicesPage extends StatefulWidget {
 }
 
 class _GroupDevicesPageState extends State<GroupDevicesPage> {
-  final HomeControllerGroup controller =
-      Get.put(HomeControllerGroup(Get.find()));
-  RxList<Map<String, dynamic>> customerDevices = <Map<String, dynamic>>[].obs;
+  final HomeControllerGroup controller = Get.put(HomeControllerGroup(Get.find()));
+
+  /// لیست id هایی که از fetchCustomerDeviceInfos میاد
+  RxSet<String> groupDeviceIds = <String>{}.obs;
+
+  /// لیست دستگاه‌های نهایی (بعد از فیلتر شدن)
+  RxList<CustomerDevice> filteredDevices = <CustomerDevice>[].obs;
+
+  /// برای فیلتر لوکیشن
+  RxString selectedLocationId = "all".obs;
 
   @override
   void initState() {
     super.initState();
-    fetchGroupDevices();
-    if (controller.userLocationsGroup.isEmpty) {
-      controller.fetchUserLocationsGroup();
-    }
+    initializeData();
   }
 
-  Future<void> fetchGroupDevices() async {
-    final devices = await controller.fetchCustomerDeviceInfos(widget.groupId);
-    customerDevices.value = devices;
+  Future<void> initializeData() async {
+    await fetchGroupDeviceIds();
+    await controller.fetchUserLocationsGroup();
+    await fetchFilteredDevices();
+  }
+
+  Future<void> fetchGroupDeviceIds() async {
+    final rawDevices = await controller.fetchCustomerDeviceInfos(widget.groupId);
+    groupDeviceIds.value = rawDevices.map((d) => d.id).toSet();
+  }
+
+  Future<void> fetchFilteredDevices() async {
+    List<DeviceItem> rawDevices = [];
+
+    if (selectedLocationId.value == "all") {
+      await controller.fetchAllDevicesGroup();
+      rawDevices = controller.deviceListGroup;
+    } else {
+      await controller.fetchDevicesByLocationGroup(selectedLocationId.value);
+      rawDevices = controller.deviceListGroup;
+    }
+
+    // تبدیل DeviceItem به CustomerDevice برای فیلتر گروه
+    final allDevices = rawDevices.map((d) {
+      return CustomerDevice(
+        id: d.deviceId,
+        name: d.title,
+        label: d.title,
+        deviceProfileName: d.deviceTypeName ?? '',
+      );
+    }).toList();
+
+    // فقط دستگاه‌های موجود در گروه
+    filteredDevices.value =
+        allDevices.where((d) => groupDeviceIds.contains(d.id)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("دستگاه‌های گروه: ${widget.groupName}")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ElevatedButton.icon(
-              onPressed: () {
-                Get.to(() => CreateGroupStep2Page(
-                      groupName: widget.groupName,
-                      groupDescription: widget.groupDescription,
-                      groupId: widget.groupId,
-                    ));
-              },
-              icon: const Icon(Icons.add),
-              label: const Text("اضافه کردن دستگاه به گروه"),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "لیست دستگاه‌های گروه:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+      body: Column(
+        children: [
+          const SizedBox(height: 8),
 
-            // فیلتر گروه‌ها
-            Obx(() {
-              final groups = controller.userLocationsGroup;
-              final selectedId = controller.selectedLocationIdGroup.value;
+          /// فیلتر لوکیشن‌ها
+          Obx(() {
+            final locations = controller.userLocationsGroup;
+            return SizedBox(
+              height: 45,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: locations.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final id = index == 0 ? "all" : locations[index - 1].id ?? "unknown";
+                  final title = index == 0 ? "همه" : locations[index - 1].title;
 
-              return SizedBox(
-                height: 45,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: groups.length + 1,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final id =
-                        index == 0 ? 'all' : groups[index - 1].id ?? 'unknown';
-                    final title = index == 0 ? 'همه' : groups[index - 1].title;
-                    final isSelected = selectedId == id && selectedId.isNotEmpty;
-
-                    return GestureDetector(
-                      onTap: () async {
-                        controller.selectedLocationIdGroup.value = id;
-                        if (id == 'all') {
-                          await controller.fetchAllDevicesGroup();
-                        } else {
-                          await controller.fetchDevicesByLocationGroup(id);
-                        }
-                        await fetchGroupDevices(); // همیشه به‌روز
-                      },
-                      child: AnimatedContainer(
+                  return GestureDetector(
+                    onTap: () async {
+                      selectedLocationId.value = id;
+                      await fetchFilteredDevices();
+                    },
+                    child: Obx(() {
+                      final isSelected = selectedLocationId.value == id;
+                      return AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border.all(
-                            color: isSelected ? Colors.blue : Colors.grey.shade300,
+                            color: isSelected ? Colors.yellow : Colors.grey.shade300,
                             width: isSelected ? 2 : 1,
                           ),
                           borderRadius: BorderRadius.circular(12),
@@ -109,102 +120,102 @@ class _GroupDevicesPageState extends State<GroupDevicesPage> {
                           child: Text(
                             title,
                             style: TextStyle(
-                              color: isSelected ? Colors.blue : Colors.grey,
-                              fontWeight:
-                                  isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.yellow.shade700 : Colors.grey,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                         ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            );
+          }),
+
+          const SizedBox(height: 16),
+
+          /// دکمه افزودن دستگاه به گروه
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("افزودن دستگاه به گروه"),
+                onPressed: () {
+                  Get.to(() => CreateGroupStep2Page(
+                        groupName: widget.groupName,
+                        groupDescription: widget.groupDescription,
+                        groupId: widget.groupId,
+                      ));
+                },
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          /// لیست دستگاه‌ها
+          Expanded(
+            child: Obx(() {
+              if (filteredDevices.isEmpty) {
+                return const Center(child: Text("هیچ دستگاهی یافت نشد"));
+              }
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: filteredDevices.map((customerDevice) {
+                    // پیدا کردن DeviceItem متناظر برای نمایش بهتر
+                    DeviceItem? deviceItem;
+try {
+  deviceItem = controller.deviceListGroup.firstWhere(
+    (d) => d.deviceId == customerDevice.id,
+  );
+} catch (_) {
+  deviceItem = null;
+}
+
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: DeviceCardSimpleCustom(
+                        customerDevice: customerDevice,
+                        deviceItem: deviceItem,
                       ),
                     );
-                  },
+                  }).toList(),
                 ),
               );
             }),
-
-            const SizedBox(height: 16),
-
-            // نمایش دستگاه‌ها
-            Expanded(
-              child: Obx(() {
-                final allDevices = controller.deviceListGroup;
-
-                // فقط دستگاه‌هایی که در customerDevices هستند
-                final devicesInGroup = allDevices.where((device) {
-                  final deviceIdStr = device.deviceId?.toString().trim() ?? '';
-                  return customerDevices.any((cd) =>
-                      (cd['deviceId']?.toString().trim() ?? '') == deviceIdStr);
-                }).toList();
-
-                if (devicesInGroup.isEmpty) {
-                  return const Center(child: Text("هیچ دستگاهی در این گروه موجود نیست"));
-                }
-
-                final double cardWidth = 300;
-                final double cardHeight = 220;
-                final double circleSize = 42;
-
-                return SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 40, right: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: devicesInGroup.map((device) {
-                        final locationTitle = device.dashboardTitle.isNotEmpty
-                            ? device.dashboardTitle
-                            : "نامشخص";
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: DeviceCard(
-                            device: device,
-                            locationTitle: locationTitle,
-                            cardWidth: cardWidth,
-                            cardHeight: cardHeight,
-                            circleSize: circleSize,
-                            isAlreadyInGroup: true,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class DeviceCard extends StatefulWidget {
-  final DeviceItem device;
-  final String locationTitle;
-  final double cardWidth;
-  final double cardHeight;
-  final double circleSize;
-  final bool isAlreadyInGroup;
+class DeviceCardSimpleCustom extends StatefulWidget {
+  final CustomerDevice customerDevice;
+  final DeviceItem? deviceItem;
 
-  const DeviceCard({
+  const DeviceCardSimpleCustom({
     super.key,
-    required this.device,
-    required this.locationTitle,
-    required this.cardWidth,
-    required this.cardHeight,
-    required this.circleSize,
-    required this.isAlreadyInGroup,
+    required this.customerDevice,
+    this.deviceItem,
   });
 
   @override
-  State<DeviceCard> createState() => _DeviceCardState();
+  State<DeviceCardSimpleCustom> createState() => _DeviceCardSimpleCustomState();
 }
 
-class _DeviceCardState extends State<DeviceCard> {
+class _DeviceCardSimpleCustomState extends State<DeviceCardSimpleCustom> {
   bool isActive = false;
 
-  String getKeyType(String typeName) {
-    switch (typeName) {
+  String getDeviceTypeName() {
+    final type = widget.deviceItem?.deviceTypeName ?? widget.customerDevice.deviceProfileName;
+    switch (type) {
       case 'key-1':
         return 'تک‌پل';
       case 'key-2':
@@ -216,7 +227,14 @@ class _DeviceCardState extends State<DeviceCard> {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = Colors.green.shade400;
+    final double cardHeight = 180;
+    final double circleSize = 42;
+    final double cardWidth = MediaQuery.of(context).size.width * 0.9;
+    final borderColor = isActive ? Colors.blue.shade400 : Colors.grey.shade400;
+
+    // استفاده از اطلاعات کامل DeviceItem در صورت وجود
+    final displayName = widget.deviceItem?.title ?? widget.customerDevice.label;
+    final deviceType = getDeviceTypeName();
 
     return Center(
       child: Stack(
@@ -230,74 +248,58 @@ class _DeviceCardState extends State<DeviceCard> {
               side: BorderSide(color: borderColor, width: 2.5),
             ),
             child: Container(
-              width: widget.cardWidth,
-              height: widget.cardHeight,
+              width: cardWidth,
+              height: cardHeight,
               padding: EdgeInsets.fromLTRB(
-                  16, widget.circleSize / 1.2, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                16,
+                circleSize / 1.5 + 24,
+                16,
+                16,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const SizedBox(width: 50),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            getKeyType(widget.device.deviceTypeName),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.device.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.locationTitle,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const Text(
-                            "اضافه شده قبلاً",
-                            style: TextStyle(fontSize: 12, color: Colors.green),
-                          ),
-                        ],
-                      ),
-                    ],
+                  Switch(
+                    value: isActive,
+                    onChanged: (val) => setState(() => isActive = val),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          displayName,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "نوع: $deviceType",
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
           Positioned(
-            top: -widget.circleSize / 3,
+            top: -circleSize / 4,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                width: widget.circleSize,
-                height: widget.circleSize,
+                width: circleSize,
+                height: circleSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: borderColor,
-                    width: 3,
-                  ),
+                  border: Border.all(color: borderColor, width: 3),
                 ),
                 child: ClipOval(
                   child: SvgPicture.asset(
-                    'assets/svg/on.svg',
+                    isActive ? 'assets/svg/on.svg' : 'assets/svg/off.svg',
                     fit: BoxFit.cover,
                   ),
                 ),

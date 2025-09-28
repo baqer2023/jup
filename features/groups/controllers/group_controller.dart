@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:my_app32/app/models/weather_models.dart';
 import 'package:my_app32/app/services/token_refresh_service.dart';
 import 'package:my_app32/app/services/weather_service.dart';
+import 'package:my_app32/features/groups/models/customer_device_model.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/models/home/get_dashboards_response_model.dart';
 import 'package:flutter/material.dart';
@@ -307,37 +308,44 @@ Future<void> fetchAllDevicesGroup() async {
   return null;
 }
 
-
-
-Future<bool> assignDevicesPayload(List<Map<String, dynamic>> payload) async {
-  if (payload.isEmpty) {
+Future<bool> assignDevicesPayload(List<DeviceItem> selectedDevices, String customerId) async {
+  if (selectedDevices.isEmpty) {
     Get.snackbar('خطا', 'هیچ دستگاهی برای ارسال موجود نیست');
     return false;
   }
 
   try {
+    // ساخت payload مشابه Postman
+    final payload = selectedDevices.map((device) {
+      return {
+        "customerId": customerId,
+        "deviceId": device.deviceId,
+        "dashboardId": device.dashboardId,
+      };
+    }).toList();
+
     final headers = {
       'Authorization': 'Bearer $tokenGroup',
       'Content-Type': 'application/json',
     };
 
-    final data = json.encode(payload);
-    print('assignToCustomer payload json: $data');
+    print('assignToCustomer payload: $payload');
 
     var dio = Dio();
-    final response = await dio.request(
+    final response = await dio.post(
       'http://45.149.76.245:8080/api/device/assignToCustomer',
-      options: Options(method: 'POST', headers: headers),
-      data: data,
+      data: payload, // ❌ بدون json.encode
+      options: Options(headers: headers),
     );
+
+    print('Status code: ${response.statusCode}');
+    print('Response data: ${response.data}');
 
     if (response.statusCode == 200) {
       Get.snackbar('موفق', 'دستگاه‌ها با موفقیت اختصاص داده شدند');
-      print('assignToCustomer response: ${response.data}');
       return true;
     } else {
       Get.snackbar('خطا', response.statusMessage ?? 'خطای سرور');
-      print('assignToCustomer failed: ${response.statusMessage}');
       return false;
     }
   } catch (e, st) {
@@ -349,8 +357,9 @@ Future<bool> assignDevicesPayload(List<Map<String, dynamic>> payload) async {
 }
 
 
+
 /// دریافت اطلاعات دستگاه‌ها برای یک گروه خاص
-Future<List<Map<String, dynamic>>> fetchCustomerDeviceInfos(String customerId) async {
+Future<List<CustomerDevice>> fetchCustomerDeviceInfos(String customerId) async {
   try {
     if (tokenGroup.isEmpty) return [];
 
@@ -377,7 +386,7 @@ Future<List<Map<String, dynamic>>> fetchCustomerDeviceInfos(String customerId) a
     if (response.statusCode == 200) {
       final raw = response.data['data'] as List;
       print("✅ DeviceInfos fetched: ${raw.length}");
-      return raw.map((e) => Map<String, dynamic>.from(e)).toList();
+      return raw.map((e) => CustomerDevice.fromJson(e)).toList();
     } else {
       print("❌ Failed to fetch deviceInfos: ${response.statusMessage}");
       return [];
@@ -388,6 +397,7 @@ Future<List<Map<String, dynamic>>> fetchCustomerDeviceInfos(String customerId) a
     return [];
   }
 }
+
 
 
 

@@ -3,11 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
-import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'CreateGroupStep3Page.dart';
 
-class CreateGroupStep2Page extends StatelessWidget {
+class CreateGroupStep2Page extends StatefulWidget {
   final String groupName;
   final String groupDescription;
   final String groupId;
@@ -18,6 +16,37 @@ class CreateGroupStep2Page extends StatelessWidget {
     required this.groupDescription,
     required this.groupId,
   });
+
+  @override
+  State<CreateGroupStep2Page> createState() => _CreateGroupStep2PageState();
+}
+
+class _CreateGroupStep2PageState extends State<CreateGroupStep2Page> {
+  final HomeControllerGroup controller = Get.put(HomeControllerGroup(Get.find()));
+
+  /// دستگاه‌هایی که کاربر انتخاب کرده
+  RxList<DeviceItem> selectedDevices = <DeviceItem>[].obs;
+
+  /// id دستگاه‌های موجود در گروه
+  RxSet<String> groupDeviceIds = <String>{}.obs;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeData();
+  }
+
+  Future<void> initializeData() async {
+    // 1. دریافت id دستگاه‌های گروه
+    final customerDevices = await controller.fetchCustomerDeviceInfos(widget.groupId);
+    groupDeviceIds.value = customerDevices.map((d) => d.id).toSet();
+
+    // 2. دریافت لوکیشن‌ها
+    await controller.fetchUserLocationsGroup();
+
+    // 3. بار اول همه دستگاه‌ها
+    await controller.fetchAllDevicesGroup();
+  }
 
   String getDeviceStepType(DeviceItem device) {
     switch (device.deviceTypeName) {
@@ -32,13 +61,6 @@ class CreateGroupStep2Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final HomeControllerGroup controller = Get.put(HomeControllerGroup(Get.find()));
-    final selectedDevices = <DeviceItem>[].obs;
-
-    if (controller.userLocationsGroup.isEmpty) {
-      controller.fetchUserLocationsGroup();
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text("ایجاد گروه - مرحله ۲")),
       body: Padding(
@@ -48,29 +70,29 @@ class CreateGroupStep2Page extends StatelessWidget {
             const Text("دستگاه‌هایی که می‌خواهید اضافه کنید را انتخاب کنید:"),
             const SizedBox(height: 16),
 
-            // فیلتر گروه‌ها
+            /// فیلتر لوکیشن‌ها
             Obx(() {
-              final groups = controller.userLocationsGroup;
+              final locations = controller.userLocationsGroup;
               final selectedId = controller.selectedLocationIdGroup.value;
 
               return SizedBox(
                 height: 45,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: groups.length + 1,
+                  itemCount: locations.length + 1,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
-                    final id = index == 0 ? 'all' : groups[index - 1].id ?? 'unknown';
-                    final title = index == 0 ? 'همه' : groups[index - 1].title;
-                    final isSelected = selectedId == id && selectedId.isNotEmpty;
+                    final id = index == 0 ? 'all' : locations[index - 1].id ?? 'unknown';
+                    final title = index == 0 ? 'همه' : locations[index - 1].title;
+                    final isSelected = selectedId == id;
 
                     return GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         controller.selectedLocationIdGroup.value = id;
                         if (id == 'all') {
-                          controller.fetchAllDevicesGroup();
+                          await controller.fetchAllDevicesGroup();
                         } else {
-                          controller.fetchDevicesByLocationGroup(id);
+                          await controller.fetchDevicesByLocationGroup(id);
                         }
                       },
                       child: AnimatedContainer(
@@ -102,7 +124,7 @@ class CreateGroupStep2Page extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // کارت‌های دستگاه‌ها
+            /// لیست دستگاه‌ها
             Expanded(
               child: Obx(() {
                 final allDevices = controller.deviceListGroup;
@@ -112,32 +134,35 @@ class CreateGroupStep2Page extends StatelessWidget {
                     ? allDevices
                     : allDevices.where((d) => d.dashboardId == selectedLocationId).toList();
 
+                // فقط دستگاه‌هایی که جزو گروه نیستند
+                final devicesNotInGroup = filteredByLocation
+                    .where((d) => !groupDeviceIds.contains(d.deviceId))
+                    .toList();
+
+                if (devicesNotInGroup.isEmpty) {
+                  return const Center(child: Text("هیچ دستگاهی برای اضافه کردن وجود ندارد"));
+                }
+
                 return SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.only(right: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      children: filteredByLocation.map((device) {
-                        final isSelected = selectedDevices.contains(device);
+                      children: devicesNotInGroup.map((device) {
                         final locationTitle = device.dashboardTitle.isNotEmpty
                             ? device.dashboardTitle
                             : "نامشخص";
+                        final isSelected = selectedDevices.contains(device);
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: DeviceCardSimple(
   device: device,
-  deviceType: getDeviceStepType(device), // اینجا
+  deviceType: getDeviceStepType(device),
   locationTitle: locationTitle,
-  onTap: () {
-    if (isSelected) {
-      selectedDevices.remove(device);
-    } else {
-      selectedDevices.add(device);
-    }
-  },
-),
-
+  selectedDevices: selectedDevices, // اینجا لیست Rx را پاس بده
+)
+,
                         );
                       }).toList(),
                     ),
@@ -152,37 +177,38 @@ class CreateGroupStep2Page extends StatelessWidget {
               children: [
                 TextButton(onPressed: () => Get.back(), child: const Text("قبلی")),
                 TextButton(onPressed: () => Get.back(), child: const Text("انصراف")),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (selectedDevices.isEmpty) {
-                      Get.to(() => CreateGroupStep3Page(
-                            groupName: groupName,
-                            groupDescription: groupDescription,
-                            groupId: groupId,
-                          ));
-                      return;
-                    }
+ElevatedButton(
+  onPressed: () async {
+    if (selectedDevices.isEmpty) {
+      // اگر هیچ دستگاهی انتخاب نشده، مستقیم مرحله بعد
+      Get.to(() => CreateGroupStep3Page(
+            groupName: widget.groupName,
+            groupDescription: widget.groupDescription,
+            groupId: widget.groupId,
+          ));
+      return;
+    }
 
-                    List<Map<String, dynamic>> payload = selectedDevices.map((device) {
-                      return {
-                        "customerId": groupId,
-                        "deviceId": device.deviceId,
-                        "dashboardId": device.dashboardId,
-                      };
-                    }).toList();
+    // ارسال لیست دستگاه‌های انتخاب شده به سرور
+    final success = await controller.assignDevicesPayload(
+      selectedDevices, // لیست دستگاه‌های انتخاب شده
+      widget.groupId,  // customerId برای گروه
+    );
 
-                    final success = await controller.assignDevicesPayload(payload);
+    // اگر موفق بود، به مرحله بعد برو
+    if (success) {
+      Get.to(() => CreateGroupStep3Page(
+            groupName: widget.groupName,
+            groupDescription: widget.groupDescription,
+            groupId: widget.groupId,
+          ));
+    }
+  },
+  child: const Text("ثبت / بعدی"),
+),
 
-                    if (success) {
-                      Get.to(() => CreateGroupStep3Page(
-                            groupName: groupName,
-                            groupDescription: groupDescription,
-                            groupId: groupId,
-                          ));
-                    }
-                  },
-                  child: const Text("ثبت / بعدی"),
-                ),
+
+
               ],
             ),
           ],
@@ -192,19 +218,22 @@ class CreateGroupStep2Page extends StatelessWidget {
   }
 }
 
-// کارت دستگاه ساده با تاگل و SVG
+/// کارت دستگاه با تاگل و SVG
+/// کارت دستگاه با تاگل و SVG (اصلاح‌شده)
 class DeviceCardSimple extends StatefulWidget {
   final DeviceItem device;
   final String deviceType;
   final String locationTitle;
-  final VoidCallback onTap;
+  final RxList<DeviceItem> selectedDevices; // اضافه شد
+  final VoidCallback? onTap;
 
   const DeviceCardSimple({
     super.key,
     required this.device,
     required this.deviceType,
     required this.locationTitle,
-    required this.onTap,
+    required this.selectedDevices,
+    this.onTap,
   });
 
   @override
@@ -212,22 +241,42 @@ class DeviceCardSimple extends StatefulWidget {
 }
 
 class _DeviceCardSimpleState extends State<DeviceCardSimple> {
-  bool isActive = false;
+  late bool isActive;
+
+  @override
+  void initState() {
+    super.initState();
+    // مقدار اولیه بر اساس اینکه دستگاه در selectedDevices هست یا نه
+    isActive = widget.selectedDevices.contains(widget.device);
+  }
+
+  void toggleSelection() {
+    setState(() => isActive = !isActive);
+    if (isActive) {
+      if (!widget.selectedDevices.contains(widget.device)) {
+        widget.selectedDevices.add(widget.device);
+      }
+    } else {
+      widget.selectedDevices.remove(widget.device);
+    }
+
+    // فراخوانی callback اختیاری
+    if (widget.onTap != null) widget.onTap!();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final double cardHeight = 180;       // ارتفاع کارت
-    final double circleSize = 42;        // اندازه آیکن بالای کارت
-    final double cardWidth = MediaQuery.of(context).size.width * 0.9; // عرض کمی کمتر
+    final double cardHeight = 180;
+    final double circleSize = 42;
+    final double cardWidth = MediaQuery.of(context).size.width * 0.9;
     final borderColor = isActive ? Colors.blue.shade400 : Colors.grey.shade400;
 
     return Center(
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: toggleSelection,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // کارت اصلی
             Card(
               color: Colors.white,
               elevation: 5,
@@ -240,25 +289,22 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
                 height: cardHeight,
                 padding: EdgeInsets.fromLTRB(
                   16,
-                  circleSize / 1.5 + 24, // شروع پایین‌تر کل کارت
+                  circleSize / 1.5 + 24,
                   16,
                   16,
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, // متن‌ها و switch بالاتر
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Switch سمت چپ
                     Switch(
                       value: isActive,
-                      onChanged: (val) => setState(() => isActive = val),
+                      onChanged: (val) => toggleSelection(), // هماهنگ با کارت
                     ),
                     const SizedBox(width: 12),
-
-                    // ستون اطلاعات سمت راست
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.start, // بالاتر قرار گرفتن متن‌ها
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
                             widget.device.title,
@@ -268,14 +314,12 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
                           const SizedBox(height: 4),
                           Text(
                             widget.deviceType,
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             widget.locationTitle,
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -284,10 +328,8 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
                 ),
               ),
             ),
-
-            // آیکن بالای کارت
             Positioned(
-              top: -circleSize / 4, // کمی پایین‌تر نسبت به قبل
+              top: -circleSize / 4,
               left: 0,
               right: 0,
               child: Center(
