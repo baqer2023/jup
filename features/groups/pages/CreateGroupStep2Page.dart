@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
-import 'package:dio/dio.dart';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'CreateGroupStep3Page.dart';
 
 class CreateGroupStep2Page extends StatelessWidget {
@@ -21,39 +22,11 @@ class CreateGroupStep2Page extends StatelessWidget {
   String getDeviceStepType(DeviceItem device) {
     switch (device.deviceTypeName) {
       case 'key-1':
-        return 'تک پله';
+        return 'تک‌پل';
       case 'key-2':
-        return 'دو پله';
+        return 'دوپل';
       default:
         return 'نامشخص';
-    }
-  }
-
-  // گرفتن لیست دستگاه‌ها از سرور
-  Future<List<Map<String, dynamic>>> fetchDevicesFromServer(String token) async {
-    final headers = {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    };
-    final data = json.encode({"page": 0, "pageSize": 100});
-    final dio = Dio();
-
-    final response = await dio.request(
-      'http://45.149.76.245:8080/api/device/getAllDevices',
-      options: Options(method: 'POST', headers: headers),
-      data: data,
-    );
-
-    if (response.statusCode == 200) {
-      final devicesData = response.data['data'] as List;
-      return devicesData.map((d) => {
-        "customerId": groupId,  // **رشته خالص**
-        "deviceId": d['deviceId'],
-        "dashboardId": d['dashboardId'],
-      }).toList();
-    } else {
-      Get.snackbar('خطا', 'دریافت دستگاه‌ها ناموفق بود');
-      return [];
     }
   }
 
@@ -75,7 +48,7 @@ class CreateGroupStep2Page extends StatelessWidget {
             const Text("دستگاه‌هایی که می‌خواهید اضافه کنید را انتخاب کنید:"),
             const SizedBox(height: 16),
 
-            // لیست گروه‌ها
+            // فیلتر گروه‌ها
             Obx(() {
               final groups = controller.userLocationsGroup;
               final selectedId = controller.selectedLocationIdGroup.value;
@@ -89,7 +62,7 @@ class CreateGroupStep2Page extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final id = index == 0 ? 'all' : groups[index - 1].id ?? 'unknown';
                     final title = index == 0 ? 'همه' : groups[index - 1].title;
-                    final isSelected = selectedId == id;
+                    final isSelected = selectedId == id && selectedId.isNotEmpty;
 
                     return GestureDetector(
                       onTap: () {
@@ -129,51 +102,46 @@ class CreateGroupStep2Page extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // لیست دستگاه‌ها
+            // کارت‌های دستگاه‌ها
             Expanded(
               child: Obx(() {
-                final devices = controller.deviceListGroup;
-                if (devices.isEmpty) return const Center(child: Text("دستگاهی موجود نیست"));
+                final allDevices = controller.deviceListGroup;
+                final selectedLocationId = controller.selectedLocationIdGroup.value;
 
-                return ListView.builder(
-                  itemCount: devices.length,
-                  itemBuilder: (context, index) {
-                    final device = devices[index];
+                final filteredByLocation = selectedLocationId == 'all'
+                    ? allDevices
+                    : allDevices.where((d) => d.dashboardId == selectedLocationId).toList();
 
-                    return Obx(() {
-                      final isSelected = selectedDevices.contains(device);
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: filteredByLocation.map((device) {
+                        final isSelected = selectedDevices.contains(device);
+                        final locationTitle = device.dashboardTitle.isNotEmpty
+                            ? device.dashboardTitle
+                            : "نامشخص";
 
-                      return ListTile(
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(device.title),
-                            Text(
-                              getDeviceStepType(device),
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                        trailing: Switch(
-                          value: isSelected,
-                          onChanged: (val) {
-                            if (val) {
-                              selectedDevices.add(device);
-                            } else {
-                              selectedDevices.remove(device);
-                            }
-                          },
-                        ),
-                        onTap: () {
-                          if (isSelected) {
-                            selectedDevices.remove(device);
-                          } else {
-                            selectedDevices.add(device);
-                          }
-                        },
-                      );
-                    });
-                  },
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: DeviceCardSimple(
+  device: device,
+  deviceType: getDeviceStepType(device), // اینجا
+  locationTitle: locationTitle,
+  onTap: () {
+    if (isSelected) {
+      selectedDevices.remove(device);
+    } else {
+      selectedDevices.add(device);
+    }
+  },
+),
+
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 );
               }),
             ),
@@ -186,8 +154,6 @@ class CreateGroupStep2Page extends StatelessWidget {
                 TextButton(onPressed: () => Get.back(), child: const Text("انصراف")),
                 ElevatedButton(
                   onPressed: () async {
-                    final selectedId = controller.selectedLocationIdGroup.value;
-
                     if (selectedDevices.isEmpty) {
                       Get.to(() => CreateGroupStep3Page(
                             groupName: groupName,
@@ -197,30 +163,13 @@ class CreateGroupStep2Page extends StatelessWidget {
                       return;
                     }
 
-                    List<DeviceItem> devicesToAssign = selectedDevices.toList();
-
-                    List<Map<String, dynamic>> payload = [];
-
-                    if (selectedId == 'all') {
-                      final serverDevices = await fetchDevicesFromServer(controller.tokenGroup);
-
-                      payload = serverDevices
-                          .where((d) => devicesToAssign.any((sd) => sd.deviceId == d['deviceId']))
-                          .toList();
-                    } else {
-                      payload = devicesToAssign.map((device) {
-                        return {
-                          "customerId": groupId,  // رشته خالص
-                          "deviceId": device.deviceId,
-                          "dashboardId": selectedId,
-                        };
-                      }).toList();
-                    }
-
-                    if (payload.isEmpty) {
-                      Get.snackbar('خطا', 'هیچ دستگاهی برای ارسال موجود نیست');
-                      return;
-                    }
+                    List<Map<String, dynamic>> payload = selectedDevices.map((device) {
+                      return {
+                        "customerId": groupId,
+                        "deviceId": device.deviceId,
+                        "dashboardId": device.dashboardId,
+                      };
+                    }).toList();
 
                     final success = await controller.assignDevicesPayload(payload);
 
@@ -243,10 +192,124 @@ class CreateGroupStep2Page extends StatelessWidget {
   }
 }
 
+// کارت دستگاه ساده با تاگل و SVG
+class DeviceCardSimple extends StatefulWidget {
+  final DeviceItem device;
+  final String deviceType;
+  final String locationTitle;
+  final VoidCallback onTap;
 
-String extractCustomerId(String rawId) {
-  final regex = RegExp(r'id:\s*([a-f0-9-]+)');
-  final match = regex.firstMatch(rawId);
-  if (match != null) return match.group(1)!;
-  return rawId; // fallback
+  const DeviceCardSimple({
+    super.key,
+    required this.device,
+    required this.deviceType,
+    required this.locationTitle,
+    required this.onTap,
+  });
+
+  @override
+  State<DeviceCardSimple> createState() => _DeviceCardSimpleState();
+}
+
+class _DeviceCardSimpleState extends State<DeviceCardSimple> {
+  bool isActive = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final double cardHeight = 180;       // ارتفاع کارت
+    final double circleSize = 42;        // اندازه آیکن بالای کارت
+    final double cardWidth = MediaQuery.of(context).size.width * 0.9; // عرض کمی کمتر
+    final borderColor = isActive ? Colors.blue.shade400 : Colors.grey.shade400;
+
+    return Center(
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // کارت اصلی
+            Card(
+              color: Colors.white,
+              elevation: 5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: borderColor, width: 2.5),
+              ),
+              child: Container(
+                width: cardWidth,
+                height: cardHeight,
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  circleSize / 1.5 + 24, // شروع پایین‌تر کل کارت
+                  16,
+                  16,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start, // متن‌ها و switch بالاتر
+                  children: [
+                    // Switch سمت چپ
+                    Switch(
+                      value: isActive,
+                      onChanged: (val) => setState(() => isActive = val),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // ستون اطلاعات سمت راست
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.start, // بالاتر قرار گرفتن متن‌ها
+                        children: [
+                          Text(
+                            widget.device.title,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.deviceType,
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.locationTitle,
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // آیکن بالای کارت
+            Positioned(
+              top: -circleSize / 4, // کمی پایین‌تر نسبت به قبل
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  width: circleSize,
+                  height: circleSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: borderColor, width: 3),
+                  ),
+                  child: ClipOval(
+                    child: SvgPicture.asset(
+                      isActive ? 'assets/svg/on.svg' : 'assets/svg/off.svg',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

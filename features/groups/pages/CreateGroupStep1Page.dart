@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/pages/CreateGroupStep2Page.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
+import '../../widgets/custom_appbar.dart';
+import '../../widgets/sidebar.dart';
 
 class CreateGroupStep1Page extends StatefulWidget {
   const CreateGroupStep1Page({super.key});
@@ -38,7 +40,8 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("ایجاد گروه - مرحله ۱")),
+      endDrawer: const Sidebar(),
+      appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -62,13 +65,19 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton(onPressed: () => Get.back(), child: const Text("انصراف")),
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text("انصراف"),
+                ),
                 if (savedId == null)
                   ElevatedButton(
                     onPressed: isSubmitting ? null : handleSave,
                     child: isSubmitting
                         ? const SizedBox(
-                            width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text("ثبت"),
                   ),
                 if (savedId != null)
@@ -77,13 +86,13 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
                       Get.to(() => CreateGroupStep2Page(
                             groupName: nameController.text,
                             groupDescription: descController.text,
-                            groupId: extractCustomerId(savedId!),// پاس دادن آی‌دی
+                            groupId: extractCustomerId(savedId!), // پاس دادن آی‌دی
                           ));
                     },
                     child: const Text("بعدی"),
                   ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -91,11 +100,9 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
   }
 }
 
-
 String extractCustomerId(String rawId) {
   final regex = RegExp(r'id:\s*([a-f0-9-]+)');
   final match = regex.firstMatch(rawId);
   if (match != null) return match.group(1)!;
   return rawId; // fallback
 }
-

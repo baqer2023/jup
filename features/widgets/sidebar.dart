@@ -126,7 +126,7 @@ class Sidebar extends StatelessWidget {
               ),
               onTap: () {
                 Navigator.pop(context); // ✅ بستن سایدبار
-                Get.to(() => const GroupsPage()); // ✅ رفتن به صفحه دستگاه‌ها
+                Get.to(() =>  GroupsPage()); // ✅ رفتن به صفحه دستگاه‌ها
               },
             ),
 

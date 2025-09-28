@@ -32,12 +32,13 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
   RxBool isLoadingGroup = false.obs;
   RxBool isRefreshingGroup = false.obs;
   String tokenGroup = '';
-  RxString selectedLocationIdGroup = 'all'.obs;
+  RxString selectedLocationIdGroup = ''.obs;
   late Future<WeatherData> weatherFutureGroup;
   var groups = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
   // لیست کاربران یک گروه
 var groupUsers = <Map<String, dynamic>>[].obs;
+RxBool isRefreshing = false.obs;
 
   @override
   void onInit() {
@@ -348,6 +349,48 @@ Future<bool> assignDevicesPayload(List<Map<String, dynamic>> payload) async {
 }
 
 
+/// دریافت اطلاعات دستگاه‌ها برای یک گروه خاص
+Future<List<Map<String, dynamic>>> fetchCustomerDeviceInfos(String customerId) async {
+  try {
+    if (tokenGroup.isEmpty) return [];
+
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json'
+    };
+
+    final data = json.encode({
+      "sortProperty": "createdTime",
+      "pageSize": 10,
+      "page": 0,
+      "sortOrder": "ASC",
+      "customerId": customerId
+    });
+
+    var dio = Dio();
+    final response = await dio.request(
+      'http://45.149.76.245:8080/api/customer/deviceInfos/list',
+      options: Options(method: 'POST', headers: headers),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      final raw = response.data['data'] as List;
+      print("✅ DeviceInfos fetched: ${raw.length}");
+      return raw.map((e) => Map<String, dynamic>.from(e)).toList();
+    } else {
+      print("❌ Failed to fetch deviceInfos: ${response.statusMessage}");
+      return [];
+    }
+  } catch (e, st) {
+    print("❌ Error fetching deviceInfos: $e");
+    print(st);
+    return [];
+  }
+}
+
+
+
 
 
 
@@ -361,7 +404,7 @@ Future<bool> assignDevicesPayload(List<Map<String, dynamic>> payload) async {
       };
       final data = json.encode({
         "sortProperty": "createdTime",
-        "pageSize": 10,
+        "pageSize": 100,
         "page": 0,
         "sortOrder": "ASC"
       });

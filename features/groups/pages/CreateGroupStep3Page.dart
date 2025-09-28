@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
 
-class CreateGroupStep3Page extends StatelessWidget {
+class CreateGroupStep3Page extends StatefulWidget {
   final String groupName;
   final String groupDescription;
   final String groupId;
@@ -15,18 +15,57 @@ class CreateGroupStep3Page extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<HomeControllerGroup>();
+  State<CreateGroupStep3Page> createState() => _CreateGroupStep3PageState();
+}
 
+class _CreateGroupStep3PageState extends State<CreateGroupStep3Page> {
+  late final HomeControllerGroup controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<HomeControllerGroup>();
+    // گرفتن لیست کاربرهای گروه
+    controller.fetchGroupUsers(widget.groupId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("ایجاد گروه - مرحله ۳")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("افزودن مشتری جدید به گروه"),
+            const Text("لیست مشتریان گروه", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+
+            // لیست کاربران
+            Expanded(
+              child: Obx(() {
+                if (controller.groupUsers.isEmpty) {
+                  return const Center(child: Text("هیچ مشتری‌ای برای این گروه ثبت نشده"));
+                }
+                return ListView.builder(
+                  itemCount: controller.groupUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = controller.groupUsers[index];
+                    return Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.person),
+                        title: Text("${user['firstName']} ${user['lastName']}"),
+                        subtitle: Text(user['phoneNumber']),
+                      ),
+                    );
+                  },
+                );
+              }),
+            ),
+
             const SizedBox(height: 16),
 
+            // دکمه افزودن مشتری
             ElevatedButton.icon(
               onPressed: () {
                 _showAddCustomerDialog(context, controller);
@@ -100,7 +139,7 @@ class CreateGroupStep3Page extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               final success = await controller.addNewCustomer(
-                customerId: groupId,
+                customerId: widget.groupId,
                 firstName: firstNameCtrl.text.trim(),
                 lastName: lastNameCtrl.text.trim(),
                 phoneNumber: phoneCtrl.text.trim(),
@@ -108,8 +147,10 @@ class CreateGroupStep3Page extends StatelessWidget {
               );
 
               if (success) {
-                Get.back(); // بستن مدال
+                Get.back();
                 Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
+                // دوباره لیست مشتری‌ها رو لود کن
+                controller.fetchGroupUsers(widget.groupId);
               }
             },
             child: const Text("ثبت"),
