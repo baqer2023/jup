@@ -1,65 +1,125 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'dart:convert';
+
+import 'package:my_app32/features/widgets/custom_appbar.dart';
+import 'package:my_app32/features/widgets/sidebar.dart';
 
 class DeviceConfigPage extends StatefulWidget {
   final String sn;
-  final String deviceId;
 
-  const DeviceConfigPage({
-    super.key,
-    required this.sn,
-    required this.deviceId,
-  });
+  const DeviceConfigPage({super.key, required this.sn});
 
   @override
   State<DeviceConfigPage> createState() => _DeviceConfigPageState();
 }
 
 class _DeviceConfigPageState extends State<DeviceConfigPage> {
-  int _step = 0; // 0: Instruction, 1: ConnectionCheck, 2: WiFiForm
+  int _step = 0;
   bool _loading = false;
   String? _message;
+  bool _showOverlay = false;
+  String? _currentOverlaySVG;
 
   final _ssidController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-  }
+  final String _svgInstruction = 'assets/svg/Steper1.svg';
+  final String _svgWiFiForm = 'assets/svg/Steper2.svg';
+  final String _svgSuccess = 'assets/svg/Steper3.svg';
+  final String _svgStep1 = 'assets/svg/config1.svg';
+  final String _svgStep2 = 'assets/svg/config2.svg';
+  final String _svgStep3 = 'assets/svg/config3.svg';
 
-  // -------- Step 1: Instruction Page --------
-  Widget _buildInstruction() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "۱- اینترنت سیم‌کارت (Mobile Data) را خاموش کنید.",
-          style: TextStyle(fontSize: 18),
+  // تابع ساخت دکمه آبی با متن سفید
+  Widget _blueButton({required String text, required VoidCallback onPressed}) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-        const SizedBox(height: 12),
-        const Text(
-          "۲- به وای‌فای دستگاه که در حالت Access Point است وصل شوید.",
-          style: TextStyle(fontSize: 18),
-        ),
-        const Spacer(),
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _step = 1;
-              });
-              _checkConnection();
-            },
-            child: const Text("وصل شدم"),
-          ),
-        ),
-      ],
+      ),
+      child: Text(text, style: const TextStyle(fontSize: 16)),
     );
   }
 
-  // -------- Step 2: Connection Check --------
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CustomAppBar(isRefreshing: false.obs),
+      endDrawer: const Sidebar(),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: _step == 0
+            ? _buildInstruction()
+            : _step == 1
+                ? _buildConnectionCheck()
+                : _buildWiFiForm(),
+      ),
+    );
+  }
+
+  Widget _buildInstruction() {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SvgPicture.asset(_svgInstruction, height: 100, alignment: Alignment.centerRight),
+          const SizedBox(height: 16),
+          const Text(
+            "راهنما:",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.right,
+          ),
+          const SizedBox(height: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                "۱- اینترنت سیم‌کارت دستگاه خود را (در صورت روشن بودن) خاموش کنید.",
+                style: TextStyle(fontSize: 18),
+                textAlign: TextAlign.right,
+              ),
+              SizedBox(height: 12),
+              Text(
+                "۲- از برنامه خارج شده و به تنظیمات Wi-Fi گوشی خود بروید.",
+                style: TextStyle(fontSize: 18),
+                textAlign: TextAlign.right,
+              ),
+              SizedBox(height: 12),
+              Text(
+                "۳- در لیست شبکه‌ها، به شبکه [نام شبکه] متصل شوید.",
+                style: TextStyle(fontSize: 18),
+                textAlign: TextAlign.right,
+              ),
+              SizedBox(height: 12),
+              Text(
+                "۴- پس از اتصال، به این برنامه بازگردید.",
+                style: TextStyle(fontSize: 18),
+                textAlign: TextAlign.right,
+              ),
+            ],
+          ),
+          const Spacer(),
+          Center(
+            child: _blueButton(
+              text: "اتصال برقرار شد، ادامه دهید",
+              onPressed: _checkConnection,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _checkConnection() async {
     setState(() {
       _loading = true;
@@ -68,128 +128,220 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
 
     try {
       final response = await http
-          .get(Uri.parse("http://192.168.10.1/get-serial"))
-          .timeout(const Duration(seconds: 5));
+          .get(Uri.parse("http://192.168.4.1/get-serial"))
+          .timeout(const Duration(seconds: 25));
 
       if (response.statusCode == 200) {
-        if (response.body.trim() == widget.deviceId) {
-          setState(() {
-            _step = 2; // رفتن به فرم Wi-Fi
-          });
+        final deviceSerial = response.body.trim();
+        final hwPart = deviceSerial;
+        final swPart = widget.sn.substring(widget.sn.length - hwPart.length);
+
+        if (hwPart == swPart) {
+          setState(() => _step = 2);
         } else {
-          setState(() {
-            _message = "سریال دستگاه مطابقت ندارد!";
-          });
+          setState(() => _message = "❌ سریال دستگاه مطابقت ندارد!");
         }
       } else {
-        setState(() {
-          _message = "پاسخ نامعتبر از دستگاه!";
-        });
+        setState(() => _message = "❌ پاسخ نامعتبر از دستگاه!");
       }
-    } catch (e) {
-      setState(() {
-        _message = "ارتباط برقرار نشد: $e";
-      });
+    } catch (_) {
+      setState(() => _message = "❌ ارتباط برقرار نشد.");
+    } finally {
+      setState(() => _loading = false);
     }
-
-    setState(() {
-      _loading = false;
-    });
   }
 
-  // -------- Step 3: Wi-Fi Form --------
-  Widget _buildWiFiForm() {
+  Widget _buildConnectionCheck() {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        TextField(
-          controller: _ssidController,
-          decoration: const InputDecoration(labelText: "SSID وای‌فای"),
-        ),
-        TextField(
-          controller: _passwordController,
-          decoration: const InputDecoration(labelText: "Password وای‌فای"),
-          obscureText: true,
-        ),
-        const SizedBox(height: 24),
-        _loading
-            ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: _sendCredentials,
-                child: const Text("ثبت"),
-              ),
+        SvgPicture.asset(_svgWiFiForm, height: 100),
         const SizedBox(height: 16),
-        if (_message != null)
-          Text(
-            _message!,
-            style: const TextStyle(fontSize: 16),
+        _loading
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 12),
+                  Text(
+                    "در حال بررسی اتصال به دستگاه...",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_message != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        _message!,
+                        style: const TextStyle(fontSize: 16, color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  _blueButton(
+                    text: "تلاش مجدد",
+                    onPressed: _checkConnection,
+                  ),
+                ],
+              ),
+      ],
+    );
+  }
+
+  Widget _buildWiFiForm() {
+    if (_step == 3) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(_svgSuccess, height: 150),
+            const SizedBox(height: 20),
+            SvgPicture.asset('assets/svg/SuccessfulConfig.svg', height: 120),
+            const SizedBox(height: 12),
+            SvgPicture.asset('assets/svg/SuccessfulConfigmsg.svg', height: 80),
+            const SizedBox(height: 24),
+            if (_message != null)
+              Text(
+                _message!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: _message!.contains("✅") ? Colors.green : Colors.red,
+                ),
+              ),
+            const SizedBox(height: 30),
+            _blueButton(
+              text: "شروع استفاده از برنامه",
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        Column(
+          children: [
+            SvgPicture.asset(_svgWiFiForm, height: 120),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _ssidController,
+              decoration: const InputDecoration(labelText: "SSID وای‌فای"),
+            ),
+            TextField(
+              controller: _passwordController,
+              decoration: const InputDecoration(labelText: "Password وای‌فای"),
+              obscureText: true,
+            ),
+            const SizedBox(height: 24),
+            _loading
+                ? const SizedBox(
+                    height: 150,
+                    child: Center(child: CircularProgressIndicator()))
+                : _blueButton(
+                    text: "ذخیره و اتصال نهایی",
+                    onPressed: _onSubmitWiFiForm,
+                  ),
+            const SizedBox(height: 16),
+            if (_message != null)
+              Column(
+                children: [
+                  SvgPicture.asset(_svgSuccess, height: 80),
+                  const SizedBox(height: 12),
+                  Text(
+                    _message!,
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: _message!.contains("✅")
+                            ? Colors.green
+                            : Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+          ],
+        ),
+        if (_showOverlay && _currentOverlaySVG != null)
+          Container(
+            color: Colors.white,
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(_svgWiFiForm, height: 80),
+                const SizedBox(height: 16),
+                SvgPicture.asset(_currentOverlaySVG!, height: 150),
+              ],
+            ),
           ),
       ],
     );
   }
 
-  Future<void> _sendCredentials() async {
-    setState(() {
-      _loading = true;
-      _message = null;
-    });
+  bool _validateFormInputs() {
+    final ssid = _ssidController.text.trim();
+    final pass = _passwordController.text.trim();
+    if (ssid.isEmpty) {
+      setState(() => _message = "❌ لطفا SSID را وارد کنید.");
+      return false;
+    }
+    if (pass.length < 8) {
+      setState(() => _message = "❌ پسورد باید حداقل ۸ کاراکتر باشد.");
+      return false;
+    }
+    setState(() => _message = null);
+    return true;
+  }
 
-    final body = {
-      "ssid": _ssidController.text,
-      "password": _passwordController.text,
-      "serial": widget.deviceId,
-    };
+  Future<void> _onSubmitWiFiForm() async {
+    if (!_validateFormInputs()) return;
 
-    try {
-      final response = await http.post(
-        Uri.parse("http://192.168.10.1/set-credentials"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
-      );
+    setState(() => _showOverlay = true);
 
-      if (response.statusCode == 200) {
-        setState(() {
-          _message = "✅ دستگاه با موفقیت پیکربندی شد.";
-        });
-      } else {
-        setState(() {
-          _message = "❌ خطا در پیکربندی: ${response.statusCode}";
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _message = "❌ خطا در ارتباط: $e";
-      });
+    final List<String> svgSteps = [_svgStep1, _svgStep2, _svgStep3];
+    for (String svgPath in svgSteps) {
+      setState(() => _currentOverlaySVG = svgPath);
+      await Future.delayed(const Duration(seconds: 2));
     }
 
     setState(() {
-      _loading = false;
+      _showOverlay = false;
+      _currentOverlaySVG = null;
+      _step = 3;
+      _message = "✅ اطلاعات ارسال شد.\nدستگاه در حال اتصال به وای‌فای جدید است.";
     });
+
+    await _sendCredentials(
+        _ssidController.text.trim(), _passwordController.text.trim());
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("پیکربندی دستگاه"),
-        backgroundColor: Colors.blue,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: _step == 0
-            ? _buildInstruction()
-            : _step == 1
-                ? Center(
-                    child: _loading
-                        ? const CircularProgressIndicator()
-                        : _message != null
-                            ? Text(_message!)
-                            : const Text(
-                                "در حال بررسی اتصال به دستگاه...",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                  )
-                : _buildWiFiForm(),
-      ),
-    );
+  Future<void> _sendCredentials(String ssid, String password) async {
+    setState(() => _loading = true);
+    final body = {"ssid": ssid, "password": password, "serial": widget.sn};
+
+    try {
+      final response = await http.post(
+        Uri.parse("http://192.168.4.1/set-credentials"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200) {
+        setState(() =>
+            _message = "❌ ارسال اطلاعات ناموفق (کد: ${response.statusCode})");
+      }
+    } catch (_) {
+      // setState(() => _message = "❌ خطا در ارسال اطلاعات.");
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 }

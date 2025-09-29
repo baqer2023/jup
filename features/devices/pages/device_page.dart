@@ -445,7 +445,6 @@ Widget _buildSmartDeviceCard({
     } else if (value == 1) {
       Get.to(() => DeviceConfigPage(
             sn: device.sn,
-            deviceId: device.deviceId,
           ));
     }
   },
