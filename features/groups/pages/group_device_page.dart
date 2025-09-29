@@ -32,7 +32,7 @@ class _GroupDevicesPageState extends State<GroupDevicesPage> {
   RxList<CustomerDevice> filteredDevices = <CustomerDevice>[].obs;
 
   /// برای فیلتر لوکیشن
-  RxString selectedLocationId = "all".obs;
+  RxString selectedLocationId = "".obs;
 
   @override
   void initState() {
@@ -77,72 +77,123 @@ class _GroupDevicesPageState extends State<GroupDevicesPage> {
         allDevices.where((d) => groupDeviceIds.contains(d.id)).toList();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("دستگاه‌های گروه: ${widget.groupName}")),
-      body: Column(
-        children: [
-          const SizedBox(height: 8),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text("دستگاه‌های گروه: ${widget.groupName}")),
+    body: Stack(
+      children: [
+        Column(
+          children: [
+            const SizedBox(height: 8),
+            /// فیلتر لوکیشن‌ها
+            Obx(() {
+              final locations = controller.userLocationsGroup;
+              return SizedBox(
+                height: 45,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: locations.length + 1,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final id = index == 0 ? "all" : locations[index - 1].id ?? "unknown";
+                    final title = index == 0 ? "همه" : locations[index - 1].title;
 
-          /// فیلتر لوکیشن‌ها
-          Obx(() {
-            final locations = controller.userLocationsGroup;
-            return SizedBox(
-              height: 45,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: locations.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final id = index == 0 ? "all" : locations[index - 1].id ?? "unknown";
-                  final title = index == 0 ? "همه" : locations[index - 1].title;
-
-                  return GestureDetector(
-                    onTap: () async {
-                      selectedLocationId.value = id;
-                      await fetchFilteredDevices();
-                    },
-                    child: Obx(() {
-                      final isSelected = selectedLocationId.value == id;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            color: isSelected ? Colors.yellow : Colors.grey.shade300,
-                            width: isSelected ? 2 : 1,
+                    return GestureDetector(
+                      onTap: () async {
+                        selectedLocationId.value = id;
+                        await fetchFilteredDevices();
+                      },
+                      child: Obx(() {
+                        final isSelected = selectedLocationId.value == id;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                              color: isSelected ? Colors.yellow : Colors.grey.shade300,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              color: isSelected ? Colors.yellow.shade700 : Colors.grey,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          child: Center(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                color: isSelected ? Colors.yellow.shade700 : Colors.grey,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
                             ),
                           ),
+                        );
+                      }),
+                    );
+                  },
+                ),
+              );
+            }),
+            const SizedBox(height: 16),
+
+            /// لیست دستگاه‌ها
+            Expanded(
+              child: Obx(() {
+                if (filteredDevices.isEmpty) {
+                  return const Center(child: Text("هیچ دستگاهی یافت نشد"));
+                }
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: filteredDevices.map((customerDevice) {
+                      DeviceItem? deviceItem;
+                      try {
+                        deviceItem = controller.deviceListGroup.firstWhere(
+                          (d) => d.deviceId == customerDevice.id,
+                        );
+                      } catch (_) {
+                        deviceItem = null;
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: DeviceCardSimpleCustom(
+                          customerDevice: customerDevice,
+                          deviceItem: deviceItem,
                         ),
                       );
-                    }),
-                  );
-                },
-              ),
-            );
-          }),
+                    }).toList(),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 70), // فاصله برای دکمه
+          ],
+        ),
 
-          const SizedBox(height: 16),
-
-          /// دکمه افزودن دستگاه به گروه
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        /// دکمه پایین وسط صفحه
+        Positioned(
+          bottom: 16,
+          left: 0,
+          right: 0,
+          child: Center(
             child: SizedBox(
-              width: double.infinity,
+              width: 200, // کوچکتر
+              height: 45,
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text("افزودن دستگاه به گروه"),
+                icon: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                label: const Text(
+                  "افزودن دستگاه به گروه",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 onPressed: () {
                   Get.to(() => CreateGroupStep2Page(
                         groupName: widget.groupName,
@@ -150,50 +201,22 @@ class _GroupDevicesPageState extends State<GroupDevicesPage> {
                         groupId: widget.groupId,
                       ));
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue, // بک‌گراند آبی
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
               ),
             ),
           ),
-
-          const SizedBox(height: 8),
-
-          /// لیست دستگاه‌ها
-          Expanded(
-            child: Obx(() {
-              if (filteredDevices.isEmpty) {
-                return const Center(child: Text("هیچ دستگاهی یافت نشد"));
-              }
-
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: filteredDevices.map((customerDevice) {
-                    // پیدا کردن DeviceItem متناظر برای نمایش بهتر
-                    DeviceItem? deviceItem;
-try {
-  deviceItem = controller.deviceListGroup.firstWhere(
-    (d) => d.deviceId == customerDevice.id,
+        ),
+      ],
+    ),
   );
-} catch (_) {
-  deviceItem = null;
 }
 
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: DeviceCardSimpleCustom(
-                        customerDevice: customerDevice,
-                        deviceItem: deviceItem,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class DeviceCardSimpleCustom extends StatefulWidget {

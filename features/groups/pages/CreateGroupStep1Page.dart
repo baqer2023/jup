@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/pages/CreateGroupStep2Page.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
+import 'package:my_app32/features/groups/pages/group_page.dart';
 import '../../widgets/custom_appbar.dart';
 import '../../widgets/sidebar.dart';
 
@@ -65,32 +66,79 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text("انصراف"),
-                ),
+                Align(
+  alignment: Alignment.bottomLeft, // پایین سمت چپ
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: TextButton(
+      style: TextButton.styleFrom(
+        backgroundColor: Colors.white, // بک‌گراند سفید
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      onPressed: () {
+        // وقتی زد انصراف، برگرد به GroupsPage و همه گروه‌ها رو دوباره لود کن
+        Get.offAll(() => GroupsPage());
+        final controller = Get.find<HomeControllerGroup>();
+        controller.fetchGroups(); // داده‌ها رو دوباره لود کن
+      },
+      child: const Text(
+        "انصراف",
+        style: TextStyle(
+          color: Colors.yellow, // متن زرد
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    ),
+  ),
+),
+
                 if (savedId == null)
                   ElevatedButton(
-                    onPressed: isSubmitting ? null : handleSave,
-                    child: isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text("ثبت"),
-                  ),
+  onPressed: isSubmitting ? null : handleSave,
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.blue, // ✅ بک‌گراند آبی
+    foregroundColor: Colors.white, // ✅ متن و آیکن سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8), // گوشه‌های کمی گرد
+    ),
+  ),
+  child: isSubmitting
+      ? const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white, // ✅ لودینگ هم سفید
+          ),
+        )
+      : const Text("ثبت"),
+),
+
                 if (savedId != null)
                   ElevatedButton(
-                    onPressed: () {
-                      Get.to(() => CreateGroupStep2Page(
-                            groupName: nameController.text,
-                            groupDescription: descController.text,
-                            groupId: extractCustomerId(savedId!), // پاس دادن آی‌دی
-                          ));
-                    },
-                    child: const Text("بعدی"),
-                  ),
+  onPressed: () {
+    Get.to(() => CreateGroupStep2Page(
+          groupName: nameController.text,
+          groupDescription: descController.text,
+          groupId: extractCustomerId(savedId!), // پاس دادن آی‌دی
+        ));
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.blue, // ✅ پس‌زمینه آبی
+    foregroundColor: Colors.white, // ✅ متن سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: const Text("بعدی"),
+)
+,
               ],
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
+import 'package:my_app32/features/groups/pages/group_page.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'CreateGroupStep3Page.dart';
 
@@ -172,45 +173,73 @@ class _CreateGroupStep2PageState extends State<CreateGroupStep2Page> {
             ),
 
             // دکمه‌ها
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(onPressed: () => Get.back(), child: const Text("قبلی")),
-                TextButton(onPressed: () => Get.back(), child: const Text("انصراف")),
-ElevatedButton(
-  onPressed: () async {
-    if (selectedDevices.isEmpty) {
-      // اگر هیچ دستگاهی انتخاب نشده، مستقیم مرحله بعد
-      Get.to(() => CreateGroupStep3Page(
-            groupName: widget.groupName,
-            groupDescription: widget.groupDescription,
-            groupId: widget.groupId,
-          ));
-      return;
-    }
 
-    // ارسال لیست دستگاه‌های انتخاب شده به سرور
-    final success = await controller.assignDevicesPayload(
-      selectedDevices, // لیست دستگاه‌های انتخاب شده
-      widget.groupId,  // customerId برای گروه
-    );
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    // دکمه انصراف پایین سمت چپ
+    TextButton(
+      style: TextButton.styleFrom(
+        backgroundColor: Colors.white, // بک‌گراند سفید
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      onPressed: () {
+        // برگرد به GroupsPage و همه گروه‌ها را دوباره لود کن
+        Get.offAll(() => GroupsPage());
+        final controller = Get.find<HomeControllerGroup>();
+        controller.fetchGroups();
+      },
+      child: const Text(
+        "انصراف",
+        style: TextStyle(
+          color: Colors.yellow, // متن زرد
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    ),
 
-    // اگر موفق بود، به مرحله بعد برو
-    if (success) {
-      Get.to(() => CreateGroupStep3Page(
-            groupName: widget.groupName,
-            groupDescription: widget.groupDescription,
-            groupId: widget.groupId,
-          ));
-    }
-  },
-  child: const Text("ثبت / بعدی"),
+    // دکمه ثبت / بعدی (همان دکمه قبلی خودتان)
+    ElevatedButton(
+      onPressed: () async {
+        if (selectedDevices.isEmpty) {
+          Get.to(() => CreateGroupStep3Page(
+                groupName: widget.groupName,
+                groupDescription: widget.groupDescription,
+                groupId: widget.groupId,
+              ));
+          return;
+        }
+
+        final success = await controller.assignDevicesPayload(
+          selectedDevices,
+          widget.groupId,
+        );
+
+        if (success) {
+          Get.to(() => CreateGroupStep3Page(
+                groupName: widget.groupName,
+                groupDescription: widget.groupDescription,
+                groupId: widget.groupId,
+              ));
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: const Text("ثبت / بعدی"),
+    ),
+  ],
 ),
 
-
-
-              ],
-            ),
           ],
         ),
       ),

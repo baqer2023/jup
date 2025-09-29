@@ -431,6 +431,8 @@ Future<List<CustomerDevice>> fetchCustomerDeviceInfos(String customerId) async {
         groups.value = dataList.map((e) => {
           "id": e['id'],
           "title": e['title'],
+          "allocatedDevices": e['allocatedDevices'],
+          "allocatedUsers": e['allocatedUsers'],
         }).toList();
       } else {
         Get.snackbar('خطا', 'دریافت گروه‌ها ناموفق بود');
@@ -586,6 +588,50 @@ Future<bool> addNewCustomer({
 }
 
 
+/// حذف یک گروه (مشتری) با استفاده از customerId
+Future<bool> deleteGroup(String customerId) async {
+  try {
+    if (tokenGroup.isEmpty) {
+      Get.snackbar('خطا', 'توکن یافت نشد');
+      return false;
+    }
+
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json',
+    };
+
+    final data = json.encode({
+      "customerId": customerId,
+    });
+
+    var dio = Dio();
+    final response = await dio.request(
+      'http://45.149.76.245:8080/api/customer/delete',
+      options: Options(
+        method: 'DELETE',
+        headers: headers,
+      ),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      print("✅ Group deleted: ${response.data}");
+      Get.snackbar("موفقیت", "گروه با موفقیت حذف شد");
+      await fetchGroups(); // بعد از حذف، لیست گروه‌ها دوباره دریافت بشه
+      return true;
+    } else {
+      print("❌ Delete failed: ${response.statusMessage}");
+      Get.snackbar("خطا", response.statusMessage ?? "خطای ناشناخته");
+      return false;
+    }
+  } catch (e, st) {
+    print("❌ Exception in deleteGroup: $e");
+    print(st);
+    Get.snackbar("خطا", e.toString());
+    return false;
+  }
+}
 
 
 

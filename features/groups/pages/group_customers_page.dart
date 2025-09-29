@@ -84,94 +84,158 @@ Expanded(
             const SizedBox(height: 16),
 
             ElevatedButton.icon(
-              onPressed: () => _showAddCustomerDialog(),
-              icon: const Icon(Icons.person_add),
-              label: const Text("افزودن مشتری جدید"),
-            ),
+    onPressed: () {
+      _showAddCustomerDialog(context, controller);
+    },
+    icon: const Icon(
+      Icons.person_add,
+      color: Colors.white, // آیکون سفید
+    ),
+    label: const Text(
+      "افزودن مشتری جدید",
+      style: TextStyle(
+        color: Colors.white, // متن سفید
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.blue, // بک‌گراند آبی
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+  ),
           ],
         ),
       ),
     );
   }
 
-  void _showAddCustomerDialog() {
-    final firstNameCtrl = TextEditingController();
-    final lastNameCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController(text: "98");
-    final codeCtrl = TextEditingController();
+void _showAddCustomerDialog(
+    BuildContext context, HomeControllerGroup controller) {
+  final firstNameCtrl = TextEditingController();
+  final lastNameCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController(text: "98");
+  final codeCtrl = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("افزودن مشتری جدید"),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: firstNameCtrl,
-                decoration: const InputDecoration(labelText: "نام"),
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Colors.white, // رنگ بک‌گراند فرم‌ها سفید
+      titlePadding: EdgeInsets.zero, // حذف padding پیش‌فرض برای سفارشی‌سازی هدر
+      title: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        color: Colors.blue, // هدر آبی
+        child: const Text(
+          "افزودن مشتری جدید",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          children: [
+            TextField(
+              controller: firstNameCtrl,
+              decoration: const InputDecoration(
+                labelText: "نام",
+                filled: true,
+                fillColor: Colors.white,
               ),
-              TextField(
-                controller: lastNameCtrl,
-                decoration: const InputDecoration(labelText: "نام خانوادگی"),
+            ),
+            TextField(
+              controller: lastNameCtrl,
+              decoration: const InputDecoration(
+                labelText: "نام خانوادگی",
+                filled: true,
+                fillColor: Colors.white,
               ),
-              TextField(
-                controller: phoneCtrl,
-                decoration: const InputDecoration(labelText: "شماره موبایل (با 98 یا 0)"),
-                keyboardType: TextInputType.phone,
+            ),
+            TextField(
+              controller: phoneCtrl,
+              decoration: const InputDecoration(
+                labelText: "شماره موبایل (با 98 یا 0)",
+                filled: true,
+                fillColor: Colors.white,
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: codeCtrl,
-                      decoration: const InputDecoration(labelText: "کد تایید"),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: codeCtrl,
+                    decoration: const InputDecoration(
+                      labelText: "کد تایید",
+                      filled: true,
+                      fillColor: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final phone = phoneCtrl.text.trim();
-                      if (phone.isNotEmpty) {
-                        await controller.sendVerificationCode(phone);
-                        Get.snackbar("موفقیت", "کد تایید ارسال شد");
-                      }
-                    },
-                    child: const Text("ارسال کد"),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    final phone = phoneCtrl.text.trim();
+                    if (phone.isNotEmpty) {
+                      await controller.sendVerificationCode(phone);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue, // پس‌زمینه آبی
+                    foregroundColor: Colors.white, // متن سفید
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                ],
-              ),
-            ],
-          ),
+                  child: const Text("ارسال کد"),
+                ),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text("انصراف"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final success = await controller.addNewCustomer(
-                customerId: widget.groupId,
-                firstName: firstNameCtrl.text.trim(),
-                lastName: lastNameCtrl.text.trim(),
-                phoneNumber: phoneCtrl.text.trim(),
-                verificationCode: codeCtrl.text.trim(),
-              );
-
-              if (success) {
-                Get.back();
-                Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
-                controller.fetchGroupUsers(widget.groupId);
-              }
-            },
-            child: const Text("ثبت"),
-          ),
-        ],
       ),
-    );
-  }
+      actionsAlignment: MainAxisAlignment.center, // وسط چین کردن دکمه‌ها
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.yellow, // پس‌زمینه زرد
+            foregroundColor: Colors.black, // متن مشکی
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          child: const Text("انصراف"),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final success = await controller.addNewCustomer(
+              customerId: widget.groupId,
+              firstName: firstNameCtrl.text.trim(),
+              lastName: lastNameCtrl.text.trim(),
+              phoneNumber: phoneCtrl.text.trim(),
+              verificationCode: codeCtrl.text.trim(),
+            );
+
+            if (success) {
+              Get.back();
+              Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
+              // دوباره لیست مشتری‌ها رو لود کن
+              controller.fetchGroupUsers(widget.groupId);
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue, // پس‌زمینه آبی
+            foregroundColor: Colors.white, // متن سفید
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text("ثبت"),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class CustomerCard extends StatefulWidget {

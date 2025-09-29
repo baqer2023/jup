@@ -838,199 +838,213 @@ Widget _buildSwitchRow({
 
   // ------------------- Advanced Settings Dialog -------------------
   void showLedColorDialog({required DeviceItem device}) {
-    final reliableController = Get.find<ReliableSocketController>(
-      tag: 'smartDevicesController',
-    );
-    final deviceData = reliableController.latestDeviceDataById[device.deviceId];
-    final isSingleKey = device.deviceTypeName == 'key-1';
+  final reliableController = Get.find<ReliableSocketController>(
+    tag: 'smartDevicesController',
+  );
+  final deviceData = reliableController.latestDeviceDataById[device.deviceId];
+  final isSingleKey = device.deviceTypeName == 'key-1';
 
-    // Reactive colors
-    Rx<Color> touch1On = const Color(0xFF2196F3).obs;
-    Rx<Color> touch1Off = const Color(0xFF9E9E9E).obs;
-    Rx<Color> touch2On = const Color(0xFF4CAF50).obs;
-    Rx<Color> touch2Off = const Color(0xFF9E9E9E).obs;
+  // Reactive colors
+  Rx<Color> touch1On = const Color(0xFF2196F3).obs;
+  Rx<Color> touch1Off = const Color(0xFF9E9E9E).obs;
+  Rx<Color> touch2On = const Color(0xFF4CAF50).obs;
+  Rx<Color> touch2Off = const Color(0xFF9E9E9E).obs;
 
-    // مقداردهی اولیه از داده دستگاه
-    if (deviceData != null &&
-        deviceData['ledColor'] is List &&
-        deviceData['ledColor'].isNotEmpty) {
-      try {
-        final ledEntry = deviceData['ledColor'][0][1];
-        Map<String, dynamic> ledMap = ledEntry is String
-            ? jsonDecode(ledEntry)
-            : (ledEntry as Map<String, dynamic>);
+  // مقداردهی اولیه از داده دستگاه
+  if (deviceData != null &&
+      deviceData['ledColor'] is List &&
+      deviceData['ledColor'].isNotEmpty) {
+    try {
+      final ledEntry = deviceData['ledColor'][0][1];
+      Map<String, dynamic> ledMap = ledEntry is String
+          ? jsonDecode(ledEntry)
+          : (ledEntry as Map<String, dynamic>);
 
-        if (ledMap['touch1'] != null) {
-          touch1On.value = Color.fromARGB(
-            255,
-            (ledMap['touch1']['on']['r'] as int).clamp(0, 255),
-            (ledMap['touch1']['on']['g'] as int).clamp(0, 255),
-            (ledMap['touch1']['on']['b'] as int).clamp(0, 255),
-          );
-          touch1Off.value = Color.fromARGB(
-            255,
-            (ledMap['touch1']['off']['r'] as int).clamp(0, 255),
-            (ledMap['touch1']['off']['g'] as int).clamp(0, 255),
-            (ledMap['touch1']['off']['b'] as int).clamp(0, 255),
-          );
-        }
+      if (ledMap['touch1'] != null) {
+        touch1On.value = Color.fromARGB(
+          255,
+          (ledMap['touch1']['on']['r'] as int).clamp(0, 255),
+          (ledMap['touch1']['on']['g'] as int).clamp(0, 255),
+          (ledMap['touch1']['on']['b'] as int).clamp(0, 255),
+        );
+        touch1Off.value = Color.fromARGB(
+          255,
+          (ledMap['touch1']['off']['r'] as int).clamp(0, 255),
+          (ledMap['touch1']['off']['g'] as int).clamp(0, 255),
+          (ledMap['touch1']['off']['b'] as int).clamp(0, 255),
+        );
+      }
 
-        if (!isSingleKey && ledMap['touch2'] != null) {
-          touch2On.value = Color.fromARGB(
-            255,
-            (ledMap['touch2']['on']['r'] as int).clamp(0, 255),
-            (ledMap['touch2']['on']['g'] as int).clamp(0, 255),
-            (ledMap['touch2']['on']['b'] as int).clamp(0, 255),
-          );
-          touch2Off.value = Color.fromARGB(
-            255,
-            (ledMap['touch2']['off']['r'] as int).clamp(0, 255),
-            (ledMap['touch2']['off']['g'] as int).clamp(0, 255),
-            (ledMap['touch2']['off']['b'] as int).clamp(0, 255),
-          );
-        }
-      } catch (_) {}
-    }
+      if (!isSingleKey && ledMap['touch2'] != null) {
+        touch2On.value = Color.fromARGB(
+          255,
+          (ledMap['touch2']['on']['r'] as int).clamp(0, 255),
+          (ledMap['touch2']['on']['g'] as int).clamp(0, 255),
+          (ledMap['touch2']['on']['b'] as int).clamp(0, 255),
+        );
+        touch2Off.value = Color.fromARGB(
+          255,
+          (ledMap['touch2']['off']['r'] as int).clamp(0, 255),
+          (ledMap['touch2']['off']['g'] as int).clamp(0, 255),
+          (ledMap['touch2']['off']['b'] as int).clamp(0, 255),
+        );
+      }
+    } catch (_) {}
+  }
 
-    showDialog(
-      context: Get.context!,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Center(
+  showDialog(
+    context: Get.context!,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white, // بک‌گراند فرم سفید
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          color: Colors.blue, // هدر آبی
+          child: const Center(
             child: Text(
               'تنظیمات پیشرفته',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Obx(
-                  () => _ColorPreviewPicker(
-                    label: 'کلید ۱ روشن',
-                    color: touch1On.value,
-                    onPick: (c) => touch1On.value = c,
-                  ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Obx(
+                () => _ColorPreviewPicker(
+                  label: 'کلید ۱ روشن',
+                  color: touch1On.value,
+                  onPick: (c) => touch1On.value = c,
                 ),
-                Obx(
-                  () => _ColorPreviewPicker(
-                    label: 'کلید ۱ خاموش',
-                    color: touch1Off.value,
-                    onPick: (c) => touch1Off.value = c,
-                  ),
-                ),
-                if (!isSingleKey) ...[
-                  const SizedBox(height: 8),
-                  Obx(
-                    () => _ColorPreviewPicker(
-                      label: 'کلید ۲ روشن',
-                      color: touch2On.value,
-                      onPick: (c) => touch2On.value = c,
-                    ),
-                  ),
-                  Obx(
-                    () => _ColorPreviewPicker(
-                      label: 'کلید ۲ خاموش',
-                      color: touch2Off.value,
-                      onPick: (c) => touch2Off.value = c,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'انصراف',
-                style: TextStyle(color: Colors.black54),
               ),
+              Obx(
+                () => _ColorPreviewPicker(
+                  label: 'کلید ۱ خاموش',
+                  color: touch1Off.value,
+                  onPick: (c) => touch1Off.value = c,
+                ),
+              ),
+              if (!isSingleKey) ...[
+                const SizedBox(height: 8),
+                Obx(
+                  () => _ColorPreviewPicker(
+                    label: 'کلید ۲ روشن',
+                    color: touch2On.value,
+                    onPick: (c) => touch2On.value = c,
+                  ),
+                ),
+                Obx(
+                  () => _ColorPreviewPicker(
+                    label: 'کلید ۲ خاموش',
+                    color: touch2Off.value,
+                    onPick: (c) => touch2Off.value = c,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.yellow, // متن زرد
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  // final token = Get.find<HomeController>().token; // استفاده از توکن کنترلر
-                  final token2 = controller.token;
-                  var headers = {
-                    'Authorization': 'Bearer $token2',
-                    'Content-Type': 'application/json',
-                  };
+            child: const Text("انصراف"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final token2 = controller.token;
+                var headers = {
+                  'Authorization': 'Bearer $token2',
+                  'Content-Type': 'application/json',
+                };
 
-                  var data = json.encode({
-                    "deviceId": device.deviceId,
-                    "request": {
-                      "ledColor": {
-                        "touch1": {
+                var data = json.encode({
+                  "deviceId": device.deviceId,
+                  "request": {
+                    "ledColor": {
+                      "touch1": {
+                        "on": {
+                          "r": touch1On.value.red,
+                          "g": touch1On.value.green,
+                          "b": touch1On.value.blue,
+                        },
+                        "off": {
+                          "r": touch1Off.value.red,
+                          "g": touch1Off.value.green,
+                          "b": touch1Off.value.blue,
+                        },
+                      },
+                      if (!isSingleKey)
+                        "touch2": {
                           "on": {
-                            "r": touch1On.value.red,
-                            "g": touch1On.value.green,
-                            "b": touch1On.value.blue,
+                            "r": touch2On.value.red,
+                            "g": touch2On.value.green,
+                            "b": touch2On.value.blue,
                           },
                           "off": {
-                            "r": touch1Off.value.red,
-                            "g": touch1Off.value.green,
-                            "b": touch1Off.value.blue,
+                            "r": touch2Off.value.red,
+                            "g": touch2Off.value.green,
+                            "b": touch2Off.value.blue,
                           },
                         },
-                        if (!isSingleKey)
-                          "touch2": {
-                            "on": {
-                              "r": touch2On.value.red,
-                              "g": touch2On.value.green,
-                              "b": touch2On.value.blue,
-                            },
-                            "off": {
-                              "r": touch2Off.value.red,
-                              "g": touch2Off.value.green,
-                              "b": touch2Off.value.blue,
-                            },
-                          },
-                      },
                     },
-                  });
+                  },
+                });
 
-                  var dio = Dio();
-                  var response = await dio.request(
-                    'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
-                    options: Options(method: 'POST', headers: headers),
-                    data: data,
+                var dio = Dio();
+                var response = await dio.request(
+                  'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
+                  options: Options(method: 'POST', headers: headers),
+                  data: data,
+                );
+
+                if (response.statusCode == 200) {
+                  Get.snackbar(
+                    'موفق',
+                    'رنگ کلید با موفقیت تغییر کرد',
+                    backgroundColor: Colors.green,
                   );
-
-                  if (response.statusCode == 200) {
-                    Get.snackbar(
-                      'موفق',
-                      'رنگ کلید با موفقیت تغییر کرد',
-                      backgroundColor: Colors.green,
-                    );
-                    Navigator.of(context).pop();
-                  } else {
-                    Get.snackbar(
-                      'خطا',
-                      'خطا در تغییر رنگ: ${response.statusMessage}',
-                      backgroundColor: Colors.red,
-                    );
-                  }
-                } catch (e) {
+                  Navigator.of(context).pop();
+                } else {
                   Get.snackbar(
                     'خطا',
-                    'خطا در ارتباط با سرور: $e',
+                    'خطا در تغییر رنگ: ${response.statusMessage}',
                     backgroundColor: Colors.red,
                   );
                 }
-              },
-              child: const Text('ثبت'),
+              } catch (e) {
+                Get.snackbar(
+                  'خطا',
+                  'خطا در ارتباط با سرور: $e',
+                  backgroundColor: Colors.red,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue, // دکمه ثبت آبی
+              foregroundColor: Colors.white, // متن سفید
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-          ],
-        );
-      },
-    );
-  }
+            child: const Text('ثبت'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 }
 
 
