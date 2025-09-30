@@ -52,8 +52,21 @@ class HomePage extends BaseView<HomeController> {
     // final RxString selectedLocationId = ''.obs;
 
     return Obx(() {
+
+
       final locations = controller.userLocations;
-      final devices = controller.deviceList;
+  final devices = controller.deviceList;
+
+  // وقتی لیست مکان‌ها آماده شد، پذیرایی رو به صورت پیش‌فرض انتخاب کن
+  if (locations.isNotEmpty && controller.selectedLocationId.value.isEmpty) {
+    final paziraei = locations.firstWhereOrNull((loc) => loc.title == "پذیرایی");
+    if (paziraei != null) {
+      controller.selectedLocationId.value = paziraei.id;
+      controller.fetchDevicesByLocation(paziraei.id);
+    }
+  }
+      // final locations = controller.userLocations;
+      // final devices = controller.deviceList;
 
       return RefreshIndicator(
         onRefresh: controller.refreshAllData,
