@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -30,27 +30,57 @@ class WeatherDisplay extends StatelessWidget {
   }
 }
 
-class WeatherCard extends StatelessWidget {
+class WeatherCard extends StatefulWidget {
   final WeatherData weather;
 
   const WeatherCard({super.key, required this.weather});
 
   @override
+  State<WeatherCard> createState() => _WeatherCardState();
+}
+
+class _WeatherCardState extends State<WeatherCard> {
+  late String _currentTime;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTime();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
+  }
+
+  void _updateTime() {
+    final now = DateTime.now();
+    setState(() {
+      _currentTime = DateFormat.Hm().format(now); // ساعت:دقیقه
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final temp = AppUtilsMixin.toPersianNumber(
-      (weather.main.temp - 273.15).round(),
+      (widget.weather.main.temp - 273.15).round(),
     );
-    final now = DateTime.fromMillisecondsSinceEpoch(weather.dt * 1000);
+
+    final now = DateTime.fromMillisecondsSinceEpoch(widget.weather.dt * 1000);
     final jalali = Jalali.fromDateTime(now);
-    final dayName = jalali.formatter.wN; // Day name in Persian
+    final dayName = jalali.formatter.wN; // نام روز
 
     final condition = _translateWeatherCondition(
-      weather.weather.first.description,
+      widget.weather.weather.first.description,
     );
-    final weatherIcon = _getWeatherIcon(weather.weather.first.description);
+    final weatherIcon =
+        _getWeatherIcon(widget.weather.weather.first.description);
 
     return Container(
-      height: 80,
+      height: 100,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -93,6 +123,16 @@ class WeatherCard extends StatelessWidget {
                   color: Colors.blue[600],
                 ),
               ),
+              const SizedBox(height: 2),
+              Text(
+                'ساعت $_currentTime',
+                style: TextStyle(
+                  fontFamily: 'IranYekan',
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.blueGrey[600],
+                ),
+              ),
             ],
           ),
           const SizedBox(width: 24),
@@ -116,91 +156,36 @@ class WeatherCard extends StatelessWidget {
     final desc = description.toLowerCase();
     if (desc.contains('clear')) {
       return SvgPicture.asset(
-        'assets/weather/sunny.svg',
+        'assets/svg/sunny.svg',
         width: 48,
         height: 48,
       );
     } else if (desc.contains('cloud')) {
       return SvgPicture.asset(
-        'assets/weather/partly_cloudy.svg',
+        'assets/svg/partly_cloudy.svg',
         width: 48,
         height: 48,
       );
     } else if (desc.contains('rain')) {
       return SvgPicture.asset(
-        'assets/weather/rainy.svg',
+        'assets/svg/rainy.svg',
         width: 48,
         height: 48,
       );
     } else if (desc.contains('snow')) {
       return SvgPicture.asset(
-        'assets/weather/snowy.svg',
+        'assets/svg/snowy.svg',
         width: 48,
         height: 48,
       );
     } else if (desc.contains('thunderstorm')) {
       return SvgPicture.asset(
-        'assets/weather/rainy.svg',
+        'assets/svg/thunderstorm.svg',
         width: 48,
         height: 48,
       );
     }
     return const Icon(Icons.help_outline, size: 48, color: Colors.grey);
-  }
-}
-
-class _MetricBox extends StatelessWidget {
-  final String value;
-  final String label;
-  final IconData icon;
-  final Color color;
-  final Color textColor;
-
-  const _MetricBox({
-    required this.value,
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 56,
-      padding: const EdgeInsets.symmetric(vertical: 6.4, horizontal: 3.2),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(6.4),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 1.6,
-            offset: const Offset(0, 0.8),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14.4, color: textColor),
-          const SizedBox(height: 1.6),
-          Text(
-            value,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 11.2,
-            ),
-          ),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 8, color: textColor.withOpacity(0.8)),
-          ),
-        ],
-      ),
-    );
   }
 }
 

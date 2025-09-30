@@ -42,16 +42,16 @@ class MainPage extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          IconButton(
-            onPressed: () {
-              controller.showCustomModal(context);
-            },
-            icon: SvgPicture.asset(
-              'assets/icons/add_newdevide.svg',
-              width: 440,
-              height: 94,
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {
+          //     controller.showCustomModal(context);
+          //   },
+          //   icon: SvgPicture.asset(
+          //     'assets/icons/add_newdevide.svg',
+          //     width: 440,
+          //     height: 94,
+          //   ),
+          // ),
         ],
       ),
     );
