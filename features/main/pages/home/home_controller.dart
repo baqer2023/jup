@@ -1,4 +1,5 @@
 // import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import 'package:my_app32/app/models/weather_models.dart';
 import 'package:my_app32/app/services/token_refresh_service.dart';
 import 'package:my_app32/app/services/weather_service.dart';
@@ -70,6 +71,41 @@ late Future<WeatherData> weatherFuture;
     ).getWeather(lat: 35.7219, lon: 51.3347);
     update(); // باعث میشه ویجت‌هایی که به controller گوش میدن دوباره ساخته بشن
   }
+
+
+Future<void> fetchHomeDevices() async {
+  try {
+    final token = await UserStoreService.to.getToken();
+    if (token == null) return;
+
+    final headers = {
+      'Authorization': 'Bearer $token',
+    };
+
+    final dio = Dio();
+    final response = await dio.post(
+      'http://45.149.76.245:8080/api/dashboard/getHome',
+      options: Options(headers: headers),
+    );
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+
+      // فرض می‌کنم JSON یه لیست دستگاه باشه
+      final devicesJson = data as List? ?? [];
+
+      deviceList.value =
+          devicesJson.map((e) => DeviceItem.fromJson(e)).toList();
+
+    } else {
+      Get.snackbar("خطا", "دریافت دستگاه‌ها موفق نبود: ${response.statusCode}");
+    }
+  } catch (e) {
+    Get.snackbar("خطا", "اشکال در ارتباط با سرور: $e");
+  }
+}
+
+
 
   // ------------------- User Locations -------------------
   Future<void> fetchUserLocations() async {

@@ -30,61 +30,31 @@ class WeatherDisplay extends StatelessWidget {
   }
 }
 
-class WeatherCard extends StatefulWidget {
+class WeatherCard extends StatelessWidget {
   final WeatherData weather;
 
   const WeatherCard({super.key, required this.weather});
 
   @override
-  State<WeatherCard> createState() => _WeatherCardState();
-}
-
-class _WeatherCardState extends State<WeatherCard> {
-  late String _currentTime;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _updateTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
-  }
-
-  void _updateTime() {
-    final now = DateTime.now();
-    setState(() {
-      _currentTime = DateFormat.Hm().format(now); // ساعت:دقیقه
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final temp = AppUtilsMixin.toPersianNumber(
-      (widget.weather.main.temp - 273.15).round(),
+      (weather.main.temp - 273.15).round(),
     );
 
-    final now = DateTime.fromMillisecondsSinceEpoch(widget.weather.dt * 1000);
+    final now = DateTime.fromMillisecondsSinceEpoch(weather.dt * 1000);
     final jalali = Jalali.fromDateTime(now);
-    final dayName = jalali.formatter.wN; // نام روز
+    final dayName = jalali.formatter.wN;
 
     final condition = _translateWeatherCondition(
-      widget.weather.weather.first.description,
+      weather.weather.first.description,
     );
-    final weatherIcon =
-        _getWeatherIcon(widget.weather.weather.first.description);
+    final weatherIcon = _getWeatherIcon(weather.weather.first.description);
 
     return Container(
-      height: 100,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2), // کمتر شد
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -94,49 +64,45 @@ class _WeatherCardState extends State<WeatherCard> {
             '$temp°',
             style: TextStyle(
               fontFamily: 'IranYekan',
-              fontSize: 48,
+              fontSize: 18, // خیلی کوچکتر
               fontWeight: FontWeight.bold,
               color: Colors.blue[600],
             ),
           ),
-          const SizedBox(width: 24),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                condition,
-                style: TextStyle(
-                  fontFamily: 'IranYekan',
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[600],
+          const SizedBox(width: 6),
+          Flexible(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  condition,
+                  style: TextStyle(
+                    fontFamily: 'IranYekan',
+                    fontSize: 10, // خیلی کوچکتر
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[600],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '$dayName، تهران',
-                style: TextStyle(
-                  fontFamily: 'IranYekan',
-                  fontSize: 16,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.blue[600],
+                const SizedBox(height: 1),
+                Text(
+                  '$dayName، تهران',
+                  style: TextStyle(
+                    fontFamily: 'IranYekan',
+                    fontSize: 9, // خیلی کوچکتر
+                    fontWeight: FontWeight.normal,
+                    color: Colors.blue[600],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'ساعت $_currentTime',
-                style: TextStyle(
-                  fontFamily: 'IranYekan',
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.blueGrey[600],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(width: 24),
-          weatherIcon,
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: weatherIcon,
+          ),
         ],
       ),
     );
@@ -154,38 +120,15 @@ class _WeatherCardState extends State<WeatherCard> {
 
   Widget _getWeatherIcon(String description) {
     final desc = description.toLowerCase();
-    if (desc.contains('clear')) {
-      return SvgPicture.asset(
-        'assets/svg/sunny.svg',
-        width: 48,
-        height: 48,
-      );
-    } else if (desc.contains('cloud')) {
-      return SvgPicture.asset(
-        'assets/svg/partly_cloudy.svg',
-        width: 48,
-        height: 48,
-      );
-    } else if (desc.contains('rain')) {
-      return SvgPicture.asset(
-        'assets/svg/rainy.svg',
-        width: 48,
-        height: 48,
-      );
-    } else if (desc.contains('snow')) {
-      return SvgPicture.asset(
-        'assets/svg/snowy.svg',
-        width: 48,
-        height: 48,
-      );
-    } else if (desc.contains('thunderstorm')) {
-      return SvgPicture.asset(
-        'assets/svg/thunderstorm.svg',
-        width: 48,
-        height: 48,
-      );
-    }
-    return const Icon(Icons.help_outline, size: 48, color: Colors.grey);
+    String asset = '';
+    if (desc.contains('clear')) asset = 'assets/svg/sunny.svg';
+    else if (desc.contains('cloud')) asset = 'assets/svg/partly_cloudy.svg';
+    else if (desc.contains('rain')) asset = 'assets/svg/rainy.svg';
+    else if (desc.contains('snow')) asset = 'assets/svg/snowy.svg';
+    else if (desc.contains('thunderstorm')) asset = 'assets/svg/thunderstorm.svg';
+    else return const Icon(Icons.help_outline, size: 20, color: Colors.grey);
+
+    return SvgPicture.asset(asset, width: 20, height: 20);
   }
 }
 

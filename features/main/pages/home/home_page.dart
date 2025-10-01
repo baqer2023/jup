@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 import 'package:my_app32/app/services/realable_controller.dart';
 
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ class HomePage extends BaseView<HomeController> {
 
   @override
   Widget body() {
+    final controller = Get.find<HomeController>();
     return DefaultTabController(
       length: 3,
       child: Builder(
@@ -36,7 +38,7 @@ class HomePage extends BaseView<HomeController> {
 
             body: TabBarView(
               children: [
-                _buildMainContent(),
+                _buildMainContent(controller),
                 const Center(child: Text('To be Built Soon')),
                 const Center(child: Text('Under Construction')),
               ],
@@ -47,195 +49,190 @@ class HomePage extends BaseView<HomeController> {
     );
   }
 
-  Widget _buildMainContent() {
-    // Reactive variable برای نگه داشتن مکان انتخاب شده
-    // final RxString selectedLocationId = ''.obs;
+Widget _buildMainContent(HomeController controller) {
+  return Obx(() {
+    final devices = controller.deviceList;
 
-    return Obx(() {
+    return RefreshIndicator(
+      onRefresh: controller.refreshAllData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 16),
 
+            // --- چهار بخش بالای همه ---
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: LayoutBuilder(builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final height = width / 3; // کاهش ارتفاع برای جمع‌وجور شدن
+                return SizedBox(
+                  width: width,
+                  height: height,
+                  child: Stack(
+                    children: [
+                      // بالا سمت راست: Weather
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        width: width / 2 - 16,
+                        height: height / 2 - 8,
+                        child: WeatherDisplay(weatherFuture: controller.weatherFuture),
+                      ),
 
-      final locations = controller.userLocations;
-  final devices = controller.deviceList;
+                      // پایین سمت راست: آیکون SVG
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        width: width / 2 - 16,
+                        height: height / 2 - 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/svg/enableDevice.svg',
+                              width: 100,
+                              height: 100,
+                            ),
+                          ),
+                        ),
+                      ),
 
-  // وقتی لیست مکان‌ها آماده شد، پذیرایی رو به صورت پیش‌فرض انتخاب کن
-  if (locations.isNotEmpty && controller.selectedLocationId.value.isEmpty) {
-    final paziraei = locations.firstWhereOrNull((loc) => loc.title == "پذیرایی");
-    if (paziraei != null) {
-      controller.selectedLocationId.value = paziraei.id;
-      controller.fetchDevicesByLocation(paziraei.id);
-    }
-  }
-      // final locations = controller.userLocations;
-      // final devices = controller.deviceList;
+                      // بالا سمت چپ: آیکون SVG
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        width: width / 2 - 16,
+                        height: height / 2 - 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/svg/enableSencor.svg',
+                              width: 100,
+                              height: 100,
+                            ),
+                          ),
+                        ),
+                      ),
 
-      return RefreshIndicator(
-        onRefresh: controller.refreshAllData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 16),
-              _buildWeatherSection(),
-              const SizedBox(height: 24),
-
-              // دکمه‌ها و عنوان
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // پایین سمت چپ: ساعت و تاریخ + آیکون
+                      // پایین سمت چپ: ساعت و تاریخ + آیکون
+Positioned(
+  bottom: 8,
+  left: 8,
+  width: width / 2 - 16,
+  height: height / 2 - 8,
+  child: Container(
+    padding: const EdgeInsets.all(4), // کمتر شد
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.7),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center, // وسط آیکون
+      children: [
+        // ساعت و تاریخ + متن کوچک
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            StreamBuilder<DateTime>(
+              stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+              builder: (context, snapshot) {
+                final now = snapshot.data ?? DateTime.now();
+                final time = DateFormat.Hm().format(now);
+                final date = DateFormat.yMd().format(now);
+                return Row(
                   children: [
-                    Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Get.to(() => const AddDevicePage());
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.lightBlue.shade400,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                          child: const Text('ثبت دستگاه'),
-                        ),
-
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed:
-                              _showAddLocationDialog, // اینجا تابع مدال را فراخوانی می‌کنیم
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.yellow.shade700,
-                            side: BorderSide(
-                              color: Colors.yellow.shade700,
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                          child: const Text('افزودن مکان'),
-                        ),
-                      ],
-                    ),
-                    const Text(
-                      'دستگاه‌ها',
-                      style: TextStyle(
-                        fontSize: 20,
+                    Text(
+                      time,
+                      style: const TextStyle(
+                        fontSize: 14, // کوچکتر شد
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Divider(thickness: 2),
-              const SizedBox(height: 16),
-
-              // لیست مکان‌ها با انتخاب فعال
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SizedBox(
-                  height: 45, // ارتفاع ثابت برای آیتم‌ها
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: locations.map((loc) {
-                        return Obx(() {
-                          final isSelected = controller.selectedLocationId.value == loc.id;
-
-                          return GestureDetector(
-                            onTap: () {
-                              controller.selectedLocationId.value = loc.id;
-                              controller.fetchDevicesByLocation(loc.id);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 8),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: isSelected ? Colors.yellow : Colors.grey.shade300,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  loc.title,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.yellow.shade700 : Colors.grey,
-                                    fontWeight:
-                                        isSelected ? FontWeight.bold : FontWeight.normal,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        });
-                      }).toList(),
+                    const SizedBox(width: 4),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                        fontSize: 12, // کوچکتر شد
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black54,
+                      ),
                     ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 2),
+            const Text(
+              'تاریخ و ساعت',
+              style: TextStyle(fontSize: 8, color: Colors.black54), // کوچکتر شد
+            ),
+          ],
+        ),
+        // آیکون سمت راست وسط ستون
+        SvgPicture.asset(
+          'assets/svg/time.svg',
+          width: 24, // کمی کوچکتر شد
+          height: 24,
+        ),
+      ],
+    ),
+  ),
+),
+
+                    ],
+                  ),
+                );
+              }),
+            ),
+
+            const SizedBox(height: 16),
+            const Divider(thickness: 2),
+            const SizedBox(height: 16),
+
+            // Grid یا حالت خالی دستگاه‌ها
+            if (devices.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: SvgPicture.asset(
+                          'assets/svg/EmptyDashboard.svg',
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-
-             // لیست دستگاه‌ها
-              if (devices.isEmpty)
-                 Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // SVG نمایشی
-          SizedBox(
-            height: 180,
-            child: SvgPicture.asset('assets/svg/NDeviceF.svg', fit: BoxFit.fill),
-          ),
-          const SizedBox(height: 20),
-
-          // متن راهنما
-          const Text(
-            "تا کنون دستگاهی ثبت نشده‌است،\nجهت ثبت دستگاه جدید روی دکمه ثبت دستگاه کلیک کنید",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    ),
-  )
-              else
-                _buildSmartDevicesGrid(),
-            ],
-          ),
+              )
+            else
+              _buildSmartDevicesGrid(controller),
+          ],
         ),
-      );
-    });
-  }
+      ),
+    );
+  });
+}
+
 
   Widget _buildWeatherSection() {
     return Padding(
@@ -250,38 +247,42 @@ class HomePage extends BaseView<HomeController> {
   }
 
   // ------------------- Smart Devices Grid -------------------
-  Widget _buildSmartDevicesGrid() {
-    return Obx(() {
-      final devices = controller.deviceList;
+Widget _buildSmartDevicesGrid(HomeController controller) {
+  return Obx(() {
+    final devices = controller.deviceList;
 
-      if (devices.isEmpty) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: Text(
-              'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
-              style: TextStyle(color: Colors.grey),
-            ),
+    if (devices.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Text(
+            'هیچ دستگاهی یافت نشد',
+            style: TextStyle(color: Colors.grey),
           ),
-        );
-      }
-
-      final deviceIds = devices.map((d) => d.deviceId).toList();
-
-      if (Get.isRegistered<ReliableSocketController>(
-        tag: 'smartDevicesController',
-      )) {
-        Get.delete<ReliableSocketController>(tag: 'smartDevicesController');
-      }
-
-      final reliableController = Get.put(
-        ReliableSocketController(controller.token, deviceIds),
-        tag: 'smartDevicesController',
-        permanent: true,
+        ),
       );
+    }
 
-      return SingleChildScrollView(
-        child: Column(
+    final deviceIds = devices.map((d) => d.deviceId).toList();
+
+    if (Get.isRegistered<ReliableSocketController>(
+      tag: 'smartDevicesController',
+    )) {
+      Get.delete<ReliableSocketController>(tag: 'smartDevicesController');
+    }
+
+    final reliableController = Get.put(
+      ReliableSocketController(controller.token, deviceIds),
+      tag: 'smartDevicesController',
+      permanent: true,
+    );
+
+    return SizedBox(
+      height: 280, // ارتفاع ثابت کارت‌ها
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
           children: devices.map((device) {
             return Obx(() {
               final deviceData =
@@ -361,36 +362,35 @@ class HomePage extends BaseView<HomeController> {
               final isSingleKey = device.deviceTypeName == 'key-1';
 
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: _buildSmartDeviceCard(
-                      title: device.title,
-                      deviceId: device.deviceId,
-                      switch1On: switch1On,
-                      switch2On: switch2On,
-                      iconColor1: iconColor1,
-                      iconColor2: iconColor2,
-                      onToggle: (switchNumber, value) async {
-                        await reliableController.toggleSwitch(
-                          value,
-                          switchNumber,
-                          device.deviceId,
-                        );
-                      },
-                      isSingleKey: isSingleKey,
-                      device: device,
-                    ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: _buildSmartDeviceCard(
+                    title: device.title,
+                    deviceId: device.deviceId,
+                    switch1On: switch1On,
+                    switch2On: switch2On,
+                    iconColor1: iconColor1,
+                    iconColor2: iconColor2,
+                    onToggle: (switchNumber, value) async {
+                      await reliableController.toggleSwitch(
+                        value,
+                        switchNumber,
+                        device.deviceId,
+                      );
+                    },
+                    isSingleKey: isSingleKey,
+                    device: device,
                   ),
                 ),
               );
             });
           }).toList(),
         ),
-      );
-    });
-  }
+      ),
+    );
+  });
+}
 
   // ------------------- Smart Device Card -------------------
 Widget _buildSmartDeviceCard({

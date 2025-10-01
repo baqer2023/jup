@@ -111,7 +111,8 @@ class DevicesPage extends BaseView<HomeController> {
                     child: Row(
                       children: locations.map((loc) {
                         return Obx(() {
-                          final isSelected = controller.selectedLocationId.value == loc.id;
+                          final isSelected =
+                              controller.selectedLocationId.value == loc.id;
 
                           return GestureDetector(
                             onTap: () {
@@ -120,12 +121,16 @@ class DevicesPage extends BaseView<HomeController> {
                             },
                             child: Container(
                               margin: const EdgeInsets.only(right: 8),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 border: Border.all(
-                                  color: isSelected ? Colors.yellow : Colors.grey.shade300,
+                                  color: isSelected
+                                      ? Colors.yellow
+                                      : Colors.grey.shade300,
                                   width: isSelected ? 2 : 1,
                                 ),
                                 borderRadius: BorderRadius.circular(12),
@@ -141,9 +146,12 @@ class DevicesPage extends BaseView<HomeController> {
                                 child: Text(
                                   loc.title,
                                   style: TextStyle(
-                                    color: isSelected ? Colors.yellow.shade700 : Colors.grey,
-                                    fontWeight:
-                                        isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? Colors.yellow.shade700
+                                        : Colors.grey,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -160,33 +168,36 @@ class DevicesPage extends BaseView<HomeController> {
 
               // لیست دستگاه‌ها
               if (devices.isEmpty)
-                 Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // SVG نمایشی
-          SizedBox(
-            height: 180,
-            child: SvgPicture.asset('assets/svg/NDeviceF.svg', fit: BoxFit.fill),
-          ),
-          const SizedBox(height: 20),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // SVG نمایشی
+                        SizedBox(
+                          height: 180,
+                          child: SvgPicture.asset(
+                            'assets/svg/NDeviceF.svg',
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
 
-          // متن راهنما
-          const Text(
-            "تا کنون دستگاهی ثبت نشده‌است،\nجهت ثبت دستگاه جدید روی دکمه ثبت دستگاه کلیک کنید",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    ),
-  )
+                        // متن راهنما
+                        const Text(
+                          "تا کنون دستگاهی ثبت نشده‌است،\nجهت ثبت دستگاه جدید روی دکمه ثبت دستگاه کلیک کنید",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               else
                 _buildSmartDevicesGrid(),
             ],
@@ -196,9 +207,7 @@ class DevicesPage extends BaseView<HomeController> {
     });
   }
 
-
-
- // ------------------- Smart Devices Grid -------------------
+  // ------------------- Smart Devices Grid -------------------
   Widget _buildSmartDevicesGrid() {
     return Obx(() {
       final devices = controller.deviceList;
@@ -342,275 +351,360 @@ class DevicesPage extends BaseView<HomeController> {
   }
 
   // ------------------- Smart Device Card -------------------
-Widget _buildSmartDeviceCard({
-  required String title,
-  required String deviceId,
-  required bool switch1On,
-  bool? switch2On,
-  required Color iconColor1,
-  Color? iconColor2,
-  required Function(int switchNumber, bool value) onToggle,
-  required bool isSingleKey,
-  required DeviceItem device,
-}) {
-  final reliableController = Get.find<ReliableSocketController>(
-    tag: 'smartDevicesController',
-  );
+  Widget _buildSmartDeviceCard({
+    required String title,
+    required String deviceId,
+    required bool switch1On,
+    bool? switch2On,
+    required Color iconColor1,
+    Color? iconColor2,
+    required Function(int switchNumber, bool value) onToggle,
+    required bool isSingleKey,
+    required DeviceItem device,
+  }) {
+    final reliableController = Get.find<ReliableSocketController>(
+      tag: 'smartDevicesController',
+    );
 
-  bool anySwitchOn = switch1On || (!isSingleKey && (switch2On ?? false));
-  Color borderColor = anySwitchOn ? Colors.blue.shade400 : Colors.grey.shade400;
+    bool anySwitchOn = switch1On || (!isSingleKey && (switch2On ?? false));
+    Color borderColor = anySwitchOn
+        ? Colors.blue.shade400
+        : Colors.grey.shade400;
 
-  return ConstrainedBox(
-    constraints: const BoxConstraints(minHeight: 200, maxHeight: 250),
-    child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Card(
-          color: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: borderColor, width: 2),
-          ),
-          shadowColor: Colors.black12,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 32, 12, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // کلیدها سمت چپ
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildSwitchRow(
-                            deviceId: deviceId,
-                            switchNumber: 1,
-                            color: iconColor1,
-                            onToggle: onToggle,
-                          ),
-                          if (!isSingleKey)
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 200, maxHeight: 250),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Card(
+            color: Colors.white,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor, width: 2),
+            ),
+            shadowColor: Colors.black12,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 32, 12, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // کلیدها سمت چپ
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             _buildSwitchRow(
                               deviceId: deviceId,
-                              switchNumber: 2,
-                              color: iconColor2 ?? Colors.grey,
+                              switchNumber: 1,
+                              color: iconColor1,
                               onToggle: onToggle,
                             ),
+                            if (!isSingleKey)
+                              _buildSwitchRow(
+                                deviceId: deviceId,
+                                switchNumber: 2,
+                                color: iconColor2 ?? Colors.grey,
+                                onToggle: onToggle,
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // عنوان و آنلاین/آفلاین بالا سمت راست
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Obx(() {
+                            final isOnline = reliableController
+                                .isDeviceConnected(deviceId);
+                            return Text(
+                              isOnline ? "آنلاین" : "آفلاین",
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: isOnline ? Colors.green : Colors.red,
+                              ),
+                            );
+                          }),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    // عنوان و آنلاین/آفلاین بالا سمت راست
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                    ],
+                  ),
+
+                  // آخرین فعالیت پایین سمت راست
+                  Row(
+                    children: [
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: PopupMenuButton<int>(
+                          icon: const Icon(
+                            Icons.more_vert,
+                            size: 20,
+                            color: Colors.black87,
+                          ),
+                          onSelected: (value) async {
+                            if (value == 0) {
+                              showLedColorDialog(device: device);
+                            } else if (value == 1) {
+                              Get.to(() => DeviceConfigPage(sn: device.sn));
+                            } else if (value == 2) {
+                              // 👇 افزودن به داشبورد (میانبر)
+                              final homeController = Get.find<HomeController>();
+                              await homeController
+                                  .fetchUserLocations(); // گرفتن آخرین مکان‌ها
+                              final shortcutLocation = homeController
+                                  .userLocations
+                                  .firstWhereOrNull(
+                                    (loc) => loc.title == "میانبر",
+                                  );
+
+                              if (shortcutLocation == null) {
+                                Get.snackbar(
+                                  "خطا",
+                                  "مکان 'میانبر' پیدا نشد",
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                );
+                                return;
+                              }
+
+                              final token = controller.token;
+                              if (token == null) {
+                                Get.snackbar("خطا", "توکن معتبر پیدا نشد");
+                                return;
+                              }
+
+                              final headers = {
+                                'Authorization': 'Bearer $token',
+                                'Content-Type': 'application/json',
+                              };
+
+                              final data = {
+                                 "deviceId":deviceId,
+                                "dashboardId": shortcutLocation.id,
+                              };
+                              print(data);
+                              try {
+                                final dio = Dio();
+                                final response = await dio.post(
+                                  'http://45.149.76.245:8080/api/shortcut/addDevice',
+                                  data: data,
+                                  options: Options(headers: headers),
+                                );
+
+                                if (response.statusCode == 200 ||
+                                    response.statusCode == 201) {
+                                  Get.snackbar(
+                                    'موفقیت',
+                                    'دستگاه به میانبر اضافه شد',
+                                    backgroundColor: Colors.green,
+                                    colorText: Colors.white,
+                                  );
+
+                                  // لیست دستگاه‌ها رو آپدیت کن
+                                  await homeController.refreshAllData();
+                                } else {
+                                  Get.snackbar(
+                                    'خطا',
+                                    'افزودن دستگاه موفق نبود: ${response.statusCode}',
+                                    backgroundColor: Colors.red,
+                                    colorText: Colors.white,
+                                  );
+                                }
+                              } catch (e) {
+                                Get.snackbar(
+                                  'خطا',
+                                  'مشکل در ارتباط با سرور: $e',
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                );
+                              }
+                            }
+                          },
+                          itemBuilder: (context) => const [
+                            PopupMenuItem(
+                              value: 0,
+                              child: Text('تنظیمات پیشرفته'),
+                            ),
+                            PopupMenuItem(value: 1, child: Text('پیکربندی')),
+                            PopupMenuItem(
+                              value: 2,
+                              child: Text('افزودن به داشبورد'),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Obx(() {
-                          final isOnline = reliableController.isDeviceConnected(deviceId);
+                      ),
+                      const Spacer(),
+                      Obx(() {
+                        final lastSeen = reliableController.getLastActivity(
+                          deviceId,
+                        );
+                        if (lastSeen != null) {
+                          final formattedDate =
+                              "${lastSeen.year}/${lastSeen.month}/${lastSeen.day}";
+                          final formattedTime =
+                              "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
                           return Text(
-                            isOnline ? "آنلاین" : "آفلاین",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: isOnline ? Colors.green : Colors.red,
+                            "آخرین فعالیت: $formattedDate - $formattedTime",
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
                             ),
                           );
-                        }),
-                      ],
-                    ),
-                  ],
-                ),
-
-                // آخرین فعالیت پایین سمت راست
-                Row(
-                  children: [
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: PopupMenuButton<int>(
-  icon: const Icon(Icons.more_vert, size: 20, color: Colors.black87),
-  onSelected: (value) {
-    if (value == 0) {
-      showLedColorDialog(device: device);
-    } else if (value == 1) {
-      Get.to(() => DeviceConfigPage(
-            sn: device.sn,
-          ));
-    }
-  },
-  itemBuilder: (context) => [
-    const PopupMenuItem(
-      value: 0,
-      child: Text('تنظیمات پیشرفته'),
-    ),
-    const PopupMenuItem(
-      value: 1,
-      child: Text('پیکربندی'),
-    ),
-  ],
-)
-
-,
-                    ),
-                    const Spacer(),
-                    Obx(() {
-                      final lastSeen = reliableController.getLastActivity(deviceId);
-                      if (lastSeen != null) {
-                        final formattedDate =
-                            "${lastSeen.year}/${lastSeen.month}/${lastSeen.day}";
-                        final formattedTime =
-                            "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
-                        return Text(
-                          "آخرین فعالیت: $formattedDate - $formattedTime",
-                          style: const TextStyle(fontSize: 10, color: Colors.grey),
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    }),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        // دایره لامپ بالا وسط
-        Positioned(
-          top: -20,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              width: 45,
-              height: 45,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: anySwitchOn ? Colors.blue.shade400 : Colors.grey.shade400,
-                  width: 3,
-                ),
-                boxShadow: [
-                  if (anySwitchOn)
-                    BoxShadow(
-                      color: Colors.blue.shade200.withOpacity(0.5),
-                      blurRadius: 5,
-                      spreadRadius: 1,
-                    ),
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      }),
+                    ],
+                  ),
                 ],
               ),
-              child: ClipOval(
-                child: SvgPicture.asset(
-                  anySwitchOn ? 'assets/svg/on.svg' : 'assets/svg/off.svg',
-                  fit: BoxFit.cover,
+            ),
+          ),
+          // دایره لامپ بالا وسط
+          Positioned(
+            top: -20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                width: 45,
+                height: 45,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: anySwitchOn
+                        ? Colors.blue.shade400
+                        : Colors.grey.shade400,
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    if (anySwitchOn)
+                      BoxShadow(
+                        color: Colors.blue.shade200.withOpacity(0.5),
+                        blurRadius: 5,
+                        spreadRadius: 1,
+                      ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: SvgPicture.asset(
+                    anySwitchOn ? 'assets/svg/on.svg' : 'assets/svg/off.svg',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-
-
-// ------------------- ستون کلید (Switch Row) اصلاح شده -------------------
-Widget _buildSwitchRow({
-  required String deviceId,
-  required int switchNumber,
-  required Color color,
-  required Function(int switchNumber, bool value) onToggle,
-}) {
-  final reliableController = Get.find<ReliableSocketController>(
-    tag: 'smartDevicesController',
-  );
-
-  return Obx(() {
-    final deviceData = reliableController.latestDeviceDataById[deviceId];
-    bool isOn = false;
-
-    if (deviceData != null) {
-      final keyEntries = switchNumber == 1
-          ? [
-              if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
-              if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
-            ]
-          : [
-              if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
-              if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
-            ];
-
-      if (keyEntries.isNotEmpty) {
-        keyEntries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
-        isOn = keyEntries.first[1].toString().contains('On');
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10), // فاصله بیشتر بین کلیدها
-      child: Row(
-        children: [
-          // دایره رنگ وضعیت (بزرگتر)
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
-              boxShadow: [
-                if (isOn)
-                  BoxShadow(
-                    color: color.withOpacity(0.6),
-                    blurRadius: 6,
-                    spreadRadius: 2,
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // دکمه روشن/خاموش (بزرگتر)
-          GestureDetector(
-            onTap: () => onToggle(switchNumber, !isOn),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isOn ? Colors.lightBlueAccent : Colors.grey.shade400,
-              ),
-              child: const Icon(
-                Icons.power_settings_new,
-                color: Colors.white,
-                size: 20, // آیکون کمی بزرگتر
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // اسم کلید (فونت بزرگتر)
-          Text(
-            "کلید $switchNumber",
-            style: const TextStyle(
-              fontSize: 16, // فونت بزرگتر
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],
       ),
     );
-  });
-}
+  }
+
+  // ------------------- ستون کلید (Switch Row) اصلاح شده -------------------
+  Widget _buildSwitchRow({
+    required String deviceId,
+    required int switchNumber,
+    required Color color,
+    required Function(int switchNumber, bool value) onToggle,
+  }) {
+    final reliableController = Get.find<ReliableSocketController>(
+      tag: 'smartDevicesController',
+    );
+
+    return Obx(() {
+      final deviceData = reliableController.latestDeviceDataById[deviceId];
+      bool isOn = false;
+
+      if (deviceData != null) {
+        final keyEntries = switchNumber == 1
+            ? [
+                if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
+                if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
+              ]
+            : [
+                if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
+                if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
+              ];
+
+        if (keyEntries.isNotEmpty) {
+          keyEntries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+          isOn = keyEntries.first[1].toString().contains('On');
+        }
+      }
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: 10,
+        ), // فاصله بیشتر بین کلیدها
+        child: Row(
+          children: [
+            // دایره رنگ وضعیت (بزرگتر)
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                boxShadow: [
+                  if (isOn)
+                    BoxShadow(
+                      color: color.withOpacity(0.6),
+                      blurRadius: 6,
+                      spreadRadius: 2,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // دکمه روشن/خاموش (بزرگتر)
+            GestureDetector(
+              onTap: () => onToggle(switchNumber, !isOn),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isOn ? Colors.lightBlueAccent : Colors.grey.shade400,
+                ),
+                child: const Icon(
+                  Icons.power_settings_new,
+                  color: Colors.white,
+                  size: 20, // آیکون کمی بزرگتر
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+
+            // اسم کلید (فونت بزرگتر)
+            Text(
+              "کلید $switchNumber",
+              style: const TextStyle(
+                fontSize: 16, // فونت بزرگتر
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
 
   void _showAddLocationDialog() {
     final TextEditingController nameController = TextEditingController();
@@ -838,216 +932,222 @@ Widget _buildSwitchRow({
 
   // ------------------- Advanced Settings Dialog -------------------
   void showLedColorDialog({required DeviceItem device}) {
-  final reliableController = Get.find<ReliableSocketController>(
-    tag: 'smartDevicesController',
-  );
-  final deviceData = reliableController.latestDeviceDataById[device.deviceId];
-  final isSingleKey = device.deviceTypeName == 'key-1';
+    final reliableController = Get.find<ReliableSocketController>(
+      tag: 'smartDevicesController',
+    );
+    final deviceData = reliableController.latestDeviceDataById[device.deviceId];
+    final isSingleKey = device.deviceTypeName == 'key-1';
 
-  // Reactive colors
-  Rx<Color> touch1On = const Color(0xFF2196F3).obs;
-  Rx<Color> touch1Off = const Color(0xFF9E9E9E).obs;
-  Rx<Color> touch2On = const Color(0xFF4CAF50).obs;
-  Rx<Color> touch2Off = const Color(0xFF9E9E9E).obs;
+    // Reactive colors
+    Rx<Color> touch1On = const Color(0xFF2196F3).obs;
+    Rx<Color> touch1Off = const Color(0xFF9E9E9E).obs;
+    Rx<Color> touch2On = const Color(0xFF4CAF50).obs;
+    Rx<Color> touch2Off = const Color(0xFF9E9E9E).obs;
 
-  // مقداردهی اولیه از داده دستگاه
-  if (deviceData != null &&
-      deviceData['ledColor'] is List &&
-      deviceData['ledColor'].isNotEmpty) {
-    try {
-      final ledEntry = deviceData['ledColor'][0][1];
-      Map<String, dynamic> ledMap = ledEntry is String
-          ? jsonDecode(ledEntry)
-          : (ledEntry as Map<String, dynamic>);
+    // مقداردهی اولیه از داده دستگاه
+    if (deviceData != null &&
+        deviceData['ledColor'] is List &&
+        deviceData['ledColor'].isNotEmpty) {
+      try {
+        final ledEntry = deviceData['ledColor'][0][1];
+        Map<String, dynamic> ledMap = ledEntry is String
+            ? jsonDecode(ledEntry)
+            : (ledEntry as Map<String, dynamic>);
 
-      if (ledMap['touch1'] != null) {
-        touch1On.value = Color.fromARGB(
-          255,
-          (ledMap['touch1']['on']['r'] as int).clamp(0, 255),
-          (ledMap['touch1']['on']['g'] as int).clamp(0, 255),
-          (ledMap['touch1']['on']['b'] as int).clamp(0, 255),
-        );
-        touch1Off.value = Color.fromARGB(
-          255,
-          (ledMap['touch1']['off']['r'] as int).clamp(0, 255),
-          (ledMap['touch1']['off']['g'] as int).clamp(0, 255),
-          (ledMap['touch1']['off']['b'] as int).clamp(0, 255),
-        );
-      }
+        if (ledMap['touch1'] != null) {
+          touch1On.value = Color.fromARGB(
+            255,
+            (ledMap['touch1']['on']['r'] as int).clamp(0, 255),
+            (ledMap['touch1']['on']['g'] as int).clamp(0, 255),
+            (ledMap['touch1']['on']['b'] as int).clamp(0, 255),
+          );
+          touch1Off.value = Color.fromARGB(
+            255,
+            (ledMap['touch1']['off']['r'] as int).clamp(0, 255),
+            (ledMap['touch1']['off']['g'] as int).clamp(0, 255),
+            (ledMap['touch1']['off']['b'] as int).clamp(0, 255),
+          );
+        }
 
-      if (!isSingleKey && ledMap['touch2'] != null) {
-        touch2On.value = Color.fromARGB(
-          255,
-          (ledMap['touch2']['on']['r'] as int).clamp(0, 255),
-          (ledMap['touch2']['on']['g'] as int).clamp(0, 255),
-          (ledMap['touch2']['on']['b'] as int).clamp(0, 255),
-        );
-        touch2Off.value = Color.fromARGB(
-          255,
-          (ledMap['touch2']['off']['r'] as int).clamp(0, 255),
-          (ledMap['touch2']['off']['g'] as int).clamp(0, 255),
-          (ledMap['touch2']['off']['b'] as int).clamp(0, 255),
-        );
-      }
-    } catch (_) {}
-  }
+        if (!isSingleKey && ledMap['touch2'] != null) {
+          touch2On.value = Color.fromARGB(
+            255,
+            (ledMap['touch2']['on']['r'] as int).clamp(0, 255),
+            (ledMap['touch2']['on']['g'] as int).clamp(0, 255),
+            (ledMap['touch2']['on']['b'] as int).clamp(0, 255),
+          );
+          touch2Off.value = Color.fromARGB(
+            255,
+            (ledMap['touch2']['off']['r'] as int).clamp(0, 255),
+            (ledMap['touch2']['off']['g'] as int).clamp(0, 255),
+            (ledMap['touch2']['off']['b'] as int).clamp(0, 255),
+          );
+        }
+      } catch (_) {}
+    }
 
-  showDialog(
-    context: Get.context!,
-    barrierDismissible: false,
-    builder: (context) {
-      return AlertDialog(
-        backgroundColor: Colors.white, // بک‌گراند فرم سفید
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          color: Colors.blue, // هدر آبی
-          child: const Center(
-            child: Text(
-              'تنظیمات پیشرفته',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    showDialog(
+      context: Get.context!,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white, // بک‌گراند فرم سفید
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            color: Colors.blue, // هدر آبی
+            child: const Center(
+              child: Text(
+                'تنظیمات پیشرفته',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Obx(
-                () => _ColorPreviewPicker(
-                  label: 'کلید ۱ روشن',
-                  color: touch1On.value,
-                  onPick: (c) => touch1On.value = c,
-                ),
-              ),
-              Obx(
-                () => _ColorPreviewPicker(
-                  label: 'کلید ۱ خاموش',
-                  color: touch1Off.value,
-                  onPick: (c) => touch1Off.value = c,
-                ),
-              ),
-              if (!isSingleKey) ...[
-                const SizedBox(height: 8),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Obx(
                   () => _ColorPreviewPicker(
-                    label: 'کلید ۲ روشن',
-                    color: touch2On.value,
-                    onPick: (c) => touch2On.value = c,
+                    label: 'کلید ۱ روشن',
+                    color: touch1On.value,
+                    onPick: (c) => touch1On.value = c,
                   ),
                 ),
                 Obx(
                   () => _ColorPreviewPicker(
-                    label: 'کلید ۲ خاموش',
-                    color: touch2Off.value,
-                    onPick: (c) => touch2Off.value = c,
+                    label: 'کلید ۱ خاموش',
+                    color: touch1Off.value,
+                    onPick: (c) => touch1Off.value = c,
                   ),
                 ),
+                if (!isSingleKey) ...[
+                  const SizedBox(height: 8),
+                  Obx(
+                    () => _ColorPreviewPicker(
+                      label: 'کلید ۲ روشن',
+                      color: touch2On.value,
+                      onPick: (c) => touch2On.value = c,
+                    ),
+                  ),
+                  Obx(
+                    () => _ColorPreviewPicker(
+                      label: 'کلید ۲ خاموش',
+                      color: touch2Off.value,
+                      onPick: (c) => touch2Off.value = c,
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.yellow, // متن زرد
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text("انصراف"),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                final token2 = controller.token;
-                var headers = {
-                  'Authorization': 'Bearer $token2',
-                  'Content-Type': 'application/json',
-                };
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.yellow, // متن زرد
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text("انصراف"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final token2 = controller.token;
+                  var headers = {
+                    'Authorization': 'Bearer $token2',
+                    'Content-Type': 'application/json',
+                  };
 
-                var data = json.encode({
-                  "deviceId": device.deviceId,
-                  "request": {
-                    "ledColor": {
-                      "touch1": {
-                        "on": {
-                          "r": touch1On.value.red,
-                          "g": touch1On.value.green,
-                          "b": touch1On.value.blue,
-                        },
-                        "off": {
-                          "r": touch1Off.value.red,
-                          "g": touch1Off.value.green,
-                          "b": touch1Off.value.blue,
-                        },
-                      },
-                      if (!isSingleKey)
-                        "touch2": {
+                  var data = json.encode({
+                    "deviceId": device.deviceId,
+                    "request": {
+                      "ledColor": {
+                        "touch1": {
                           "on": {
-                            "r": touch2On.value.red,
-                            "g": touch2On.value.green,
-                            "b": touch2On.value.blue,
+                            "r": touch1On.value.red,
+                            "g": touch1On.value.green,
+                            "b": touch1On.value.blue,
                           },
                           "off": {
-                            "r": touch2Off.value.red,
-                            "g": touch2Off.value.green,
-                            "b": touch2Off.value.blue,
+                            "r": touch1Off.value.red,
+                            "g": touch1Off.value.green,
+                            "b": touch1Off.value.blue,
                           },
                         },
+                        if (!isSingleKey)
+                          "touch2": {
+                            "on": {
+                              "r": touch2On.value.red,
+                              "g": touch2On.value.green,
+                              "b": touch2On.value.blue,
+                            },
+                            "off": {
+                              "r": touch2Off.value.red,
+                              "g": touch2Off.value.green,
+                              "b": touch2Off.value.blue,
+                            },
+                          },
+                      },
                     },
-                  },
-                });
+                  });
 
-                var dio = Dio();
-                var response = await dio.request(
-                  'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
-                  options: Options(method: 'POST', headers: headers),
-                  data: data,
-                );
-
-                if (response.statusCode == 200) {
-                  Get.snackbar(
-                    'موفق',
-                    'رنگ کلید با موفقیت تغییر کرد',
-                    backgroundColor: Colors.green,
+                  var dio = Dio();
+                  var response = await dio.request(
+                    'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
+                    options: Options(method: 'POST', headers: headers),
+                    data: data,
                   );
-                  Navigator.of(context).pop();
-                } else {
+
+                  if (response.statusCode == 200) {
+                    Get.snackbar(
+                      'موفق',
+                      'رنگ کلید با موفقیت تغییر کرد',
+                      backgroundColor: Colors.green,
+                    );
+                    Navigator.of(context).pop();
+                  } else {
+                    Get.snackbar(
+                      'خطا',
+                      'خطا در تغییر رنگ: ${response.statusMessage}',
+                      backgroundColor: Colors.red,
+                    );
+                  }
+                } catch (e) {
                   Get.snackbar(
                     'خطا',
-                    'خطا در تغییر رنگ: ${response.statusMessage}',
+                    'خطا در ارتباط با سرور: $e',
                     backgroundColor: Colors.red,
                   );
                 }
-              } catch (e) {
-                Get.snackbar(
-                  'خطا',
-                  'خطا در ارتباط با سرور: $e',
-                  backgroundColor: Colors.red,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue, // دکمه ثبت آبی
-              foregroundColor: Colors.white, // متن سفید
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // دکمه ثبت آبی
+                foregroundColor: Colors.white, // متن سفید
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('ثبت'),
             ),
-            child: const Text('ثبت'),
-          ),
-        ],
-      );
-    },
-  );
+          ],
+        );
+      },
+    );
+  }
 }
-
-}
-
-
 
 // ------------------- Color Picker Widget -------------------
 class _ColorPreviewPicker extends StatelessWidget {
@@ -1184,4 +1284,3 @@ class _ColorPreviewPicker extends StatelessWidget {
     );
   }
 }
-
