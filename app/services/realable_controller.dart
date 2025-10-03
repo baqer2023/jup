@@ -69,22 +69,15 @@ class ReliableSocketController extends GetxController {
     });
   }
 
-  /// وضعیت آنلاین دستگاه:
-  /// اگر در `deviceConnectionStatus` آنلاین بود true برمی‌گرداند
-  /// اگر اخیراً فعالیت داشته (آخرین ۳۰ ثانیه) آنلاین هم در نظر می‌گیرد
+  /// فقط آنلاین یا آفلاین بودن دستگاه
   bool isDeviceConnected(String deviceId) {
-    final connected = deviceConnectionStatus[deviceId];
-    if (connected != null && connected) return true;
-
-    final lastSeen = lastDeviceActivity[deviceId];
-    if (lastSeen != null && DateTime.now().difference(lastSeen) < const Duration(seconds: 30)) {
-      return true;
-    }
-
-    return false;
+    return deviceConnectionStatus[deviceId] ?? false;
   }
 
-  DateTime? getLastActivity(String deviceId) => lastDeviceActivity[deviceId];
+  /// گرفتن زمان آخرین فعالیت دستگاه (حتی اگه آفلاین باشه)
+  DateTime? getLastActivity(String deviceId) {
+    return lastDeviceActivity[deviceId];
+  }
 
   /// تغییر وضعیت سوئیچ
   Future<void> toggleSwitch(bool isOn, int switchNumber, String deviceId) async {

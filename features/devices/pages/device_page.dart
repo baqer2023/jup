@@ -207,139 +207,149 @@ class DevicesPage extends BaseView<HomeController> {
     });
   }
 
-// ------------------- Smart Devices Grid (بهینه) -------------------
-Widget _buildSmartDevicesGrid() {
-  return Obx(() {
-    final devices = controller.deviceList;
+  // ------------------- Smart Devices Grid (بهینه) -------------------
+  Widget _buildSmartDevicesGrid() {
+    return Obx(() {
+      final devices = controller.deviceList;
 
-    if (devices.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text(
-            'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
-            style: TextStyle(color: Colors.grey),
+      if (devices.isEmpty) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Text(
+              'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
-        ),
+        );
+      }
+
+      // تنها یکبار کنترلر را ایجاد کن اگر موجود نباشد
+      final reliableController = Get.put(
+        Get.isRegistered<ReliableSocketController>(
+              tag: 'smartDevicesController',
+            )
+            ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
+            : ReliableSocketController(
+                controller.token,
+                devices.map((d) => d.deviceId).toList(),
+              ),
+        tag: 'smartDevicesController',
+        permanent: true,
       );
-    }
 
-    // تنها یکبار کنترلر را ایجاد کن اگر موجود نباشد
-    final reliableController = Get.put(
-      Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')
-          ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
-          : ReliableSocketController(controller.token, devices.map((d) => d.deviceId).toList()),
-      tag: 'smartDevicesController',
-      permanent: true,
-    );
+      return SingleChildScrollView(
+        child: Column(
+          children: devices.map((device) {
+            return Obx(() {
+              final deviceData =
+                  reliableController.latestDeviceDataById[device.deviceId];
 
-    return SingleChildScrollView(
-      child: Column(
-        children: devices.map((device) {
-          return Obx(() {
-            final deviceData = reliableController.latestDeviceDataById[device.deviceId];
+              bool switch1On = false;
+              bool switch2On = false;
+              Color iconColor1 = Colors.grey;
+              Color iconColor2 = Colors.grey;
 
-            bool switch1On = false;
-            bool switch2On = false;
-            Color iconColor1 = Colors.grey;
-            Color iconColor2 = Colors.grey;
-
-            if (deviceData != null) {
-              // وضعیت سوئیچ‌ها
-              final key1Entries = [
-                if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
-                if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
-              ];
-              if (key1Entries.isNotEmpty) {
-                key1Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
-                switch1On = key1Entries.first[1].toString().contains('On');
-              }
-
-              final key2Entries = [
-                if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
-                if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
-              ];
-              if (key2Entries.isNotEmpty) {
-                key2Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
-                switch2On = key2Entries.first[1].toString().contains('On');
-              }
-
-              // رنگ‌ها
-              if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
-                final ledEntry = deviceData['ledColor'][0][1];
-                Map<String, dynamic> ledMap;
-                if (ledEntry is String) {
-                  ledMap = jsonDecode(ledEntry);
-                } else if (ledEntry is Map<String, dynamic>) {
-                  ledMap = ledEntry;
-                } else {
-                  ledMap = {};
+              if (deviceData != null) {
+                // وضعیت سوئیچ‌ها
+                final key1Entries = [
+                  if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
+                  if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
+                ];
+                if (key1Entries.isNotEmpty) {
+                  key1Entries.sort(
+                    (a, b) => (b[0] as int).compareTo(a[0] as int),
+                  );
+                  switch1On = key1Entries.first[1].toString().contains('On');
                 }
 
-                iconColor1 = switch1On
-                    ? Color.fromARGB(
-                        255,
-                        ledMap['touch1']['on']['r'],
-                        ledMap['touch1']['on']['g'],
-                        ledMap['touch1']['on']['b'],
-                      )
-                    : Color.fromARGB(
-                        255,
-                        ledMap['touch1']['off']['r'],
-                        ledMap['touch1']['off']['g'],
-                        ledMap['touch1']['off']['b'],
-                      );
+                final key2Entries = [
+                  if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
+                  if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
+                ];
+                if (key2Entries.isNotEmpty) {
+                  key2Entries.sort(
+                    (a, b) => (b[0] as int).compareTo(a[0] as int),
+                  );
+                  switch2On = key2Entries.first[1].toString().contains('On');
+                }
 
-                iconColor2 = switch2On
-                    ? Color.fromARGB(
-                        255,
-                        ledMap['touch2']['on']['r'],
-                        ledMap['touch2']['on']['g'],
-                        ledMap['touch2']['on']['b'],
-                      )
-                    : Color.fromARGB(
-                        255,
-                        ledMap['touch2']['off']['r'],
-                        ledMap['touch2']['off']['g'],
-                        ledMap['touch2']['off']['b'],
-                      );
+                // رنگ‌ها
+                if (deviceData['ledColor'] is List &&
+                    deviceData['ledColor'].isNotEmpty) {
+                  final ledEntry = deviceData['ledColor'][0][1];
+                  Map<String, dynamic> ledMap;
+                  if (ledEntry is String) {
+                    ledMap = jsonDecode(ledEntry);
+                  } else if (ledEntry is Map<String, dynamic>) {
+                    ledMap = ledEntry;
+                  } else {
+                    ledMap = {};
+                  }
+
+                  iconColor1 = switch1On
+                      ? Color.fromARGB(
+                          255,
+                          ledMap['touch1']['on']['r'],
+                          ledMap['touch1']['on']['g'],
+                          ledMap['touch1']['on']['b'],
+                        )
+                      : Color.fromARGB(
+                          255,
+                          ledMap['touch1']['off']['r'],
+                          ledMap['touch1']['off']['g'],
+                          ledMap['touch1']['off']['b'],
+                        );
+
+                  iconColor2 = switch2On
+                      ? Color.fromARGB(
+                          255,
+                          ledMap['touch2']['on']['r'],
+                          ledMap['touch2']['on']['g'],
+                          ledMap['touch2']['on']['b'],
+                        )
+                      : Color.fromARGB(
+                          255,
+                          ledMap['touch2']['off']['r'],
+                          ledMap['touch2']['off']['g'],
+                          ledMap['touch2']['off']['b'],
+                        );
+                }
               }
-            }
 
-            final isSingleKey = device.deviceTypeName == 'key-1';
+              final isSingleKey = device.deviceTypeName == 'key-1';
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: _buildSmartDeviceCard(
-                    title: device.title,
-                    deviceId: device.deviceId,
-                    switch1On: switch1On,
-                    switch2On: switch2On,
-                    iconColor1: iconColor1,
-                    iconColor2: iconColor2,
-                    onToggle: (switchNumber, value) async {
-                      await reliableController.toggleSwitch(
-                        value,
-                        switchNumber,
-                        device.deviceId,
-                      );
-                    },
-                    isSingleKey: isSingleKey,
-                    device: device,
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: _buildSmartDeviceCard(
+                      title: device.title,
+                      deviceId: device.deviceId,
+                      switch1On: switch1On,
+                      switch2On: switch2On,
+                      iconColor1: iconColor1,
+                      iconColor2: iconColor2,
+                      onToggle: (switchNumber, value) async {
+                        await reliableController.toggleSwitch(
+                          value,
+                          switchNumber,
+                          device.deviceId,
+                        );
+                      },
+                      isSingleKey: isSingleKey,
+                      device: device,
+                    ),
                   ),
                 ),
-              ),
-            );
-          });
-        }).toList(),
-      ),
-    );
-  });
-}
-
+              );
+            });
+          }).toList(),
+        ),
+      );
+    });
+  }
 
   // ------------------- Smart Device Card -------------------
   Widget _buildSmartDeviceCard({
@@ -420,160 +430,221 @@ Widget _buildSmartDevicesGrid() {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Obx(() {
-                            final isOnline = reliableController
-                                .isDeviceConnected(deviceId);
-                            return Text(
-                              isOnline ? "آنلاین" : "آفلاین",
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: isOnline ? Colors.green : Colors.red,
-                              ),
-                            );
-                          }),
+                          // Obx(() {
+                          //   final isOnline = reliableController
+                          //       .isDeviceConnected(deviceId);
+                          //   return Text(
+                          //     isOnline ? "آنلاین" : "آفلاین",
+                          //     style: TextStyle(
+                          //       fontSize: 11,
+                          //       fontWeight: FontWeight.w500,
+                          //       color: isOnline ? Colors.green : Colors.red,
+                          //     ),
+                          //   );
+                          // }),
                         ],
                       ),
                     ],
                   ),
-Row(
-  children: [
-    Align(
-      alignment: Alignment.bottomLeft,
-      child: PopupMenuButton<int>(
-        color: Colors.white, // پس‌زمینه منو سفید
-        icon: const Icon(
-          Icons.more_vert,
-          size: 20,
-          color: Colors.black87,
-        ),
-        onSelected: (value) async {
-          final homeController = Get.find<HomeController>();
+                  Row(
+                    children: [
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: PopupMenuButton<int>(
+                          color: Colors.white, // پس‌زمینه منو سفید
+                          icon: const Icon(
+                            Icons.more_vert,
+                            size: 20,
+                            color: Colors.black87,
+                          ),
+                          onSelected: (value) async {
+                            final homeController = Get.find<HomeController>();
 
-          if (value == 0) {
-            showLedColorDialog(device: device);
-          } else if (value == 1) {
-            Get.to(() => DeviceConfigPage(sn: device.sn));
-          } else if (value == 2) {
-            // 👇 افزودن به داشبورد (میانبر)
-            await homeController.fetchUserLocations(); 
-            final shortcutLocation = homeController.userLocations.firstWhereOrNull(
-              (loc) => loc.title == "میانبر",
-            );
+                            if (value == 0) {
+                              showLedColorDialog(device: device);
+                            } else if (value == 1) {
+                              Get.to(() => DeviceConfigPage(sn: device.sn));
+                            } else if (value == 2) {
+                              // 👇 افزودن به داشبورد (میانبر)
+                              await homeController.fetchUserLocations();
+                              final shortcutLocation = homeController
+                                  .userLocations
+                                  .firstWhereOrNull(
+                                    (loc) => loc.title == "میانبر",
+                                  );
 
-            if (shortcutLocation == null) {
-              Get.snackbar(
-                "خطا",
-                "مکان 'میانبر' پیدا نشد",
-                backgroundColor: Colors.red,
-                colorText: Colors.white,
-              );
-              return;
-            }
+                              if (shortcutLocation == null) {
+                                Get.snackbar(
+                                  "خطا",
+                                  "مکان 'میانبر' پیدا نشد",
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                );
+                                return;
+                              }
 
-            final token = controller.token;
-            if (token == null) {
-              Get.snackbar("خطا", "توکن معتبر پیدا نشد");
-              return;
-            }
+                              final token = controller.token;
+                              if (token == null) {
+                                Get.snackbar("خطا", "توکن معتبر پیدا نشد");
+                                return;
+                              }
 
-            final headers = {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json',
-            };
+                              final headers = {
+                                'Authorization': 'Bearer $token',
+                                'Content-Type': 'application/json',
+                              };
 
-            final data = {
-              "deviceId": deviceId,
-              "dashboardId": shortcutLocation.id,
-            };
+                              final data = {
+                                "deviceId": deviceId,
+                                "dashboardId": shortcutLocation.id,
+                              };
 
-            try {
-              final dio = Dio();
-              final response = await dio.post(
-                'http://45.149.76.245:8080/api/shortcut/addDevice',
-                data: data,
-                options: Options(headers: headers),
-              );
+                              try {
+                                final dio = Dio();
+                                final response = await dio.post(
+                                  'http://45.149.76.245:8080/api/shortcut/addDevice',
+                                  data: data,
+                                  options: Options(headers: headers),
+                                );
 
-              if (response.statusCode == 200 || response.statusCode == 201) {
-                Get.snackbar(
-                  'موفقیت',
-                  'دستگاه به میانبر اضافه شد',
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                );
-              } else {
-                Get.snackbar(
-                  'خطا',
-                  'افزودن دستگاه موفق نبود: ${response.statusCode}',
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
-                );
-              }
-            } catch (e) {
-              Get.snackbar(
-                'خطا',
-                'مشکل در ارتباط با سرور: $e',
-                backgroundColor: Colors.red,
-                colorText: Colors.white,
-              );
-            }
-          } else if (value == 3) {
-            await homeController.removeFromDashboard(device.deviceId);
-          } else if (value == 4) {
-            await homeController.completeRemoveDevice(device.deviceId);
-          }
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 0,
-            child: Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
-          ),
-          const PopupMenuItem(
-            value: 1,
-            child: Text('پیکربندی', style: TextStyle(color: Colors.black)),
-          ),
-          const PopupMenuItem(
-            value: 2,
-            child: Text('افزودن به داشبورد', style: TextStyle(color: Colors.black)),
-          ),
-          const PopupMenuItem(
-            value: 3,
-            child: Text('حذف موقت از داشبورد', style: TextStyle(color: Colors.black)),
-          ),
-          const PopupMenuItem(
-            value: 4,
-            child: Text('حذف کامل دستگاه', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
-    ),
-    const Spacer(),
-    Obx(() {
-      final reliableController = Get.find<ReliableSocketController>(tag: 'smartDevicesController');
-      final isOnline = reliableController.isDeviceConnected(deviceId);
-      final lastSeen = reliableController.getLastActivity(deviceId);
+                                if (response.statusCode == 200 ||
+                                    response.statusCode == 201) {
+                                  Get.snackbar(
+                                    'موفقیت',
+                                    'دستگاه به میانبر اضافه شد',
+                                    backgroundColor: Colors.green,
+                                    colorText: Colors.white,
+                                  );
+                                } else {
+                                  Get.snackbar(
+                                    'خطا',
+                                    'افزودن دستگاه موفق نبود: ${response.statusCode}',
+                                    backgroundColor: Colors.red,
+                                    colorText: Colors.white,
+                                  );
+                                }
+                              } catch (e) {
+                                Get.snackbar(
+                                  'خطا',
+                                  'مشکل در ارتباط با سرور: $e',
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                );
+                              }
+                            } else if (value == 3) {
+                              await homeController.removeFromDashboard(
+                                device.deviceId,
+                              );
+                            } else if (value == 4) {
+                              await homeController.completeRemoveDevice(
+                                device.deviceId,
+                              );
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 0,
+                              child: Text(
+                                'تنظیمات پیشرفته',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 1,
+                              child: Text(
+                                'پیکربندی',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 2,
+                              child: Text(
+                                'افزودن به داشبورد',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 3,
+                              child: Text(
+                                'حذف موقت از داشبورد',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 4,
+                              child: Text(
+                                'حذف کامل دستگاه',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      Obx(() {
+                        final reliableController =
+                            Get.find<ReliableSocketController>(
+                              tag: 'smartDevicesController',
+                            );
 
-      if (!isOnline && lastSeen != null) {
-        final formattedDate = "${lastSeen.year}/${lastSeen.month}/${lastSeen.day}";
-        final formattedTime =
-            "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
-        return Text(
-          "آخرین فعالیت: $formattedDate - $formattedTime",
-          style: const TextStyle(
-            fontSize: 10,
-            color: Colors.grey,
-          ),
-        );
-      } else {
-        return const SizedBox.shrink();
-      }
-    }),
-  ],
-),
+                        final lastSeen =
+                            reliableController.lastDeviceActivity[deviceId];
 
+                        // بررسی آنلاین بودن: اگر آخرین فعالیت کمتر از 5 ثانیه پیش بود آنلاین است
+                        final isOnline =
+                            lastSeen != null &&
+                            DateTime.now().difference(lastSeen) <
+                                const Duration(seconds: 30);
+                        print(lastSeen);
+                        print(DateTime.now());
+                        if (isOnline) {
+                          // فقط آنلاین نشان داده شود
+                          return Text(
+                            "آنلاین",
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
+                        } else {
+                          // آفلاین: بالای متن آفلاین، پایین آخرین زمان فعالیت
+                          String lastActivityText;
+                          if (lastSeen != null) {
+                            final formattedDate =
+                                "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+                            final formattedTime =
+                                "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+                            lastActivityText =
+                                "آخرین فعالیت: $formattedDate - $formattedTime";
+                          } else {
+                            lastActivityText = "آخرین فعالیت: نامشخص";
+                          }
 
-
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "آفلاین",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                lastActivityText,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      }),
+                    ],
+                  ),
                 ],
               ),
             ),

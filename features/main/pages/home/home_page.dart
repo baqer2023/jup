@@ -255,15 +255,11 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32),
-          child: Text(
-            'هیچ دستگاهی یافت نشد',
-            style: TextStyle(color: Colors.grey),
-          ),
+          child: Text('هیچ دستگاهی یافت نشد', style: TextStyle(color: Colors.grey)),
         ),
       );
     }
 
-    // فقط یکبار کنترلر را ایجاد کن یا اگر موجود است از آن استفاده کن
     final reliableController = Get.isRegistered<ReliableSocketController>(
             tag: 'smartDevicesController')
         ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
@@ -275,11 +271,12 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
           );
 
     return SizedBox(
-      height: 280, // ارتفاع ثابت کارت‌ها
+      height: 280,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: devices.map((device) {
             return Obx(() {
               final deviceData =
@@ -296,9 +293,7 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
                   if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
                 ];
                 if (key1Entries.isNotEmpty) {
-                  key1Entries.sort(
-                    (a, b) => (b[0] as int).compareTo(a[0] as int),
-                  );
+                  key1Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
                   switch1On = key1Entries.first[1].toString().contains('On');
                 }
 
@@ -311,18 +306,10 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
                   switch2On = key2Entries.first[1].toString().contains('On');
                 }
 
-                if (deviceData['ledColor'] is List &&
-                    deviceData['ledColor'].isNotEmpty) {
+                if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
                   final ledEntry = deviceData['ledColor'][0][1];
-                  Map<String, dynamic> ledMap;
-
-                  if (ledEntry is String) {
-                    ledMap = jsonDecode(ledEntry);
-                  } else if (ledEntry is Map<String, dynamic>) {
-                    ledMap = ledEntry;
-                  } else {
-                    ledMap = {};
-                  }
+                  Map<String, dynamic> ledMap =
+                      ledEntry is String ? jsonDecode(ledEntry) : (ledEntry as Map<String, dynamic>);
 
                   iconColor1 = switch1On
                       ? Color.fromARGB(
@@ -358,8 +345,8 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
+                child: SizedBox(
+                  width: 280, // پهنای ثابت کارت‌ها
                   child: _buildSmartDeviceCard(
                     title: device.title,
                     deviceId: device.deviceId,
@@ -386,6 +373,7 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
     );
   });
 }
+
 
   // ------------------- Smart Device Card -------------------
 Widget _buildSmartDeviceCard({
@@ -462,17 +450,68 @@ Widget _buildSmartDeviceCard({
                               fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         const SizedBox(height: 2),
-                        Obx(() {
-                          final isOnline = reliableController.isDeviceConnected(deviceId);
+Obx(() {
+                        final reliableController =
+                            Get.find<ReliableSocketController>(
+                              tag: 'smartDevicesController',
+                            );
+
+                        final lastSeen =
+                            reliableController.lastDeviceActivity[deviceId];
+
+                        // بررسی آنلاین بودن: اگر آخرین فعالیت کمتر از 5 ثانیه پیش بود آنلاین است
+                        final isOnline =
+                            lastSeen != null &&
+                            DateTime.now().difference(lastSeen) <
+                                const Duration(seconds: 30);
+                        print(lastSeen);
+                        print(DateTime.now());
+                        if (isOnline) {
+                          // فقط آنلاین نشان داده شود
                           return Text(
-                            isOnline ? "آنلاین" : "آفلاین",
+                            "آنلاین",
                             style: TextStyle(
+                              color: Colors.green,
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: isOnline ? Colors.green : Colors.red,
                             ),
                           );
-                        }),
+                        } else {
+                          // آفلاین: بالای متن آفلاین، پایین آخرین زمان فعالیت
+                          String lastActivityText;
+                          if (lastSeen != null) {
+                            final formattedDate =
+                                "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+                            final formattedTime =
+                                "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+                            lastActivityText =
+                                "آخرین فعالیت: $formattedDate - $formattedTime";
+                          } else {
+                            lastActivityText = "آخرین فعالیت: نامشخص";
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "آفلاین",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                lastActivityText,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      }),
                       ],
                     ),
                   ],
@@ -522,21 +561,21 @@ Widget _buildSmartDeviceCard({
 
                     ),
                     const Spacer(),
-                    Obx(() {
-                      final lastSeen = reliableController.getLastActivity(deviceId);
-                      if (lastSeen != null) {
-                        final formattedDate =
-                            "${lastSeen.year}/${lastSeen.month}/${lastSeen.day}";
-                        final formattedTime =
-                            "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
-                        return Text(
-                          "آخرین فعالیت: $formattedDate - $formattedTime",
-                          style: const TextStyle(fontSize: 10, color: Colors.grey),
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    }),
+                    // Obx(() {
+                    //   final lastSeen = reliableController.getLastActivity(deviceId);
+                    //   if (lastSeen != null) {
+                    //     final formattedDate =
+                    //         "${lastSeen.year}/${lastSeen.month}/${lastSeen.day}";
+                    //     final formattedTime =
+                    //         "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
+                    //     return Text(
+                    //       "آخرین فعالیت: $formattedDate - $formattedTime",
+                    //       style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    //     );
+                    //   } else {
+                    //     return const SizedBox.shrink();
+                    //   }
+                    // }),
                   ],
                 ),
               ],

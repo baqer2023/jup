@@ -81,44 +81,52 @@ void _onMessage(dynamic message) {
     final parsed = jsonDecode(message);
     if (parsed is Map && parsed['errorCode'] == 0) {
       final subscriptionId = parsed['subscriptionId'] as int;
-      final safeParsed = Map<String, dynamic>.from(parsed);
+      final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
 
       // آپدیت subscriptionData
       subscriptionData[subscriptionId] = {
         ...?subscriptionData[subscriptionId],
-        ...safeParsed
+        ...parsed,
       };
 
-      final data = safeParsed['data'] as Map<String, dynamic>?;
+      final data = parsed['data'] as Map<String, dynamic>?;
 
-      // فقط وقتی دیتا شامل active و inactivityAlarmTime باشه
-      if (data != null &&
-          data.containsKey('active') &&
-          data.containsKey('inactivityAlarmTime')) {
-        final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
+      if (data != null) {
+        // ✅ آپدیت وضعیت آنلاین بر اساس active
+        if (data.containsKey('active')) {
+          final activeList = data['active'];
+          if (activeList is List && activeList.isNotEmpty) {
+            final lastEntry = activeList.last;
+            final statusValue = lastEntry[1].toString();
+            final isActive = statusValue.toLowerCase() == 'true';
 
-        /// active
-        final activeList = data['active'];
-        if (activeList is List && activeList.isNotEmpty) {
-          final lastEntry = activeList.last;
-          final timestamp = lastEntry[0] as int;
-          final statusValue = lastEntry[1].toString();
-          final isActive = statusValue.toLowerCase() == 'true';
-
-          deviceConnectionStatus[deviceId] = isActive;
-          lastDeviceActivity[deviceId] =
-              DateTime.fromMillisecondsSinceEpoch(timestamp);
+            deviceConnectionStatus[deviceId] = isActive;
+            deviceConnectionStatus.refresh();
+          }
         }
 
-        /// inactivityAlarmTime (آپدیت تایم آخرین فعالیت)
-        final inactivityList = data['inactivityAlarmTime'];
-        if (inactivityList is List && inactivityList.isNotEmpty) {
-          final lastEntry = inactivityList.last;
-          final inactivityTimestamp = int.tryParse(lastEntry[1].toString());
-          if (inactivityTimestamp != null) {
-            lastDeviceActivity[deviceId] =
-                DateTime.fromMillisecondsSinceEpoch(inactivityTimestamp);
+        // ✅ آپدیت آخرین زمان فعالیت (یکبار)
+        int? timestamp;
+
+        if (data.containsKey('lastActivityTime')) {
+          final lastActivityList = data['lastActivityTime'];
+          if (lastActivityList is List && lastActivityList.isNotEmpty) {
+            final lastEntry = lastActivityList.last;
+            timestamp = lastEntry[0] as int?;
           }
+        }
+
+        if (timestamp == null && parsed.containsKey('latestValues')) {
+          final latestValues = parsed['latestValues'] as Map<String, dynamic>?;
+          if (latestValues != null && latestValues['lastActivityTime'] != null) {
+            timestamp = latestValues['lastActivityTime'] as int?;
+          }
+        }
+
+        if (timestamp != null) {
+          lastDeviceActivity[deviceId] =
+              DateTime.fromMillisecondsSinceEpoch(timestamp);
+          lastDeviceActivity.refresh();
         }
       }
     }
@@ -126,6 +134,9 @@ void _onMessage(dynamic message) {
     print('⚠️ Could not parse JSON: $message\nError: $e\nStack: $stack');
   }
 }
+
+
+
 
 
   Future<void> disconnect() async {
