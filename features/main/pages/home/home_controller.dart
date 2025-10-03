@@ -269,5 +269,60 @@ Future<void> addLocation(String title) async {
   }
 }
 
+  // ------------------- Remove From Dashboard (Temporary) -------------------
+  Future<void> removeFromDashboard(String deviceId) async {
+    try {
+      final dio = Dio();
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+      final data = json.encode({"id": deviceId});
+
+      final response = await dio.post(
+        'http://45.149.76.245:8080/api/device/removeFromDashboard',
+        options: Options(headers: headers),
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        deviceList.removeWhere((d) => d.deviceId == deviceId);
+        Get.snackbar('موفق', 'دستگاه موقتاً از داشبورد حذف شد');
+      } else {
+        Get.snackbar('خطا', 'حذف موقت موفق نبود: ${response.statusCode}');
+      }
+    } catch (e) {
+      Get.snackbar('خطا', 'اشکال در حذف موقت: $e');
+    }
+  }
+
+  // ------------------- Complete Remove (Permanent) -------------------
+  Future<void> completeRemoveDevice(String deviceId) async {
+    try {
+      final dio = Dio();
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+      final data = json.encode({"id": deviceId});
+
+      final response = await dio.post(
+        'http://45.149.76.245:8080/api/device/completeRemove',
+        options: Options(headers: headers),
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        deviceList.removeWhere((d) => d.deviceId == deviceId);
+        Get.snackbar('موفق', 'دستگاه به طور کامل حذف شد');
+      } else {
+        Get.snackbar('خطا', 'حذف کامل موفق نبود: ${response.statusCode}');
+      }
+    } catch (e) {
+      Get.snackbar('خطا', 'اشکال در حذف کامل: $e');
+    }
+  }
+
+
 
 }

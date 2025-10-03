@@ -20,8 +20,14 @@ class ReliableSocketController extends GetxController {
     super.onInit();
     _socket = ReliableSocket(authToken, deviceIds);
 
-    ever(_socket.deviceConnectionStatus, (status) => deviceConnectionStatus.assignAll(status));
-    ever(_socket.lastDeviceActivity, (activity) => lastDeviceActivity.assignAll(activity));
+    ever(_socket.deviceConnectionStatus, (status) {
+      deviceConnectionStatus.assignAll(status);
+    });
+
+    ever(_socket.lastDeviceActivity, (activity) {
+      lastDeviceActivity.assignAll(activity);
+    });
+
     ever(_socket.subscriptionData, (msg) {
       if (msg.isNotEmpty) _updateLatestDeviceData(msg.cast<int, Map<String, dynamic>>());
     });
@@ -53,36 +59,60 @@ class ReliableSocketController extends GetxController {
 
       valueData.forEach((key, val) {
         if (val is List && val.isNotEmpty) {
-          // فقط آخرین داده را اعمال کن
-          final lastEntry = val.last;
-          latestDeviceDataById[deviceId]![key] = [lastEntry];
+          latestDeviceDataById[deviceId]![key] = [val.last];
         } else {
           latestDeviceDataById[deviceId]![key] = val;
         }
       });
 
-      latestDeviceDataById[deviceId]!.refresh(); // خیلی مهم
+      latestDeviceDataById[deviceId]!.refresh();
     });
   }
 
-  bool isDeviceConnected(String deviceId) => deviceConnectionStatus[deviceId] ?? false;
+  /// وضعیت آنلاین دستگاه:
+  /// اگر در `deviceConnectionStatus` آنلاین بود true برمی‌گرداند
+  /// اگر اخیراً فعالیت داشته (آخرین ۳۰ ثانیه) آنلاین هم در نظر می‌گیرد
+  bool isDeviceConnected(String deviceId) {
+    final connected = deviceConnectionStatus[deviceId];
+    if (connected != null && connected) return true;
+
+    final lastSeen = lastDeviceActivity[deviceId];
+    if (lastSeen != null && DateTime.now().difference(lastSeen) < const Duration(seconds: 30)) {
+      return true;
+    }
+
+    return false;
+  }
+
   DateTime? getLastActivity(String deviceId) => lastDeviceActivity[deviceId];
 
+  /// تغییر وضعیت سوئیچ
   Future<void> toggleSwitch(bool isOn, int switchNumber, String deviceId) async {
     final keyW = 'Touch_W$switchNumber';
+    final keyD = 'Touch_D$switchNumber';
     final valueW = isOn ? '${keyW}_On' : '${keyW}_Off';
+    final valueD = isOn ? '${keyD}_On' : '${keyD}_Off';
 
     final payload = {'deviceId': deviceId, 'request': {keyW: valueW}};
 
     try {
       final response = await http.post(
         Uri.parse('http://45.149.76.245:8080/api/plugins/telemetry/changeDeviceState'),
-        headers: {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json; charset=utf-8'},
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Content-Type': 'application/json; charset=utf-8'
+        },
         body: json.encode(payload),
       );
 
       if (response.statusCode == 200) {
-        updateSwitchState(deviceId, keyW, valueW);
+        final deviceData = latestDeviceDataById[deviceId];
+        if (deviceData != null) {
+          deviceData[keyW] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
+          deviceData[keyD] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
+          deviceData.refresh();
+        }
+
         await Future.delayed(const Duration(milliseconds: 500));
       }
     } catch (e) {
@@ -90,8 +120,11 @@ class ReliableSocketController extends GetxController {
     }
   }
 
+  /// آپدیت وضعیت سوئیچ
   void updateSwitchState(String deviceId, String key, String value) {
-    if (!latestDeviceDataById.containsKey(deviceId)) latestDeviceDataById[deviceId] = <String, dynamic>{}.obs;
+    if (!latestDeviceDataById.containsKey(deviceId)) {
+      latestDeviceDataById[deviceId] = <String, dynamic>{}.obs;
+    }
 
     latestDeviceDataById[deviceId]![key] = [
       [DateTime.now().millisecondsSinceEpoch, value]

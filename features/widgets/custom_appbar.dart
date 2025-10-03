@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:my_app32/app/routes/app_routes.dart';
 import 'package:my_app32/features/main/pages/home/profile.dart';
 import 'package:my_app32/app/store/user_store_service.dart';
 
@@ -114,16 +115,13 @@ void _handleLogout(BuildContext context) {
     cancelTextColor: Colors.black,
     buttonColor: Colors.blue, // رنگ دکمه تأیید
     onConfirm: () async {
-      // بستن دیالوگ
-      Get.back();
+  Get.back(); // اینو await نزن چون void هست
+  await UserStoreService.to.deleteToken();
+  await UserStoreService.to.deleteRefreshToken();
+  Get.offAllNamed(AppRoutes.LOGIN);
+}
 
-      // پاک کردن توکن‌ها
-      await UserStoreService.to.deleteToken();
-      await UserStoreService.to.deleteRefreshToken();
-
-      // رفتن به صفحه لاگین
-      Get.offAllNamed("/login");
-    },
+,
   );
 }
 

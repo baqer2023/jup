@@ -246,7 +246,7 @@ Positioned(
     );
   }
 
-  // ------------------- Smart Devices Grid -------------------
+ // ------------------- Smart Devices Grid (اصلاح شده) -------------------
 Widget _buildSmartDevicesGrid(HomeController controller) {
   return Obx(() {
     final devices = controller.deviceList;
@@ -263,19 +263,16 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
       );
     }
 
-    final deviceIds = devices.map((d) => d.deviceId).toList();
-
-    if (Get.isRegistered<ReliableSocketController>(
-      tag: 'smartDevicesController',
-    )) {
-      Get.delete<ReliableSocketController>(tag: 'smartDevicesController');
-    }
-
-    final reliableController = Get.put(
-      ReliableSocketController(controller.token, deviceIds),
-      tag: 'smartDevicesController',
-      permanent: true,
-    );
+    // فقط یکبار کنترلر را ایجاد کن یا اگر موجود است از آن استفاده کن
+    final reliableController = Get.isRegistered<ReliableSocketController>(
+            tag: 'smartDevicesController')
+        ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
+        : Get.put(
+            ReliableSocketController(
+                controller.token, devices.map((d) => d.deviceId).toList()),
+            tag: 'smartDevicesController',
+            permanent: true,
+          );
 
     return SizedBox(
       height: 280, // ارتفاع ثابت کارت‌ها
@@ -310,9 +307,7 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
                   if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
                 ];
                 if (key2Entries.isNotEmpty) {
-                  key2Entries.sort(
-                    (a, b) => (b[0] as int).compareTo(a[0] as int),
-                  );
+                  key2Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
                   switch2On = key2Entries.first[1].toString().contains('On');
                 }
 
@@ -488,28 +483,43 @@ Widget _buildSmartDeviceCard({
                   children: [
                     Align(
                       alignment: Alignment.bottomLeft,
-                      child:  PopupMenuButton<int>(
+                      child: PopupMenuButton<int>(
+  color: Colors.white, // پس‌زمینه سفید
   icon: const Icon(Icons.more_vert, size: 20, color: Colors.black87),
-  onSelected: (value) {
+  onSelected: (value) async {
+    final homeController = Get.find<HomeController>();
+
     if (value == 0) {
       showLedColorDialog(device: device);
     } else if (value == 1) {
-      Get.to(() => DeviceConfigPage(
-            sn: device.sn,
-          ));
+      Get.to(() => DeviceConfigPage(sn: device.sn));
+    } else if (value == 2) {
+      await homeController.removeFromDashboard(device.deviceId);
+    } else if (value == 3) {
+      await homeController.completeRemoveDevice(device.deviceId);
     }
   },
   itemBuilder: (context) => [
     const PopupMenuItem(
       value: 0,
-      child: Text('تنظیمات پیشرفته'),
+      child: Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
     ),
     const PopupMenuItem(
       value: 1,
-      child: Text('پیکربندی'),
+      child: Text('پیکربندی', style: TextStyle(color: Colors.black)),
+    ),
+    const PopupMenuItem(
+      value: 2,
+      child: Text('حذف موقت از داشبورد', style: TextStyle(color: Colors.black)),
+    ),
+    const PopupMenuItem(
+      value: 3,
+      child: Text('حذف کامل دستگاه', style: TextStyle(color: Colors.black)),
     ),
   ],
 ),
+
+
                     ),
                     const Spacer(),
                     Obx(() {
