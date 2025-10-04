@@ -651,7 +651,7 @@ class DevicesPage extends BaseView<HomeController> {
           ),
           // دایره لامپ بالا وسط
           Positioned(
-            top: -20,
+            top: -15,
             left: 0,
             right: 0,
             child: Center(

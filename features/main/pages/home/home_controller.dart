@@ -38,6 +38,7 @@ class HomeController extends GetxController with AppUtilsMixin {
   RxBool isRefreshing = false.obs;
   String token = '';
 RxList<DeviceItem> deviceList = <DeviceItem>[].obs;
+RxList<DeviceItem> dashboardDevices = <DeviceItem>[].obs;
 RxString selectedLocationId = ''.obs;
 late Future<WeatherData> weatherFuture;
 
@@ -46,6 +47,7 @@ late Future<WeatherData> weatherFuture;
   void onInit() {
     super.onInit();
     _initializeToken();
+    fetchHomeDevices();
 
 
     // مقدار اولیه آب‌وهوا
@@ -73,37 +75,36 @@ late Future<WeatherData> weatherFuture;
   }
 
 
-Future<void> fetchHomeDevices() async {
-  try {
-    final token = await UserStoreService.to.getToken();
-    if (token == null) return;
+ Future<void> fetchHomeDevices() async {
+    try {
+      final token = await UserStoreService.to.getToken();
+      if (token == null) return;
 
-    final headers = {
-      'Authorization': 'Bearer $token',
-    };
+      final headers = {
+        'Authorization': 'Bearer $token',
+      };
 
-    final dio = Dio();
-    final response = await dio.post(
-      'http://45.149.76.245:8080/api/dashboard/getHome',
-      options: Options(headers: headers),
-    );
+      final dio = Dio();
+      final response = await dio.post(
+        'http://45.149.76.245:8080/api/dashboard/getHome',
+        options: Options(headers: headers),
+      );
 
-    if (response.statusCode == 200) {
-      final data = response.data;
+      if (response.statusCode == 200) {
+        final data = response.data;
+        
+        final devicesJson = data as List? ?? [];
 
-      // فرض می‌کنم JSON یه لیست دستگاه باشه
-      final devicesJson = data as List? ?? [];
+        dashboardDevices.value =
+            devicesJson.map((e) => DeviceItem.fromJson(e)).toList();
 
-      deviceList.value =
-          devicesJson.map((e) => DeviceItem.fromJson(e)).toList();
-
-    } else {
-      Get.snackbar("خطا", "دریافت دستگاه‌ها موفق نبود: ${response.statusCode}");
+      } else {
+        Get.snackbar("خطا", "دریافت دستگاه‌های داشبورد موفق نبود: ${response.statusCode}");
+      }
+    } catch (e) {
+      Get.snackbar("خطا", "اشکال در ارتباط با سرور: $e");
     }
-  } catch (e) {
-    Get.snackbar("خطا", "اشکال در ارتباط با سرور: $e");
   }
-}
 
 
 

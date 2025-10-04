@@ -51,7 +51,8 @@ class HomePage extends BaseView<HomeController> {
 
 Widget _buildMainContent(HomeController controller) {
   return Obx(() {
-    final devices = controller.deviceList;
+    final devices = controller.dashboardDevices;
+    print(devices);
 
     return RefreshIndicator(
       onRefresh: controller.refreshAllData,
@@ -201,8 +202,8 @@ Positioned(
             ),
 
             const SizedBox(height: 16),
-            const Divider(thickness: 2),
-            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 36),
 
             // Grid یا حالت خالی دستگاه‌ها
             if (devices.isEmpty)
@@ -225,7 +226,11 @@ Positioned(
                 ),
               )
             else
-              _buildSmartDevicesGrid(controller),
+             Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: _buildSmartDevicesGrid(controller),
+  ),
+  const SizedBox(height: 32), // ✅ فاصله پایین Grid
           ],
         ),
       ),
@@ -249,7 +254,7 @@ Positioned(
  // ------------------- Smart Devices Grid (اصلاح شده) -------------------
 Widget _buildSmartDevicesGrid(HomeController controller) {
   return Obx(() {
-    final devices = controller.deviceList;
+    final devices = controller.dashboardDevices;
 
     if (devices.isEmpty) {
       return const Center(
@@ -413,178 +418,151 @@ Widget _buildSmartDeviceCard({
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // کلیدها سمت چپ
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildSwitchRow(
-                            deviceId: deviceId,
-                            switchNumber: 1,
-                            color: iconColor1,
-                            onToggle: onToggle,
-                          ),
-                          if (!isSingleKey)
-                            _buildSwitchRow(
-                              deviceId: deviceId,
-                              switchNumber: 2,
-                              color: iconColor2 ?? Colors.grey,
-                              onToggle: onToggle,
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // عنوان و آنلاین/آفلاین بالا سمت راست
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        const SizedBox(height: 2),
-Obx(() {
-                        final reliableController =
-                            Get.find<ReliableSocketController>(
-                              tag: 'smartDevicesController',
-                            );
-
-                        final lastSeen =
-                            reliableController.lastDeviceActivity[deviceId];
-
-                        // بررسی آنلاین بودن: اگر آخرین فعالیت کمتر از 5 ثانیه پیش بود آنلاین است
-                        final isOnline =
-                            lastSeen != null &&
-                            DateTime.now().difference(lastSeen) <
-                                const Duration(seconds: 30);
-                        print(lastSeen);
-                        print(DateTime.now());
-                        if (isOnline) {
-                          // فقط آنلاین نشان داده شود
-                          return Text(
-                            "آنلاین",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          );
-                        } else {
-                          // آفلاین: بالای متن آفلاین، پایین آخرین زمان فعالیت
-                          String lastActivityText;
-                          if (lastSeen != null) {
-                            final formattedDate =
-                                "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
-                            final formattedTime =
-                                "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
-                            lastActivityText =
-                                "آخرین فعالیت: $formattedDate - $formattedTime";
-                          } else {
-                            lastActivityText = "آخرین فعالیت: نامشخص";
-                          }
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "آفلاین",
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                lastActivityText,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          );
-                        }
-                      }),
-                      ],
-                    ),
-                  ],
-                ),
-
-                // آخرین فعالیت پایین سمت راست
-                Row(
-                  children: [
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: PopupMenuButton<int>(
-  color: Colors.white, // پس‌زمینه سفید
-  icon: const Icon(Icons.more_vert, size: 20, color: Colors.black87),
-  onSelected: (value) async {
-    final homeController = Get.find<HomeController>();
-
-    if (value == 0) {
-      showLedColorDialog(device: device);
-    } else if (value == 1) {
-      Get.to(() => DeviceConfigPage(sn: device.sn));
-    } else if (value == 2) {
-      await homeController.removeFromDashboard(device.deviceId);
-    } else if (value == 3) {
-      await homeController.completeRemoveDevice(device.deviceId);
-    }
-  },
-  itemBuilder: (context) => [
-    const PopupMenuItem(
-      value: 0,
-      child: Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
+                // بالای کارت: سوئیچ‌ها و عنوان
+// بالای کارت: سوئیچ‌ها و عنوان
+Row(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  mainAxisAlignment: MainAxisAlignment.spaceBetween, // عنوان سمت راست
+  children: [
+    // ستون سوئیچ‌ها
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildSwitchRow(
+          deviceId: deviceId,
+          switchNumber: 1,
+          color: iconColor1,
+          onToggle: onToggle,
+        ),
+        if (!isSingleKey)
+          _buildSwitchRow(
+            deviceId: deviceId,
+            switchNumber: 2,
+            color: iconColor2 ?? Colors.grey,
+            onToggle: onToggle,
+          ),
+      ],
     ),
-    const PopupMenuItem(
-      value: 1,
-      child: Text('پیکربندی', style: TextStyle(color: Colors.black)),
-    ),
-    const PopupMenuItem(
-      value: 2,
-      child: Text('حذف موقت از داشبورد', style: TextStyle(color: Colors.black)),
-    ),
-    const PopupMenuItem(
-      value: 3,
-      child: Text('حذف کامل دستگاه', style: TextStyle(color: Colors.black)),
+
+    // عنوان دستگاه
+    Text(
+      title,
+      textAlign: TextAlign.right,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     ),
   ],
 ),
 
 
+                // پایین کارت: دکمه منو سمت چپ و وضعیت آنلاین/آفلاین سمت راست
+                Row(
+                  children: [
+                    // دکمه سه‌نقطه منو سمت چپ
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: PopupMenuButton<int>(
+                        color: Colors.white,
+                        icon: const Icon(Icons.more_vert, size: 20, color: Colors.black87),
+                        onSelected: (value) async {
+                          final homeController = Get.find<HomeController>();
+                          if (value == 0) {
+                            showLedColorDialog(device: device);
+                          } else if (value == 1) {
+                            Get.to(() => DeviceConfigPage(sn: device.sn));
+                          } else if (value == 2) {
+                            await homeController.removeFromDashboard(device.deviceId);
+                          } else if (value == 3) {
+                            await homeController.completeRemoveDevice(device.deviceId);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 0,
+                            child: Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
+                          ),
+                          const PopupMenuItem(
+                            value: 1,
+                            child: Text('پیکربندی', style: TextStyle(color: Colors.black)),
+                          ),
+                          const PopupMenuItem(
+                            value: 2,
+                            child: Text('حذف موقت از داشبورد', style: TextStyle(color: Colors.black)),
+                          ),
+                          const PopupMenuItem(
+                            value: 3,
+                            child: Text('حذف کامل دستگاه', style: TextStyle(color: Colors.black)),
+                          ),
+                        ],
+                      ),
                     ),
+
                     const Spacer(),
-                    // Obx(() {
-                    //   final lastSeen = reliableController.getLastActivity(deviceId);
-                    //   if (lastSeen != null) {
-                    //     final formattedDate =
-                    //         "${lastSeen.year}/${lastSeen.month}/${lastSeen.day}";
-                    //     final formattedTime =
-                    //         "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
-                    //     return Text(
-                    //       "آخرین فعالیت: $formattedDate - $formattedTime",
-                    //       style: const TextStyle(fontSize: 10, color: Colors.grey),
-                    //     );
-                    //   } else {
-                    //     return const SizedBox.shrink();
-                    //   }
-                    // }),
+
+                    // وضعیت آنلاین/آفلاین سمت راست
+                    Obx(() {
+                      final lastSeen = reliableController.lastDeviceActivity[deviceId];
+                      final isOnline = lastSeen != null &&
+                          DateTime.now().difference(lastSeen) < const Duration(seconds: 30);
+
+                      if (isOnline) {
+                        return const Text(
+                          "آنلاین",
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      } else {
+                        String lastActivityText;
+                        if (lastSeen != null) {
+                          final formattedDate =
+                              "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+                          final formattedTime =
+                              "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+                          lastActivityText = "آخرین فعالیت: $formattedDate - $formattedTime";
+                        } else {
+                          lastActivityText = "آخرین فعالیت: نامشخص";
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              "آفلاین",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              lastActivityText,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    }),
                   ],
                 ),
               ],
             ),
           ),
         ),
+
         // دایره لامپ بالا وسط
         Positioned(
-          top: -20,
+          top: -15,
           left: 0,
           right: 0,
           child: Center(
@@ -619,6 +597,7 @@ Obx(() {
     ),
   );
 }
+
 
 
 
