@@ -29,6 +29,10 @@ class DevicesPage extends BaseView<HomeController> {
   Widget _buildDevicesContent() {
     return Obx(() {
       final locations = controller.userLocations;
+      final visibleLocations = locations
+          .where((loc) => loc.title != "میانبر")
+          .toList();
+
       final devices = controller.deviceList;
 
       return RefreshIndicator(
@@ -109,61 +113,66 @@ class DevicesPage extends BaseView<HomeController> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: locations.map((loc) {
-                        return Obx(() {
-                          final isSelected =
-                              controller.selectedLocationId.value == loc.id;
+                      // فیلتر کردن مکان‌ها: "میانبر" نمایش داده نمی‌شود
+                      children: locations
+                          .where((loc) => loc.title != "میانبر")
+                          .map((loc) {
+                            return Obx(() {
+                              final isSelected =
+                                  controller.selectedLocationId.value == loc.id;
 
-                          return GestureDetector(
-                            onTap: () {
-                              controller.selectedLocationId.value = loc.id;
-                              controller.fetchDevicesByLocation(loc.id);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Colors.yellow
-                                      : Colors.grey.shade300,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
+                              return GestureDetector(
+                                onTap: () {
+                                  controller.selectedLocationId.value = loc.id;
+                                  controller.fetchDevicesByLocation(loc.id);
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
                                   ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  loc.title,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.yellow.shade700
-                                        : Colors.grey,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    fontSize: 14,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.yellow
+                                          : Colors.grey.shade300,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      loc.title,
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? Colors.yellow.shade700
+                                            : Colors.grey,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          );
-                        });
-                      }).toList(),
+                              );
+                            });
+                          })
+                          .toList(),
                     ),
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
 
               // لیست دستگاه‌ها
@@ -465,79 +474,86 @@ class DevicesPage extends BaseView<HomeController> {
                             } else if (value == 1) {
                               Get.to(() => DeviceConfigPage(sn: device.sn));
                             } else if (value == 2) {
-                              // 👇 افزودن به داشبورد (میانبر)
-                              await homeController.fetchUserLocations();
-                              final shortcutLocation = homeController
-                                  .userLocations
-                                  .firstWhereOrNull(
-                                    (loc) => loc.title == "میانبر",
-                                  );
-
-                              if (shortcutLocation == null) {
-                                Get.snackbar(
-                                  "خطا",
-                                  "مکان 'میانبر' پیدا نشد",
-                                  backgroundColor: Colors.red,
-                                  colorText: Colors.white,
-                                );
-                                return;
-                              }
-
-                              final token = controller.token;
-                              if (token == null) {
-                                Get.snackbar("خطا", "توکن معتبر پیدا نشد");
-                                return;
-                              }
-
-                              final headers = {
-                                'Authorization': 'Bearer $token',
-                                'Content-Type': 'application/json',
-                              };
-
-                              final data = {
-                                "deviceId": deviceId,
-                                "dashboardId": shortcutLocation.id,
-                              };
-
-                              try {
-                                final dio = Dio();
-                                final response = await dio.post(
-                                  'http://45.149.76.245:8080/api/shortcut/addDevice',
-                                  data: data,
-                                  options: Options(headers: headers),
-                                );
-
-                                if (response.statusCode == 200 ||
-                                    response.statusCode == 201) {
+                              // افزودن به میانبر فقط اگر دستگاه در dashboardDevices نیست
+                              if (!controller.dashboardDevices.any(
+                                (d) => d.deviceId == device.deviceId,
+                              )) {
+                                final token = controller.token;
+                                if (token == null) {
                                   Get.snackbar(
-                                    'موفقیت',
-                                    'دستگاه به میانبر اضافه شد',
-                                    backgroundColor: Colors.green,
+                                    "خطا",
+                                    "توکن معتبر پیدا نشد",
+                                    backgroundColor: Colors.red,
                                     colorText: Colors.white,
                                   );
-                                } else {
+                                  return;
+                                }
+
+                                final headers = {
+                                  'Authorization': 'Bearer $token',
+                                  'Content-Type': 'application/json',
+                                };
+
+                                final data = {"deviceId": device.deviceId};
+
+                                try {
+                                  final dio = Dio();
+                                  final response = await dio.post(
+                                    'http://45.149.76.245:8080/api/shortcut/addDevice',
+                                    data: data,
+                                    options: Options(headers: headers),
+                                  );
+
+                                  if (response.statusCode == 200 ||
+                                      response.statusCode == 201) {
+                                    Get.snackbar(
+                                      'موفقیت',
+                                      'دستگاه به میانبر اضافه شد',
+                                      backgroundColor: Colors.green,
+                                      colorText: Colors.white,
+                                    );
+
+                                    // اضافه کردن دستگاه به لیست محلی dashboardDevices
+                                    controller.dashboardDevices.add(device);
+                                  } else {
+                                    Get.snackbar(
+                                      'خطا',
+                                      'افزودن دستگاه موفق نبود: ${response.statusCode}',
+                                      backgroundColor: Colors.red,
+                                      colorText: Colors.white,
+                                    );
+                                  }
+                                } catch (e) {
                                   Get.snackbar(
                                     'خطا',
-                                    'افزودن دستگاه موفق نبود: ${response.statusCode}',
+                                    'مشکل در ارتباط با سرور: $e',
                                     backgroundColor: Colors.red,
                                     colorText: Colors.white,
                                   );
                                 }
-                              } catch (e) {
+                              } else {
                                 Get.snackbar(
-                                  'خطا',
-                                  'مشکل در ارتباط با سرور: $e',
-                                  backgroundColor: Colors.red,
+                                  'توجه',
+                                  'این دستگاه قبلاً به میانبر اضافه شده است',
+                                  backgroundColor: Colors.orange,
                                   colorText: Colors.white,
                                 );
                               }
                             } else if (value == 3) {
-                              await homeController.removeFromDashboard(
+                              await homeController.removeFromAllDashboard(
                                 device.deviceId,
                               );
                             } else if (value == 4) {
                               await homeController.completeRemoveDevice(
                                 device.deviceId,
+                              );
+                            } else if (value == 5) {
+                              await homeController.resetDevice(device.deviceId);
+                              Get.snackbar(
+                                'موفقیت',
+                                'دستگاه ریست شد',
+                                backgroundColor: Colors.green,
+                                colorText: Colors.white,
                               );
                             }
                           },
@@ -556,17 +572,21 @@ class DevicesPage extends BaseView<HomeController> {
                                 style: TextStyle(color: Colors.black),
                               ),
                             ),
-                            const PopupMenuItem(
-                              value: 2,
-                              child: Text(
-                                'افزودن به داشبورد',
-                                style: TextStyle(color: Colors.black),
+                            // فقط اگر دستگاه در dashboardDevices نیست، گزینه نمایش داده شود
+                            if (!controller.dashboardDevices.any(
+                              (d) => d.deviceId == device.deviceId,
+                            ))
+                              const PopupMenuItem(
+                                value: 2,
+                                child: Text(
+                                  'افزودن به میانبر',
+                                  style: TextStyle(color: Colors.black),
+                                ),
                               ),
-                            ),
                             const PopupMenuItem(
                               value: 3,
                               child: Text(
-                                'حذف موقت از داشبورد',
+                                'حذف موقت کلید از همه مکانها',
                                 style: TextStyle(color: Colors.black),
                               ),
                             ),
@@ -574,6 +594,13 @@ class DevicesPage extends BaseView<HomeController> {
                               value: 4,
                               child: Text(
                                 'حذف کامل دستگاه',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 5,
+                              child: Text(
+                                'ریست دستگاه',
                                 style: TextStyle(color: Colors.black),
                               ),
                             ),

@@ -37,11 +37,10 @@ class HomeController extends GetxController with AppUtilsMixin {
   RxBool isLoading = false.obs;
   RxBool isRefreshing = false.obs;
   String token = '';
-RxList<DeviceItem> deviceList = <DeviceItem>[].obs;
-RxList<DeviceItem> dashboardDevices = <DeviceItem>[].obs;
-RxString selectedLocationId = ''.obs;
-late Future<WeatherData> weatherFuture;
-
+  RxList<DeviceItem> deviceList = <DeviceItem>[].obs;
+  RxList<DeviceItem> dashboardDevices = <DeviceItem>[].obs;
+  RxString selectedLocationId = ''.obs;
+  late Future<WeatherData> weatherFuture;
 
   @override
   void onInit() {
@@ -49,15 +48,17 @@ late Future<WeatherData> weatherFuture;
     _initializeToken();
     fetchHomeDevices();
 
-
     // مقدار اولیه آب‌وهوا
     weatherFuture = WeatherApiService(
       apiKey: 'e6f7286f932ef4636fdfb82a45266d17',
     ).getWeather(lat: 35.7219, lon: 51.3347);
   }
 
-
-  
+  @override
+  void onReady() {
+    super.onReady();
+    refreshAllData(); // هر بار صفحه باز بشه اجرا میشه
+  }
 
   Future<void> _initializeToken() async {
     token = await UserStoreService.to.getToken() ?? '';
@@ -66,7 +67,7 @@ late Future<WeatherData> weatherFuture;
     }
   }
 
- // برای رفرش دستی
+  // برای رفرش دستی
   Future<void> refreshWeather() async {
     weatherFuture = WeatherApiService(
       apiKey: 'e6f7286f932ef4636fdfb82a45266d17',
@@ -74,15 +75,12 @@ late Future<WeatherData> weatherFuture;
     update(); // باعث میشه ویجت‌هایی که به controller گوش میدن دوباره ساخته بشن
   }
 
-
- Future<void> fetchHomeDevices() async {
+  Future<void> fetchHomeDevices() async {
     try {
       final token = await UserStoreService.to.getToken();
       if (token == null) return;
 
-      final headers = {
-        'Authorization': 'Bearer $token',
-      };
+      final headers = {'Authorization': 'Bearer $token'};
 
       final dio = Dio();
       final response = await dio.post(
@@ -92,21 +90,22 @@ late Future<WeatherData> weatherFuture;
 
       if (response.statusCode == 200) {
         final data = response.data;
-        
+
         final devicesJson = data as List? ?? [];
 
-        dashboardDevices.value =
-            devicesJson.map((e) => DeviceItem.fromJson(e)).toList();
-
+        dashboardDevices.value = devicesJson
+            .map((e) => DeviceItem.fromJson(e))
+            .toList();
       } else {
-        Get.snackbar("خطا", "دریافت دستگاه‌های داشبورد موفق نبود: ${response.statusCode}");
+        Get.snackbar(
+          "خطا",
+          "دریافت دستگاه‌های داشبورد موفق نبود: ${response.statusCode}",
+        );
       }
     } catch (e) {
       Get.snackbar("خطا", "اشکال در ارتباط با سرور: $e");
     }
   }
-
-
 
   // ------------------- User Locations -------------------
   Future<void> fetchUserLocations() async {
@@ -123,12 +122,17 @@ late Future<WeatherData> weatherFuture;
 
       final response = await http.post(
         url,
-        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: data,
       );
 
       if (response.statusCode == 200) {
-        final model = UserLocationsResponseModel.fromJson(json.decode(response.body));
+        final model = UserLocationsResponseModel.fromJson(
+          json.decode(response.body),
+        );
         userLocations.value = model.data;
       } else {
         print('Failed to fetch locations: ${response.statusCode}');
@@ -139,56 +143,54 @@ late Future<WeatherData> weatherFuture;
   }
 
   // ------------------- Devices by Location -------------------
-Future<void> fetchDevicesByLocation(String dashboardId) async {
-  try {
-    print('Fetching devices for dashboardId: $dashboardId');
-    if (token.isEmpty) return;
+  Future<void> fetchDevicesByLocation(String dashboardId) async {
+    try {
+      print('Fetching devices for dashboardId: $dashboardId');
+      if (token.isEmpty) return;
 
-    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/getDeviceList');
-    final body = json.encode({"dashboardId": dashboardId});
+      final url = Uri.parse(
+        'http://45.149.76.245:8080/api/dashboard/getDeviceList',
+      );
+      final body = json.encode({"dashboardId": dashboardId});
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: body,
-    );
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      );
 
-    if (response.statusCode == 200) {
-      final raw = json.decode(response.body);
-      print("Raw response: $raw");
+      if (response.statusCode == 200) {
+        final raw = json.decode(response.body);
+        print("Raw response: $raw");
 
-      if (raw is List) {
-        // فقط Map<String, dynamic> ها رو نگه می‌داره
-        final safeData = raw
-            .whereType<Map<String, dynamic>>()
-            .map((d) => DeviceItem.fromJson(d))
-            .toList();
+        if (raw is List) {
+          // فقط Map<String, dynamic> ها رو نگه می‌داره
+          final safeData = raw
+              .whereType<Map<String, dynamic>>()
+              .map((d) => DeviceItem.fromJson(d))
+              .toList();
 
-        deviceList.value = safeData;
-        deviceList.refresh();
+          deviceList.value = safeData;
+          deviceList.refresh();
 
-        print('✅ Devices parsed: ${deviceList.length}');
+          print('✅ Devices parsed: ${deviceList.length}');
+        } else {
+          print("❌ Unexpected format: ${raw.runtimeType}");
+          deviceList.clear();
+        }
       } else {
-        print("❌ Unexpected format: ${raw.runtimeType}");
+        print('❌ Failed to fetch devices: ${response.statusCode}');
         deviceList.clear();
       }
-    } else {
-      print('❌ Failed to fetch devices: ${response.statusCode}');
+    } catch (e, st) {
+      print('❌ Error fetching devices: $e');
+      print(st);
       deviceList.clear();
     }
-  } catch (e, st) {
-    print('❌ Error fetching devices: $e');
-    print(st);
-    deviceList.clear();
   }
-}
-
-
-
-
 
   // ------------------- Refresh All -------------------
   Future<void> refreshAllData() async {
@@ -199,6 +201,7 @@ Future<void> fetchDevicesByLocation(String dashboardId) async {
       await fetchUserLocations();
       deviceList.clear();
       await refreshWeather();
+      await fetchHomeDevices();
     } catch (e) {
       print('Error refreshing data: $e');
     } finally {
@@ -216,62 +219,77 @@ Future<void> fetchDevicesByLocation(String dashboardId) async {
     }
   }
 
-Future<void> removeDevice(String deviceId) async {
-  try {
-    final url = Uri.parse('http://45.149.76.245:8080/api/device/remove');
-    final response = await http.post(
-      url,
-      headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
-      body: json.encode({'id': deviceId}),
-    );
+  // Future<void> removeDevice(String deviceId) async {
+  //   try {
+  //     final url = Uri.parse('http://45.149.76.245:8080/api/device/remove');
+  //     final response = await http.post(
+  //       url,
+  //       headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+  //       body: json.encode({'id': deviceId}),
+  //     );
 
-    if (response.statusCode == 200) {
-      deviceList.removeWhere((d) => d.deviceId == deviceId);
-      Get.snackbar('موفق', 'دستگاه حذف شد');
-    } else {
-      Get.snackbar('خطا', 'حذف دستگاه موفق نبود: ${response.statusCode}');
+  //     if (response.statusCode == 200) {
+  //       deviceList.removeWhere((d) => d.deviceId == deviceId);
+  //       Get.snackbar('موفق', 'دستگاه حذف شد');
+  //     } else {
+  //       Get.snackbar('خطا', 'حذف دستگاه موفق نبود: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     Get.snackbar('خطا', 'خطا در حذف دستگاه: $e');
+  //   }
+  // }
+
+  Future<void> addLocation(String title) async {
+    if (title.trim().isEmpty) {
+      Get.snackbar(
+        'خطا',
+        'لطفاً نام مکان را وارد کنید',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
     }
-  } catch (e) {
-    Get.snackbar('خطا', 'خطا در حذف دستگاه: $e');
-  }
-}
 
+    try {
+      final url = Uri.parse(
+        'http://45.149.76.245:8080/api/dashboard/addOrUpdate',
+      );
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+      final data = json.encode({"title": title.trim()});
 
+      final response = await http.post(url, headers: headers, body: data);
 
-
-Future<void> addLocation(String title) async {
-  if (title.trim().isEmpty) {
-    Get.snackbar('خطا', 'لطفاً نام مکان را وارد کنید',
-        backgroundColor: Colors.red, colorText: Colors.white);
-    return;
-  }
-
-  try {
-    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/addOrUpdate');
-    final headers = {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json'
-    };
-    final data = json.encode({"title": title.trim()});
-
-    final response = await http.post(url, headers: headers, body: data);
-
-    if (response.statusCode == 200) {
-      Get.snackbar('موفقیت', 'مکان با موفقیت اضافه شد',
-          backgroundColor: Colors.green, colorText: Colors.white);
-      await fetchUserLocations(); // بازخوانی لیست مکان‌ها
-    } else {
-      Get.snackbar('خطا', 'ثبت مکان موفقیت‌آمیز نبود: ${response.statusCode}',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          'موفقیت',
+          'مکان با موفقیت اضافه شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        await fetchUserLocations(); // بازخوانی لیست مکان‌ها
+      } else {
+        Get.snackbar(
+          'خطا',
+          'ثبت مکان موفقیت‌آمیز نبود: ${response.statusCode}',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'خطا',
+        'خطا در افزودن مکان: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
-  } catch (e) {
-    Get.snackbar('خطا', 'خطا در افزودن مکان: $e',
-        backgroundColor: Colors.red, colorText: Colors.white);
   }
-}
 
   // ------------------- Remove From Dashboard (Temporary) -------------------
-  Future<void> removeFromDashboard(String deviceId) async {
+  Future<void> removeFromAllDashboard(String deviceId) async {
     try {
       final dio = Dio();
       final headers = {
@@ -281,7 +299,7 @@ Future<void> addLocation(String title) async {
       final data = json.encode({"id": deviceId});
 
       final response = await dio.post(
-        'http://45.149.76.245:8080/api/device/removeFromDashboard',
+        'http://45.149.76.245:8080/api/device/removeFromAllDashboard',
         options: Options(headers: headers),
         data: data,
       );
@@ -324,6 +342,59 @@ Future<void> addLocation(String title) async {
     }
   }
 
+  Future<void> resetDevice(String deviceId) async {
+    try {
+      if (token.isEmpty) {
+        Get.snackbar(
+          'خطا',
+          'توکن خالی است',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
 
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
 
+      final data = json.encode({
+        "id": deviceId, // به عنوان مثال: "f8211120-93ac-11f0-839a-c7e577718932"
+      });
+
+      final dio = Dio();
+      final response = await dio.request(
+        'http://45.149.76.245:8080/api/plugins/telemetry/device/sharedReset',
+        options: Options(method: 'POST', headers: headers),
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Response: ${json.encode(response.data)}");
+        Get.snackbar(
+          'موفق',
+          'دستگاه با موفقیت ریست شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        print("❌ Error: ${response.statusMessage}");
+        Get.snackbar(
+          'خطا',
+          'عملیات ریست موفق نبود: ${response.statusMessage}',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      print("❌ Exception: $e");
+      Get.snackbar(
+        'خطا',
+        'خطا در ریست دستگاه: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
 }

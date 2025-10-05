@@ -33,6 +33,8 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
   final String _svgStep1 = 'assets/svg/config1.svg';
   final String _svgStep2 = 'assets/svg/config2.svg';
   final String _svgStep3 = 'assets/svg/config3.svg';
+  bool _serialMatched = false;
+
 
   // تابع ساخت دکمه آبی با متن سفید
   Widget _blueButton({required String text, required VoidCallback onPressed}) {
@@ -66,90 +68,116 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
     );
   }
 
-  Widget _buildInstruction() {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SvgPicture.asset(_svgInstruction, height: 100, alignment: Alignment.centerRight),
-          const SizedBox(height: 16),
-          const Text(
-            "راهنما:",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.right,
-          ),
-          const SizedBox(height: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                "۱- اینترنت سیم‌کارت دستگاه خود را (در صورت روشن بودن) خاموش کنید.",
-                style: TextStyle(fontSize: 18),
-                textAlign: TextAlign.right,
+Widget _buildInstruction() {
+  return Directionality(
+    textDirection: TextDirection.rtl,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SvgPicture.asset(_svgInstruction, height: 100, alignment: Alignment.centerRight),
+        const SizedBox(height: 16),
+        const Text(
+          "راهنما:",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.right,
+        ),
+        const SizedBox(height: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              "۱- اینترنت سیم‌کارت دستگاه خود را (در صورت روشن بودن) خاموش کنید.",
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.right,
+            ),
+            SizedBox(height: 12),
+            Text(
+              "۲- از برنامه خارج شده و به تنظیمات Wi-Fi گوشی خود بروید.",
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.right,
+            ),
+            SizedBox(height: 12),
+            Text(
+              "۳- در لیست شبکه‌ها، به شبکه [نام شبکه] متصل شوید.",
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.right,
+            ),
+            SizedBox(height: 12),
+            Text(
+              "۴- پس از اتصال، به این برنامه بازگردید.",
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.right,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: ElevatedButton(
+            onPressed: _serialMatched ? _checkConnection : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _serialMatched ? Colors.blue : Colors.blue.shade200,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              SizedBox(height: 12),
-              Text(
-                "۲- از برنامه خارج شده و به تنظیمات Wi-Fi گوشی خود بروید.",
-                style: TextStyle(fontSize: 18),
-                textAlign: TextAlign.right,
-              ),
-              SizedBox(height: 12),
-              Text(
-                "۳- در لیست شبکه‌ها، به شبکه [نام شبکه] متصل شوید.",
-                style: TextStyle(fontSize: 18),
-                textAlign: TextAlign.right,
-              ),
-              SizedBox(height: 12),
-              Text(
-                "۴- پس از اتصال، به این برنامه بازگردید.",
-                style: TextStyle(fontSize: 18),
-                textAlign: TextAlign.right,
-              ),
-            ],
-          ),
-          const Spacer(),
-          Center(
-            child: _blueButton(
-              text: "اتصال برقرار شد، ادامه دهید",
-              onPressed: _checkConnection,
+            ),
+            child: const Text(
+              "اتصال برقرار شد، ادامه دهید",
+              style: TextStyle(fontSize: 16),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
-  Future<void> _checkConnection() async {
-    setState(() {
-      _loading = true;
-      _message = null;
-    });
 
-    try {
-      final response = await http
-          .get(Uri.parse("http://192.168.4.1/get-serial"))
-          .timeout(const Duration(seconds: 25));
+Future<void> _checkConnection() async {
+  setState(() {
+    _loading = true;
+    _message = null;
+    _serialMatched = false; // ابتدا دکمه غیرفعال
+  });
 
-      if (response.statusCode == 200) {
-        final deviceSerial = response.body.trim();
-        final hwPart = deviceSerial;
-        final swPart = widget.sn.substring(widget.sn.length - hwPart.length);
+  try {
+    final response = await http
+        .get(Uri.parse("http://192.168.4.1/get-serial"))
+        .timeout(const Duration(seconds: 25));
 
-        if (hwPart == swPart) {
-          setState(() => _step = 2);
-        } else {
-          setState(() => _message = "❌ سریال دستگاه مطابقت ندارد!");
-        }
+    if (response.statusCode == 200) {
+      final deviceSerial = response.body.trim();
+      final hwPart = deviceSerial;
+      final swPart = widget.sn.substring(widget.sn.length - hwPart.length);
+
+      if (hwPart == swPart) {
+        setState(() {
+          _step = 2;
+          _serialMatched = true; // حالا دکمه فعال
+        });
       } else {
-        setState(() => _message = "❌ پاسخ نامعتبر از دستگاه!");
+        setState(() {
+          _message = "❌ سریال دستگاه مطابقت ندارد!";
+          _serialMatched = false;
+        });
       }
-    } catch (_) {
-      setState(() => _message = "❌ ارتباط برقرار نشد.");
-    } finally {
-      setState(() => _loading = false);
+    } else {
+      setState(() {
+        _message = "❌ پاسخ نامعتبر از دستگاه!";
+        _serialMatched = false;
+      });
     }
+  } catch (_) {
+    setState(() {
+      _message = "❌ ارتباط برقرار نشد.";
+      _serialMatched = false;
+    });
+  } finally {
+    setState(() => _loading = false);
   }
+}
+
 
   Widget _buildConnectionCheck() {
     return Column(
