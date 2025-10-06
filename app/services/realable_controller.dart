@@ -15,25 +15,34 @@ class ReliableSocketController extends GetxController {
 
   ReliableSocketController(this.authToken, this.deviceIds);
 
-  @override
-  void onInit() {
-    super.onInit();
-    _socket = ReliableSocket(authToken, deviceIds);
+@override
+void onInit() {
+  super.onInit();
 
-    ever(_socket.deviceConnectionStatus, (status) {
-      deviceConnectionStatus.assignAll(status);
-    });
+  // ایجاد instance از ReliableSocket
+  _socket = ReliableSocket(authToken, deviceIds);
 
-    ever(_socket.lastDeviceActivity, (activity) {
-      lastDeviceActivity.assignAll(activity);
-    });
+  // گوش دادن به تغییر وضعیت آنلاین/آفلاین دستگاه‌ها
+  ever(_socket.deviceConnectionStatus, (status) {
+    deviceConnectionStatus.assignAll(status);
+  });
 
-    ever(_socket.subscriptionData, (msg) {
-      if (msg.isNotEmpty) _updateLatestDeviceData(msg.cast<int, Map<String, dynamic>>());
-    });
+  // گوش دادن به تغییر آخرین زمان فعالیت دستگاه‌ها
+  ever(_socket.lastDeviceActivity, (activity) {
+    lastDeviceActivity.assignAll(activity);
+  });
 
-    connect();
-  }
+  // گوش دادن به تغییرات subscriptionData و آپدیت latestDeviceDataById
+  ever(_socket.subscriptionData, (msg) {
+    if (msg.isNotEmpty) {
+      _updateLatestDeviceData(msg.cast<int, Map<String, dynamic>>());
+    }
+  });
+
+  // شروع اتصال به WebSocket
+  connect();
+}
+
 
   Future<void> connect() async {
     try {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:get/get.dart';
 import 'dart:math';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ReliableSocket extends GetxService {
   String authToken;
@@ -20,15 +21,36 @@ class ReliableSocket extends GetxService {
   final RxMap<String, DateTime> lastDeviceActivity = <String, DateTime>{}.obs;
   final RxMap<int, Map<String, dynamic>> subscriptionData = <int, Map<String, dynamic>>{}.obs;
 
+  final Connectivity _connectivity = Connectivity();
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+
   int _generateRandomCmdId() {
     final rand = Random();
     return 100000 + rand.nextInt(900000);
   }
 
+  @override
+  void onInit() {
+    super.onInit();
+
+    // گوش دادن به تغییر شبکه
+_connectivitySub = _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> resultList) {
+  print('🔄 Network changed: $resultList');
+  if (!_running) connect();
+});
+  }
+
+  @override
+  void onClose() {
+    _connectivitySub?.cancel();
+    disconnect();
+    super.onClose();
+  }
+
   Future<void> connect() async {
     final url = 'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
 
-    while (!_running) {
+    while (true) {
       try {
         print('🟢 Connecting to WebSocket...');
         _ws = await WebSocket.connect(url);
@@ -37,17 +59,36 @@ class ReliableSocket extends GetxService {
         _running = true;
         _sendSubscription();
 
+        _heartbeatTimer?.cancel();
         _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-          if (_ws != null) _ws!.add(jsonEncode({"type": "heartbeat"}));
+          if (_ws != null && _running) {
+            _ws!.add(jsonEncode({"type": "heartbeat"}));
+          }
         });
 
-        await for (final message in _ws!) {
-          _onMessage(message);
+        _ws!.listen(
+          (message) => _onMessage(message),
+          onDone: () {
+            print('⚠️ WebSocket closed');
+            _running = false;
+          },
+          onError: (err) {
+            print('❌ WebSocket error: $err');
+            _running = false;
+          },
+          cancelOnError: true,
+        );
+
+        // منتظر بمون تا WebSocket قطع بشه
+        while (_running) {
+          await Future.delayed(const Duration(seconds: 1));
         }
       } catch (e) {
-        print('❌ WebSocket error: $e');
-        await Future.delayed(const Duration(seconds: 5));
+        print('❌ Connect error: $e');
       }
+
+      // تلاش مجدد بعد ۵ ثانیه
+      await Future.delayed(const Duration(seconds: 5));
     }
   }
 
@@ -74,74 +115,67 @@ class ReliableSocket extends GetxService {
     }));
   }
 
-void _onMessage(dynamic message) {
-  if (message is! String) return;
+  void _onMessage(dynamic message) {
+    if (message is! String) return;
 
-  try {
-    final parsed = jsonDecode(message);
-    if (parsed is Map && parsed['errorCode'] == 0) {
-      final subscriptionId = parsed['subscriptionId'] as int;
-      final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
+    try {
+      final parsed = jsonDecode(message);
+      if (parsed is Map && parsed['errorCode'] == 0) {
+        final subscriptionId = parsed['subscriptionId'] as int;
+        final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
 
-      // آپدیت subscriptionData
-      subscriptionData[subscriptionId] = {
-        ...?subscriptionData[subscriptionId],
-        ...parsed,
-      };
+        subscriptionData[subscriptionId] = {
+          ...?subscriptionData[subscriptionId],
+          ...parsed,
+        };
 
-      final data = parsed['data'] as Map<String, dynamic>?;
+        final data = parsed['data'] as Map<String, dynamic>?;
 
-      if (data != null) {
-        // ✅ آپدیت وضعیت آنلاین بر اساس active
-        if (data.containsKey('active')) {
-          final activeList = data['active'];
-          if (activeList is List && activeList.isNotEmpty) {
-            final lastEntry = activeList.last;
-            final statusValue = lastEntry[1].toString();
-            final isActive = statusValue.toLowerCase() == 'true';
+        if (data != null) {
+          if (data.containsKey('active')) {
+            final activeList = data['active'];
+            if (activeList is List && activeList.isNotEmpty) {
+              final lastEntry = activeList.last;
+              final statusValue = lastEntry[1].toString();
+              final isActive = statusValue.toLowerCase() == 'true';
 
-            deviceConnectionStatus[deviceId] = isActive;
-            deviceConnectionStatus.refresh();
+              deviceConnectionStatus[deviceId] = isActive;
+              deviceConnectionStatus.refresh();
+            }
           }
-        }
 
-        // ✅ آپدیت آخرین زمان فعالیت (یکبار)
-        int? timestamp;
-
-        if (data.containsKey('lastActivityTime')) {
-          final lastActivityList = data['lastActivityTime'];
-          if (lastActivityList is List && lastActivityList.isNotEmpty) {
-            final lastEntry = lastActivityList.last;
-            timestamp = lastEntry[0] as int?;
+          int? timestamp;
+          if (data.containsKey('lastActivityTime')) {
+            final lastActivityList = data['lastActivityTime'];
+            if (lastActivityList is List && lastActivityList.isNotEmpty) {
+              final lastEntry = lastActivityList.last;
+              timestamp = lastEntry[0] as int?;
+            }
           }
-        }
 
-        if (timestamp == null && parsed.containsKey('latestValues')) {
-          final latestValues = parsed['latestValues'] as Map<String, dynamic>?;
-          if (latestValues != null && latestValues['lastActivityTime'] != null) {
-            timestamp = latestValues['lastActivityTime'] as int?;
+          if (timestamp == null && parsed.containsKey('latestValues')) {
+            final latestValues = parsed['latestValues'] as Map<String, dynamic>?;
+            if (latestValues != null && latestValues['lastActivityTime'] != null) {
+              timestamp = latestValues['lastActivityTime'] as int?;
+            }
           }
-        }
 
-        if (timestamp != null) {
-          lastDeviceActivity[deviceId] =
-              DateTime.fromMillisecondsSinceEpoch(timestamp);
-          lastDeviceActivity.refresh();
+          if (timestamp != null) {
+            lastDeviceActivity[deviceId] =
+                DateTime.fromMillisecondsSinceEpoch(timestamp);
+            lastDeviceActivity.refresh();
+          }
         }
       }
+    } catch (e, stack) {
+      print('⚠️ Could not parse JSON: $message\nError: $e\nStack: $stack');
     }
-  } catch (e, stack) {
-    print('⚠️ Could not parse JSON: $message\nError: $e\nStack: $stack');
   }
-}
-
-
-
-
 
   Future<void> disconnect() async {
     _heartbeatTimer?.cancel();
     _running = false;
     await _ws?.close();
+    _ws = null;
   }
 }
