@@ -98,21 +98,6 @@ class Sidebar extends StatelessWidget {
               ),
               onTap: () {},
             ),
-
-            // مشتری‌ها
-            ListTile(
-              leading: const Icon(Icons.person, color: Colors.black87),
-              title: const Text(
-                'مشتری‌ها',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontFamily: 'IranYekan',
-                ),
-                textAlign: TextAlign.right,
-              ),
-              onTap: () {},
-            ),
-
             // گروه‌ها
             ListTile(
               leading: const Icon(Icons.group, color: Colors.black87),

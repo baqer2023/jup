@@ -508,7 +508,7 @@ class DevicesPage extends BaseView<HomeController> {
                                       response.statusCode == 201) {
                                     Get.snackbar(
                                       'موفقیت',
-                                      'دستگاه به میانبر اضافه شد',
+                                      'دستگاه به داشبورد اضافه شد',
                                       backgroundColor: Colors.green,
                                       colorText: Colors.white,
                                     );
@@ -534,7 +534,7 @@ class DevicesPage extends BaseView<HomeController> {
                               } else {
                                 Get.snackbar(
                                   'توجه',
-                                  'این دستگاه قبلاً به میانبر اضافه شده است',
+                                  'این دستگاه قبلاً به داشبورد اضافه شده است',
                                   backgroundColor: Colors.orange,
                                   colorText: Colors.white,
                                 );
@@ -579,7 +579,7 @@ class DevicesPage extends BaseView<HomeController> {
                               const PopupMenuItem(
                                 value: 2,
                                 child: Text(
-                                  'افزودن به میانبر',
+                                  'افزودن به داشبورد',
                                   style: TextStyle(color: Colors.black),
                                 ),
                               ),

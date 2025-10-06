@@ -539,7 +539,7 @@ class HomePage extends BaseView<HomeController> {
                                     response.statusCode == 201) {
                                   Get.snackbar(
                                     'موفقیت',
-                                    'دستگاه از میانبر حذف شد',
+                                    'دستگاه از داشبورد حذف شد',
                                     backgroundColor: Colors.green,
                                     colorText: Colors.white,
                                   );
@@ -579,7 +579,7 @@ class HomePage extends BaseView<HomeController> {
                             const PopupMenuItem(
                               value: 2,
                               child: Text(
-                                'حذف از میانبر',
+                                'حذف از داشبورد',
                                 style: TextStyle(color: Colors.black),
                               ),
                             ),
