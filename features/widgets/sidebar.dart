@@ -7,7 +7,6 @@ import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'package:my_app32/features/main/pages/main/main_controller.dart';
 import 'package:my_app32/features/main/repository/home_repository.dart';
 
-
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
 
@@ -23,19 +22,34 @@ class Sidebar extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // بخش لوگو
+            // 🔹 بخش لوگو با گرادینت و لوگوی وسط
             DrawerHeader(
               padding: EdgeInsets.zero,
-              decoration: const BoxDecoration(color: Colors.white),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF007DC0),
+                    Color(0xFF00B8E7),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SvgPicture.asset(
-                    'assets/svg/jupin.svg',
-                    fit: BoxFit.fill,
-                    width: double.infinity,
-                    height: 80,
+                  // لوگوی وسط
+                  Expanded(
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'assets/svg/Login.svg',
+                        width: 100,
+                        height: 80,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
+                  // سه SVG زیر لوگو
                   SizedBox(
                     height: 60,
                     child: Stack(
@@ -51,7 +65,7 @@ class Sidebar extends StatelessWidget {
               ),
             ),
 
-            // داشبورد
+            // 🔹 داشبورد
             ListTile(
               leading: const Icon(Icons.dashboard, color: Colors.black87),
               title: const Text(
@@ -63,12 +77,12 @@ class Sidebar extends StatelessWidget {
                 textAlign: TextAlign.right,
               ),
               onTap: () {
-                 Navigator.pop(context); // ✅ بستن سایدبار
-                Get.to(() => const HomePage()); // ✅ رفتن به صفحه دستگاه‌ها
+                Navigator.pop(context);
+                Get.to(() => const HomePage());
               },
             ),
 
-            // دستگاه‌ها
+            // 🔹 دستگاه‌ها
             ListTile(
               leading: const Icon(Icons.devices, color: Colors.black87),
               title: const Text(
@@ -80,12 +94,12 @@ class Sidebar extends StatelessWidget {
                 textAlign: TextAlign.right,
               ),
               onTap: () {
-                Navigator.pop(context); // ✅ بستن سایدبار
-                Get.to(() => const DevicesPage()); // ✅ رفتن به صفحه دستگاه‌ها
+                Navigator.pop(context);
+                Get.to(() => const DevicesPage());
               },
             ),
 
-            // سناریوها
+            // 🔹 سناریوها
             ListTile(
               leading: const Icon(Icons.edit_calendar_outlined, color: Colors.black87),
               title: const Text(
@@ -98,7 +112,8 @@ class Sidebar extends StatelessWidget {
               ),
               onTap: () {},
             ),
-            // گروه‌ها
+
+            // 🔹 گروه‌ها
             ListTile(
               leading: const Icon(Icons.group, color: Colors.black87),
               title: const Text(
@@ -110,8 +125,8 @@ class Sidebar extends StatelessWidget {
                 textAlign: TextAlign.right,
               ),
               onTap: () {
-                Navigator.pop(context); // ✅ بستن سایدبار
-                Get.to(() =>  GroupsPage()); // ✅ رفتن به صفحه دستگاه‌ها
+                Navigator.pop(context);
+                Get.to(() => GroupsPage());
               },
             ),
 

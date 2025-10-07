@@ -5,8 +5,6 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:flutter/services.dart';
 import 'package:my_app32/app/theme/app_colors.dart';
 import 'package:my_app32/features/login/pages/main/login_controller.dart';
-import 'package:my_app32/features/widgets/fill_button_widget.dart';
-import 'package:my_app32/features/widgets/text_form_field_widget.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
 
 class LoginPage extends BaseView<LoginController> {
@@ -26,41 +24,61 @@ class LoginPage extends BaseView<LoginController> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  // لوگوی سایت و سه SVG زیر آن
+                  // بخش لوگو با گرادینت و لوگوی وسط
                   SizedBox(
                     width: double.infinity,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    height: 120,
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        SvgPicture.asset(
-                          'assets/svg/Wrapper.svg',
-                          fit: BoxFit.fill,
-                          width: double.infinity,
-                          height: 80,
+                        // پس‌زمینه گرادینت آبی
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF007DC0),
+                                Color(0xFF00B8E7),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          height: 60,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              SvgPicture.asset(
-                                'assets/svg/1.svg',
-                                fit: BoxFit.fill,
-                              ),
-                              SvgPicture.asset(
-                                'assets/svg/2.svg',
-                                fit: BoxFit.fill,
-                              ),
-                              SvgPicture.asset(
-                                'assets/svg/3.svg',
-                                fit: BoxFit.fill,
-                              ),
-                            ],
+                        // لوگوی SVG وسط
+                        Center(
+                          child: SvgPicture.asset(
+                            'assets/svg/Login.svg',
+                            width: 120, // اندازه کوچکتر برای وسط
+                            height: 80,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ],
                     ),
                   ),
+
+                  // سه SVG زیر لوگو
+                  SizedBox(
+                    height: 60,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/svg/1.svg',
+                          fit: BoxFit.fill,
+                        ),
+                        SvgPicture.asset(
+                          'assets/svg/2.svg',
+                          fit: BoxFit.fill,
+                        ),
+                        SvgPicture.asset(
+                          'assets/svg/3.svg',
+                          fit: BoxFit.fill,
+                        ),
+                      ],
+                    ),
+                  ),
+
                   const SizedBox(height: 24),
                   Padding(
                     padding: const EdgeInsets.all(24),
@@ -89,7 +107,8 @@ class LoginPage extends BaseView<LoginController> {
                         IntlPhoneField(
                           controller: controller.userNameTEC,
                           decoration: InputDecoration(
-                            labelText: 'login_phone_number_textField_label'.tr,
+                            labelText:
+                                'login_phone_number_textField_label'.tr,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide(
@@ -118,26 +137,37 @@ class LoginPage extends BaseView<LoginController> {
                           initialCountryCode: 'IR',
                           onChanged: (phone) {
                             String number = phone.number;
-                            if (number.startsWith('0')) number = number.substring(1);
-                            if (!number.startsWith('9')) number = '9$number';
-                            if (number.length > 10) number = number.substring(0, 10);
+                            if (number.startsWith('0')) {
+                              number = number.substring(1);
+                            }
+                            if (!number.startsWith('9')) {
+                              number = '9$number';
+                            }
+                            if (number.length > 10) {
+                              number = number.substring(0, 10);
+                            }
                             controller.userNameTEC.text = '0$number';
                             controller.onTapCheckLoginOrSignup();
                           },
                           keyboardType: TextInputType.phone,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           showDropdownIcon: false,
                           disableLengthCheck: true,
                         ),
                         const SizedBox(height: 24),
                         Obx(
                           () => ElevatedButton(
-                            onPressed: controller.isEnableConfirmButton.value && !controller.isLoading.value
-                                ? () => controller.onTapLogin()
-                                : null,
+                            onPressed:
+                                controller.isEnableConfirmButton.value &&
+                                        !controller.isLoading.value
+                                    ? () => controller.onTapLogin()
+                                    : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryColor,
-                              disabledBackgroundColor: AppColors.primaryColor.withOpacity(0.3),
+                              disabledBackgroundColor:
+                                  AppColors.primaryColor.withOpacity(0.3),
                               minimumSize: Size(Get.width, 48),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -147,7 +177,10 @@ class LoginPage extends BaseView<LoginController> {
                                 ? const SizedBox(
                                     width: 24,
                                     height: 24,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(
                                     'login_button'.tr,

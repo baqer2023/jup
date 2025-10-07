@@ -19,18 +19,44 @@ class OtpPage extends BaseView<OtpController> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            // لوگوی سایت و سه SVG پایین آن
+            // 🔹 بخش لوگو با گرادینت و لوگوی وسط
             SizedBox(
               width: double.infinity,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SvgPicture.asset(
-                    'assets/svg/Wrapper.svg',
-                    fit: BoxFit.fill,
+                  SizedBox(
                     width: double.infinity,
-                    height: 80,
+                    height: 120,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // پس‌زمینه گرادینت از #007DC0 به #00B8E7
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF007DC0),
+                                Color(0xFF00B8E7),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                        // لوگوی SVG کوچکتر در وسط
+                        Center(
+                          child: SvgPicture.asset(
+                            'assets/svg/Login.svg',
+                            width: 120,
+                            height: 80,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  // سه SVG پایین لوگو
                   SizedBox(
                     height: 60,
                     child: Stack(
@@ -54,7 +80,10 @@ class OtpPage extends BaseView<OtpController> {
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
+
+            // 🔹 بدنه صفحه OTP
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -97,7 +126,8 @@ class OtpPage extends BaseView<OtpController> {
                           controller: controller.verifyCodeTEC,
                           keyboardType: TextInputType.number,
                           maxLength: 5,
-                          onChanged: (value) => controller.onChangeOTPCode(value: value),
+                          onChanged: (value) =>
+                              controller.onChangeOTPCode(value: value),
                           label: Text(
                             'otp_textField_hint'.tr,
                             style: const TextStyle(fontFamily: 'IranYekan'),
@@ -110,7 +140,8 @@ class OtpPage extends BaseView<OtpController> {
                         child: SizedBox(
                           height: 56,
                           child: OutlineButtonWidget(
-                            onTap: () => controller.onTapResendOTPButton(),
+                            onTap: () =>
+                                controller.onTapResendOTPButton(),
                             color: controller.resendOTPEnable.value
                                 ? AppColors.primaryColor
                                 : AppColors.gray[400]!,
@@ -125,7 +156,8 @@ class OtpPage extends BaseView<OtpController> {
                                       ),
                                     )
                                   : Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           controller.timerText.value,
@@ -153,12 +185,14 @@ class OtpPage extends BaseView<OtpController> {
                   const SizedBox(height: 48),
                   Obx(
                     () => ElevatedButton(
-                      onPressed: controller.isVerifyOtp.value && !controller.isLoadingConfirmCode.value
+                      onPressed: controller.isVerifyOtp.value &&
+                              !controller.isLoadingConfirmCode.value
                           ? () => controller.onTapVerifyCodeButton()
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryColor,
-                        disabledBackgroundColor: AppColors.primaryColor.withOpacity(0.3),
+                        disabledBackgroundColor:
+                            AppColors.primaryColor.withOpacity(0.3),
                         minimumSize: Size(Get.width, 48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
