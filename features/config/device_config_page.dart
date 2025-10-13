@@ -158,15 +158,31 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: _serialMatched ? () => setState(() => _step = 1) : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _serialMatched ? Colors.blue : Colors.blue.shade200,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text("اتصال برقرار شد، ادامه دهید", style: TextStyle(fontSize: 16)),
-                ),
+  onPressed: _serialMatched ? () => setState(() => _step = 1) : null,
+  style: ButtonStyle(
+    backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+      if (states.contains(MaterialState.disabled)) {
+        return Colors.grey.shade300; // وقتی غیرفعال است
+      }
+      return Colors.blue; // وقتی فعال است
+    }),
+    foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+      if (states.contains(MaterialState.disabled)) {
+        return Colors.black; // متن مشکی وقتی غیرفعال است
+      }
+      return Colors.white; // متن سفید وقتی فعال است
+    }),
+    padding: MaterialStateProperty.all(
+        const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
+    shape: MaterialStateProperty.all(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+  ),
+  child: const Text(
+    "اتصال برقرار شد، ادامه دهید",
+    style: TextStyle(fontSize: 16),
+  ),
+),
+
               ],
             ),
           ),

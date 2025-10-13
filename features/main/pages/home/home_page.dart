@@ -20,6 +20,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:persian_datetime_picker/persian_datetime_picker.dart';
+import 'dart:ui' as ui;
 
 class HomePage extends BaseView<HomeController> {
   const HomePage({super.key});
@@ -44,8 +46,8 @@ class HomePage extends BaseView<HomeController> {
             body: TabBarView(
               children: [
                 _buildMainContent(controller),
-                const Center(child: Text('To be Built Soon')),
-                const Center(child: Text('Under Construction')),
+                // const Center(child: Text('To be Built Soon')),
+                // const Center(child: Text('Under Construction')),
               ],
             ),
           );
@@ -54,211 +56,235 @@ class HomePage extends BaseView<HomeController> {
     );
   }
 
-  Widget _buildMainContent(HomeController controller) {
-    return Obx(() {
-      final devices = controller.dashboardDevices;
-      print(devices);
+Widget _buildMainContent(HomeController controller) {
+  return Obx(() {
+    final devices = controller.dashboardDevices;
 
-      return RefreshIndicator(
-        onRefresh: controller.refreshAllData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 16),
+    return RefreshIndicator(
+      onRefresh: controller.refreshAllData,
+      child: NotificationListener<OverscrollIndicatorNotification>(
+        onNotification: (overscroll) {
+          overscroll.disallowIndicator(); // جلوگیری از glow افقی
+          return true;
+        },
+        child: ScrollConfiguration(
+          behavior: const ScrollBehavior()
+              .copyWith(overscroll: false), // غیرفعال کردن افکت overscroll
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(), // scroll عمودی
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 16),
 
-              // --- چهار بخش بالای همه ---
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.maxWidth;
-                    final height = width / 3; // کاهش ارتفاع برای جمع‌وجور شدن
-                    return SizedBox(
-                      width: width,
-                      height: height,
-                      child: Stack(
-                        children: [
-                          // بالا سمت راست: Weather
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            width: width / 2 - 16,
-                            height: height / 2 - 8,
-                            child: WeatherDisplay(
-                              weatherFuture: controller.weatherFuture,
-                            ),
-                          ),
-
-                          // پایین سمت راست: آیکون SVG
-                          Positioned(
-                            bottom: 8,
-                            right: 8,
-                            width: width / 2 - 16,
-                            height: height / 2 - 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: SvgPicture.asset(
-                                  'assets/svg/enableDevice.svg',
-                                  width: 100,
-                                  height: 100,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // بالا سمت چپ: آیکون SVG
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            width: width / 2 - 16,
-                            height: height / 2 - 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: SvgPicture.asset(
-                                  'assets/svg/enableSencor.svg',
-                                  width: 100,
-                                  height: 100,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // پایین سمت چپ: ساعت و تاریخ + آیکون
-                          // پایین سمت چپ: ساعت و تاریخ + آیکون
-                          Positioned(
-                            bottom: 8,
-                            left: 8,
-                            width: width / 2 - 16,
-                            height: height / 2 - 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4), // کمتر شد
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.center, // وسط آیکون
-                                children: [
-                                  // ساعت و تاریخ + متن کوچک
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      StreamBuilder<DateTime>(
-                                        stream: Stream.periodic(
-                                          const Duration(seconds: 1),
-                                          (_) => DateTime.now(),
-                                        ),
-                                        builder: (context, snapshot) {
-                                          final now =
-                                              snapshot.data ?? DateTime.now();
-                                          final time = DateFormat.Hm().format(
-                                            now,
-                                          );
-                                          final date = DateFormat.yMd().format(
-                                            now,
-                                          );
-                                          return Row(
-                                            children: [
-                                              Text(
-                                                time,
-                                                style: const TextStyle(
-                                                  fontSize: 14, // کوچکتر شد
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                date,
-                                                style: const TextStyle(
-                                                  fontSize: 12, // کوچکتر شد
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.black54,
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      ),
-                                      const SizedBox(height: 2),
-                                      const Text(
-                                        'تاریخ و ساعت',
-                                        style: TextStyle(
-                                          fontSize: 8,
-                                          color: Colors.black54,
-                                        ), // کوچکتر شد
-                                      ),
-                                    ],
-                                  ),
-                                  // آیکون سمت راست وسط ستون
-                                  SvgPicture.asset(
-                                    'assets/svg/time.svg',
-                                    width: 24, // کمی کوچکتر شد
-                                    height: 24,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 36),
-
-              // Grid یا حالت خالی دستگاه‌ها
-              if (devices.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          height: 200,
-                          child: SvgPicture.asset(
-                            'assets/svg/EmptyDashboard.svg',
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
-                )
-              else
+                // --- چهار بخش بالای همه ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildSmartDevicesGrid(controller),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth;
+                      final height = width / 3;
+                      return SizedBox(
+                        width: width,
+                        height: height,
+                        child: Stack(
+                          children: [
+                            // پایین سمت چپ: ساعت و تاریخ
+Positioned(
+  bottom: 8,
+  left: 8,
+  width: width / 2 - 16,
+  height: height / 2 - 8,
+  child: Container(
+    padding: const EdgeInsets.all(6),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.7),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      children: [
+                StreamBuilder<DateTime>(
+          stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+          builder: (context, snapshot) {
+            final now = snapshot.data ?? DateTime.now();
+            final jalali = Jalali.fromDateTime(now);
+            final time = '${jalali.hour.toString().padLeft(2,'0')}:${jalali.minute.toString().padLeft(2,'0')}';
+            final date = '${jalali.formatFullDate()}';
+            return Column(
+              textDirection: ui.TextDirection.rtl,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                
+                Text(
+                  time,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-              const SizedBox(height: 32), // ✅ فاصله پایین Grid
-            ],
+                Text(
+                  date,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+              ],
+            );
+          },
+        ),
+        
+        const SizedBox(width: 6),
+        SvgPicture.asset(
+          'assets/svg/time.svg',
+          width: 32,
+          height: 32,
+        ),
+
+      ],
+    ),
+  ),
+),
+
+// بالا سمت راست: Weather
+Positioned(
+  top: 8,
+  right: 8,
+  width: width / 2 - 16,
+  child: Container(
+    padding: const EdgeInsets.all(6),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.7),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // آیکون یا WeatherDisplay
+        Flexible(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: (width / 2 - 32), // حداکثر عرض مجاز
+            ),
+            child: WeatherDisplay(weatherFuture: controller.weatherFuture),
           ),
         ),
-      );
-    });
-  }
+        const SizedBox(width: 6),
+        // const Text(
+        //   'آب و هوا',
+        //   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        // ),
+      ],
+    ),
+  ),
+),
+
+
+
+
+// پایین سمت راست: آیکون enableDevice
+Positioned(
+  bottom: 8,
+  right: 8,
+  width: width / 2 - 16,
+  height: height / 2 - 8,
+  child: Container(
+    padding: const EdgeInsets.all(6),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.7),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      children: [
+        const Text(
+          'هنوز دستگاه فعالی نیست',
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+        ),
+        
+        const SizedBox(width: 20),
+        SvgPicture.asset(
+          'assets/svg/enableDevice.svg',
+          width: 32,
+          height: 32,
+        ),
+      ],
+    ),
+  ),
+),
+
+// بالا سمت چپ: آیکون enableSencor
+Positioned(
+  top: 8,
+  left: 8,
+  width: width / 2 - 16,
+  height: height / 2 - 8,
+  child: Container(
+    padding: const EdgeInsets.all(6),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.7),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      children: [
+        const Text(
+          
+          'نیاز به اتصال سنسور دما ',
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+        ),
+        
+        const SizedBox(width: 10),
+        SvgPicture.asset(
+          'assets/svg/enableSencor.svg',
+          width: 32,
+          height: 32,
+        ),
+      ],
+    ),
+  ),
+),
+
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+                const Divider(),
+                const SizedBox(height: 30),
+
+                // Grid یا حالت خالی دستگاه‌ها
+                if (devices.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: 200,
+                            child: SvgPicture.asset(
+                              'assets/svg/EmptyDashboard.svg',
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildSmartDevicesGrid(controller),
+                  ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  });
+}
+
+
 
   Widget _buildWeatherSection() {
     return Padding(
@@ -273,143 +299,125 @@ class HomePage extends BaseView<HomeController> {
   }
 
   // ------------------- Smart Devices Grid (اصلاح شده) -------------------
-  Widget _buildSmartDevicesGrid(HomeController controller) {
-    return Obx(() {
-      final devices = controller.dashboardDevices;
+ Widget _buildSmartDevicesGrid(HomeController controller) {
+  return Obx(() {
+    final devices = controller.dashboardDevices;
+    if (devices.isEmpty) {
+      return _buildNoDevicesFound();
+    }
 
-      // final devices = controller.dashboardDevices ?? [];
-
-      if (devices.isEmpty) {
-        return _buildNoDevicesFound(); // حالت خالی بدون خطا
-      }
-
-      final reliableController =
-          Get.isRegistered<ReliableSocketController>(
+    final reliableController = Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')
+        ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
+        : Get.put(
+            ReliableSocketController(
+              controller.token,
+              devices.map((d) => d.deviceId).toList(),
+            ),
             tag: 'smartDevicesController',
-          )
-          ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
-          : Get.put(
-              ReliableSocketController(
-                controller.token,
-                devices.map((d) => d.deviceId).toList(),
-              ),
-              tag: 'smartDevicesController',
-              permanent: true,
-            );
+            permanent: true,
+          );
 
-      return SizedBox(
-        height: 280,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: devices.map((device) {
-              return Obx(() {
-                final deviceData =
-                    reliableController.latestDeviceDataById[device.deviceId];
+    reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
 
-                bool switch1On = false;
-                bool switch2On = false;
-                Color iconColor1 = Colors.grey;
-                Color iconColor2 = Colors.grey;
+    return SizedBox(
+      height: 280, // حتماً ارتفاع مشخص باشه
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        itemCount: devices.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final device = devices[index];
 
-                if (deviceData != null) {
-                  final key1Entries = [
-                    if (deviceData['Touch_W1'] is List)
-                      ...deviceData['Touch_W1'],
-                    if (deviceData['Touch_D1'] is List)
-                      ...deviceData['Touch_D1'],
-                  ];
-                  if (key1Entries.isNotEmpty) {
-                    key1Entries.sort(
-                      (a, b) => (b[0] as int).compareTo(a[0] as int),
-                    );
-                    switch1On = key1Entries.first[1].toString().contains('On');
-                  }
+          return SizedBox(
+            width: 280, // پهنای کارت‌ها
+            child: Obx(() {
+              final deviceData = reliableController.latestDeviceDataById[device.deviceId];
 
-                  final key2Entries = [
-                    if (deviceData['Touch_W2'] is List)
-                      ...deviceData['Touch_W2'],
-                    if (deviceData['Touch_D2'] is List)
-                      ...deviceData['Touch_D2'],
-                  ];
-                  if (key2Entries.isNotEmpty) {
-                    key2Entries.sort(
-                      (a, b) => (b[0] as int).compareTo(a[0] as int),
-                    );
-                    switch2On = key2Entries.first[1].toString().contains('On');
-                  }
+              bool switch1On = false;
+              bool switch2On = false;
+              Color iconColor1 = Colors.grey;
+              Color iconColor2 = Colors.grey;
 
-                  if (deviceData['ledColor'] is List &&
-                      deviceData['ledColor'].isNotEmpty) {
-                    final ledEntry = deviceData['ledColor'][0][1];
-                    Map<String, dynamic> ledMap = ledEntry is String
-                        ? jsonDecode(ledEntry)
-                        : (ledEntry as Map<String, dynamic>);
-
-                    iconColor1 = switch1On
-                        ? Color.fromARGB(
-                            255,
-                            ledMap['touch1']['on']['r'],
-                            ledMap['touch1']['on']['g'],
-                            ledMap['touch1']['on']['b'],
-                          )
-                        : Color.fromARGB(
-                            255,
-                            ledMap['touch1']['off']['r'],
-                            ledMap['touch1']['off']['g'],
-                            ledMap['touch1']['off']['b'],
-                          );
-
-                    iconColor2 = switch2On
-                        ? Color.fromARGB(
-                            255,
-                            ledMap['touch2']['on']['r'],
-                            ledMap['touch2']['on']['g'],
-                            ledMap['touch2']['on']['b'],
-                          )
-                        : Color.fromARGB(
-                            255,
-                            ledMap['touch2']['off']['r'],
-                            ledMap['touch2']['off']['g'],
-                            ledMap['touch2']['off']['b'],
-                          );
-                  }
+              if (deviceData != null) {
+                final key1Entries = [
+                  if (deviceData['TW1'] is List) ...deviceData['TW1'],
+                  if (deviceData['TD1'] is List) ...deviceData['TD1'],
+                ];
+                if (key1Entries.isNotEmpty) {
+                  key1Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+                  switch1On = key1Entries.first[1].toString().contains('On');
                 }
 
-                final isSingleKey = device.deviceTypeName == 'key-1';
+                final key2Entries = [
+                  if (deviceData['TW2'] is List) ...deviceData['TW2'],
+                  if (deviceData['TD2'] is List) ...deviceData['TD2'],
+                ];
+                if (key2Entries.isNotEmpty) {
+                  key2Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+                  switch2On = key2Entries.first[1].toString().contains('On');
+                }
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: SizedBox(
-                    width: 280, // پهنای ثابت کارت‌ها
-                    child: _buildSmartDeviceCard(
-                      title: device.title,
-                      deviceId: device.deviceId,
-                      switch1On: switch1On,
-                      switch2On: switch2On,
-                      iconColor1: iconColor1,
-                      iconColor2: iconColor2,
-                      onToggle: (switchNumber, value) async {
-                        await reliableController.toggleSwitch(
-                          value,
-                          switchNumber,
-                          device.deviceId,
+                if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
+                  final ledEntry = deviceData['ledColor'][0][1];
+                  Map<String, dynamic> ledMap = ledEntry is String
+                      ? jsonDecode(ledEntry)
+                      : (ledEntry as Map<String, dynamic>);
+
+                  iconColor1 = switch1On
+                      ? Color.fromARGB(
+                          255,
+                          ledMap['touch1']['on']['r'],
+                          ledMap['touch1']['on']['g'],
+                          ledMap['touch1']['on']['b'],
+                        )
+                      : Color.fromARGB(
+                          255,
+                          ledMap['touch1']['off']['r'],
+                          ledMap['touch1']['off']['g'],
+                          ledMap['touch1']['off']['b'],
                         );
-                      },
-                      isSingleKey: isSingleKey,
-                      device: device,
-                    ),
-                  ),
-                );
-              });
-            }).toList(),
-          ),
-        ),
-      );
-    });
-  }
+
+                  iconColor2 = switch2On
+                      ? Color.fromARGB(
+                          255,
+                          ledMap['touch2']['on']['r'],
+                          ledMap['touch2']['on']['g'],
+                          ledMap['touch2']['on']['b'],
+                        )
+                      : Color.fromARGB(
+                          255,
+                          ledMap['touch2']['off']['r'],
+                          ledMap['touch2']['off']['g'],
+                          ledMap['touch2']['off']['b'],
+                        );
+                }
+              }
+
+              final isSingleKey = device.deviceTypeName == 'key-1';
+
+              return _buildSmartDeviceCard(
+                title: device.title,
+                deviceId: device.deviceId,
+                switch1On: switch1On,
+                switch2On: switch2On,
+                iconColor1: iconColor1,
+                iconColor2: iconColor2,
+                onToggle: (switchNumber, value) async {
+                  await reliableController.toggleSwitch(value, switchNumber, device.deviceId);
+                },
+                isSingleKey: isSingleKey,
+                device: device,
+              );
+            }),
+          );
+        },
+      ),
+    );
+  });
+}
+
 
   // ------------------- Smart Device Card -------------------
   Widget _buildSmartDeviceCard({
@@ -432,280 +440,362 @@ class HomePage extends BaseView<HomeController> {
         ? Colors.blue.shade400
         : Colors.grey.shade400;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 200, maxHeight: 250),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Card(
-            color: Colors.white,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: borderColor, width: 2),
-            ),
-            shadowColor: Colors.black12,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 32, 12, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // بالای کارت: سوئیچ‌ها و عنوان
-                  // بالای کارت: سوئیچ‌ها و عنوان
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween, // عنوان سمت راست
-                    children: [
-                      // ستون سوئیچ‌ها
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildSwitchRow(
-                            deviceId: deviceId,
-                            switchNumber: 1,
-                            color: iconColor1,
-                            onToggle: onToggle,
-                          ),
-                          if (!isSingleKey)
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 230, maxHeight: 280),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // ----- کارت اصلی -----
+            Card(
+              color: Colors.white,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: borderColor, width: 2),
+              ),
+              shadowColor: Colors.black12,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 48, 12, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // بالای کارت: سوئیچ‌ها و عنوان
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // ستون سوئیچ‌ها
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             _buildSwitchRow(
                               deviceId: deviceId,
-                              switchNumber: 2,
-                              color: iconColor2 ?? Colors.grey,
+                              switchNumber: 1,
+                              color: iconColor1,
                               onToggle: onToggle,
                             ),
-                        ],
-                      ),
-
-                      // عنوان دستگاه
-                      Text(
-                        title,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                            if (!isSingleKey)
+                              _buildSwitchRow(
+                                deviceId: deviceId,
+                                switchNumber: 2,
+                                color: iconColor2 ?? Colors.grey,
+                                onToggle: onToggle,
+                              ),
+                          ],
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
 
-                  // پایین کارت: دکمه منو سمت چپ و وضعیت آنلاین/آفلاین سمت راست
-                  Row(
-                    children: [
-                      // دکمه سه‌نقطه منو سمت چپ
-                      Align(
-                        alignment: Alignment.bottomLeft,
-                        child: PopupMenuButton<int>(
-                          color: Colors.white,
-                          icon: const Icon(
-                            Icons.more_vert,
-                            size: 20,
-                            color: Colors.black87,
-                          ),
-                          onSelected: (value) async {
-                            final homeController = Get.find<HomeController>();
-
-                            if (value == 0) {
-                              showLedColorDialog(device: device);
-                            } else if (value == 1) {
-                              Get.to(() => DeviceConfigPage(sn: device.sn));
-                            } else if (value == 2) {
-                              // حذف از میانبر
-                              final token = homeController.token;
-                              if (token == null) {
-                                Get.snackbar("خطا", "توکن معتبر پیدا نشد");
-                                return;
-                              }
-
-                              final headers = {
-                                'Authorization': 'Bearer $token',
-                                'Content-Type': 'application/json',
-                              };
-
-                              final data = {"deviceId": device.deviceId};
-
-                              try {
-                                final dio = Dio();
-                                final response = await dio.post(
-                                  'http://45.149.76.245:8080/api/device/removeFromHome',
-                                  data: data,
-                                  options: Options(headers: headers),
-                                );
-                                if (response.statusCode == 200 ||
-                                    response.statusCode == 201) {
-                                  Get.snackbar(
-                                    'موفقیت',
-                                    'دستگاه از داشبورد حذف شد',
-                                    backgroundColor: Colors.green,
-                                    colorText: Colors.white,
-                                  );
-                                  await homeController.refreshAllData();
-                                }
-                              } catch (e) {
-                                print("Error removing device from home: $e");
-                              }
-                            } else if (value == 3) {
-                              await homeController.removeFromAllDashboard(
-                                device.deviceId,
-                              );
-                            } else if (value == 4) {
-                              await homeController.completeRemoveDevice(
-                                device.deviceId,
-                              );
-                            } else if (value == 5) {
-                              // ریست دستگاه
-                              await homeController.resetDevice(device.deviceId);
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 0,
-                              child: Text(
-                                'تنظیمات پیشرفته',
-                                style: TextStyle(color: Colors.black),
+                        // عنوان دستگاه + مکان
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              title,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const PopupMenuItem(
-                              value: 1,
-                              child: Text(
-                                'پیکربندی',
-                                style: TextStyle(color: Colors.black),
+                            const SizedBox(height: 4),
+                            Text(
+                              device.dashboardTitle ?? "بدون مکان",
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                            const PopupMenuItem(
-                              value: 2,
-                              child: Text(
-                                'حذف از داشبورد',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 3,
-                              child: Text(
-                                'حذف موقت کلید از همه مکانها',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 4,
-                              child: Text(
-                                'حذف کامل دستگاه',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 5,
-                              child: Text(
-                                'ریست دستگاه',
-                                style: TextStyle(color: Colors.black),
-                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
-                      ),
+                      ],
+                    ),
 
-                      const Spacer(),
+                    // پایین کارت: منو و وضعیت آنلاین
+                    Row(
+                      children: [
+                        Align(
+                          alignment: Alignment.bottomLeft,
+                          child:PopupMenuButton<int>(
+  color: Colors.white,
+  icon: const Icon(
+    Icons.more_vert,
+    size: 20,
+    color: Colors.black87,
+  ),
+  onSelected: (value) async {
+    final homeController = Get.find<HomeController>();
 
-                      // وضعیت آنلاین/آفلاین سمت راست
-                      Obx(() {
-                        final lastSeen =
-                            reliableController.lastDeviceActivity[deviceId];
-                        final isOnline =
-                            lastSeen != null &&
-                            DateTime.now().difference(lastSeen) <
-                                const Duration(seconds: 30);
+    if (value == 0) {
+      showLedColorDialog(device: device);
+    } else if (value == 1) {
+      Get.to(() => DeviceConfigPage(sn: device.sn));
+    } else if (value == 2) {
+      final token = homeController.token;
+      if (token == null) {
+        Get.snackbar("خطا", "توکن معتبر پیدا نشد");
+        return;
+      }
 
-                        if (isOnline) {
-                          return const Text(
-                            "آنلاین",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          );
-                        } else {
-                          String lastActivityText;
-                          if (lastSeen != null) {
-                            final formattedDate =
-                                "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
-                            final formattedTime =
-                                "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
-                            lastActivityText =
-                                "آخرین فعالیت: $formattedDate - $formattedTime";
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      final data = {"deviceId": device.deviceId};
+
+      try {
+        final dio = Dio();
+        final response = await dio.post(
+          'http://45.149.76.245:8080/api/device/removeFromHome',
+          data: data,
+          options: Options(headers: headers),
+        );
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          Get.snackbar(
+            'موفقیت',
+            'دستگاه از داشبورد حذف شد',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+          await homeController.refreshAllData();
+        }
+      } catch (e) {
+        print("Error removing device from home: $e");
+      }
+    } else if (value == 3) {
+      try {
+        await homeController.removeFromAllDashboard(device.deviceId);
+        await homeController.refreshAllData();
+        Get.snackbar(
+          'موفقیت',
+          'کلید از همه مکان‌ها حذف موقت شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } catch (e) {
+        print("Error removing key from all dashboards: $e");
+        Get.snackbar(
+          'خطا',
+          'عملیات حذف با خطا مواجه شد',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } else if (value == 4) {
+      try {
+        await homeController.completeRemoveDevice(device.deviceId);
+        await homeController.refreshAllData();
+        Get.snackbar(
+          'موفقیت',
+          'دستگاه با موفقیت حذف شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } catch (e) {
+        print("Error completely removing device: $e");
+        Get.snackbar(
+          'خطا',
+          'عملیات حذف با خطا مواجه شد',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } else if (value == 5) {
+      await homeController.resetDevice(device.deviceId);
+    }
+  },
+  itemBuilder: (context) => [
+    PopupMenuItem<int>(
+      value: 0,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: ui.TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/settings.svg', width: 20, height: 20),
+          const SizedBox(width: 4),
+          Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem<int>(
+      value: 1,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: ui.TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/config.svg', width: 20, height: 20),
+          const SizedBox(width: 4),
+          Text('پیکربندی', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem<int>(
+      value: 2,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: ui.TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/add_dashboard.svg', width: 20, height: 20),
+          const SizedBox(width: 4),
+          Text('حذف از داشبورد', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem<int>(
+      value: 3,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: ui.TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/delete_temp.svg', width: 20, height: 20),
+          const SizedBox(width: 4),
+          Text('حذف موقت کلید از همه مکان‌ها', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem<int>(
+      value: 4,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: ui.TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/deleting.svg', width: 20, height: 20),
+          const SizedBox(width: 4),
+          Text('حذف کامل دستگاه', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem<int>(
+      value: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: ui.TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/reset.svg', width: 20, height: 20),
+          const SizedBox(width: 4),
+          Text('ریست دستگاه', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
+  ],
+),
+ 
+                        ),
+
+                        const Spacer(),
+
+                        // وضعیت آنلاین / آفلاین
+                        Obx(() {
+                          final lastSeen =
+                              reliableController.lastDeviceActivity[deviceId];
+                          final isOnline =
+                              lastSeen != null &&
+                              DateTime.now().difference(lastSeen) <
+                                  const Duration(seconds: 30);
+
+                          if (isOnline) {
+                            return const Text(
+                              "آنلاین",
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            );
                           } else {
-                            lastActivityText = "آخرین فعالیت: نامشخص";
+                            String lastActivityText;
+                            if (lastSeen != null) {
+                              final formattedDate =
+                                  "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+                              final formattedTime =
+                                  "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+                              lastActivityText =
+                                  "آخرین فعالیت: $formattedDate - $formattedTime";
+                            } else {
+                              lastActivityText = "آخرین فعالیت: نامشخص";
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text(
+                                  "آفلاین",
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  lastActivityText,
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            );
                           }
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              const Text(
-                                "آفلاین",
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                lastActivityText,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          );
-                        }
-                      }),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // دایره لامپ بالا وسط
-          Positioned(
-            top: -15,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                width: 45,
-                height: 45,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: anySwitchOn
-                        ? Colors.blue.shade400
-                        : Colors.grey.shade400,
-                    width: 3,
-                  ),
-                  boxShadow: [
-                    if (anySwitchOn)
-                      BoxShadow(
-                        color: Colors.blue.shade200.withOpacity(0.5),
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                      ),
+                        }),
+                      ],
+                    ),
                   ],
                 ),
-                child: ClipOval(
-                  child: SvgPicture.asset(
-                    anySwitchOn ? 'assets/svg/on.svg' : 'assets/svg/off.svg',
-                    fit: BoxFit.cover,
+              ),
+            ),
+
+            // ----- دایره آیکن بالا -----
+            Positioned(
+              top: -15,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: anySwitchOn
+                          ? Colors.blue.shade400
+                          : Colors.grey.shade400,
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      if (anySwitchOn)
+                        BoxShadow(
+                          color: Colors.blue.shade200.withOpacity(0.5),
+                          blurRadius: 5,
+                          spreadRadius: 1,
+                        ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: SvgPicture.asset(
+                      anySwitchOn ? 'assets/svg/on.svg' : 'assets/svg/off.svg',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -728,12 +818,12 @@ class HomePage extends BaseView<HomeController> {
       if (deviceData != null) {
         final keyEntries = switchNumber == 1
             ? [
-                if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
-                if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
+                if (deviceData['TW1'] is List) ...deviceData['TW1'],
+                if (deviceData['TD1'] is List) ...deviceData['TD1'],
               ]
             : [
-                if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
-                if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
+                if (deviceData['TW2'] is List) ...deviceData['TW2'],
+                if (deviceData['TD2'] is List) ...deviceData['TD2'],
               ];
 
         if (keyEntries.isNotEmpty) {
@@ -800,115 +890,115 @@ class HomePage extends BaseView<HomeController> {
     });
   }
 
-  void _showAddLocationDialog() {
-    final TextEditingController nameController = TextEditingController();
+  // void _showAddLocationDialog() {
+  //   final TextEditingController nameController = TextEditingController();
 
-    showDialog(
-      context: Get.context!,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white, // پس‌زمینه مدال
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          elevation: 10, // سایه ملایم
-          title: const Text(
-            'افزودن مکان',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              fontSize: 18,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'نام مکان',
-                    hintText: 'نام مکان را وارد کنید',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          actionsPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
-          actionsAlignment: MainAxisAlignment.spaceBetween,
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Colors.yellow),
-                ),
-              ),
-              child: const Text(
-                'انصراف',
-                style: TextStyle(
-                  color: Colors.yellow,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) {
-                  Get.snackbar(
-                    'خطا',
-                    'لطفاً نام مکان را وارد کنید',
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                  );
-                  return;
-                }
-                await controller.addLocation(name);
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'ثبت',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //   showDialog(
+  //     context: Get.context!,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         backgroundColor: Colors.white, // پس‌زمینه مدال
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(20),
+  //         ),
+  //         elevation: 10, // سایه ملایم
+  //         title: const Text(
+  //           'افزودن مکان',
+  //           style: TextStyle(
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.black,
+  //             fontSize: 18,
+  //           ),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //         content: SizedBox(
+  //           width: double.maxFinite,
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               TextField(
+  //                 controller: nameController,
+  //                 decoration: InputDecoration(
+  //                   labelText: 'نام مکان',
+  //                   hintText: 'نام مکان را وارد کنید',
+  //                   border: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(12),
+  //                   ),
+  //                   contentPadding: const EdgeInsets.symmetric(
+  //                     horizontal: 12,
+  //                     vertical: 10,
+  //                   ),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 20),
+  //             ],
+  //           ),
+  //         ),
+  //         actionsPadding: const EdgeInsets.symmetric(
+  //           horizontal: 16,
+  //           vertical: 8,
+  //         ),
+  //         actionsAlignment: MainAxisAlignment.spaceBetween,
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.of(context).pop(),
+  //             style: TextButton.styleFrom(
+  //               backgroundColor: Colors.white,
+  //               padding: const EdgeInsets.symmetric(
+  //                 horizontal: 24,
+  //                 vertical: 12,
+  //               ),
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 side: const BorderSide(color: Colors.yellow),
+  //               ),
+  //             ),
+  //             child: const Text(
+  //               'انصراف',
+  //               style: TextStyle(
+  //                 color: Colors.yellow,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () async {
+  //               final name = nameController.text.trim();
+  //               if (name.isEmpty) {
+  //                 Get.snackbar(
+  //                   'خطا',
+  //                   'لطفاً نام مکان را وارد کنید',
+  //                   backgroundColor: Colors.red,
+  //                   colorText: Colors.white,
+  //                 );
+  //                 return;
+  //               }
+  //               await controller.addLocation(name);
+  //               Navigator.of(context).pop();
+  //             },
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: Colors.blue,
+  //               padding: const EdgeInsets.symmetric(
+  //                 horizontal: 24,
+  //                 vertical: 12,
+  //               ),
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //             ),
+  //             child: const Text(
+  //               'ثبت',
+  //               style: TextStyle(
+  //                 color: Colors.white,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildLoadingDeviceCard({required String title}) {
     return Card(
@@ -1044,40 +1134,56 @@ class HomePage extends BaseView<HomeController> {
         deviceData['ledColor'].isNotEmpty) {
       try {
         final ledEntry = deviceData['ledColor'][0][1];
-        Map<String, dynamic> ledMap = ledEntry is String
-            ? jsonDecode(ledEntry)
-            : (ledEntry as Map<String, dynamic>);
 
-        if (ledMap['touch1'] != null) {
+        if (ledEntry == null) return;
+
+        Map<String, dynamic>? ledMap;
+        if (ledEntry is String) {
+          final decoded = jsonDecode(ledEntry);
+          if (decoded is Map<String, dynamic>) ledMap = decoded;
+        } else if (ledEntry is Map<String, dynamic>) {
+          ledMap = ledEntry;
+        }
+
+        if (ledMap == null) return;
+
+        if (ledMap['touch1'] != null &&
+            ledMap['touch1']['on'] != null &&
+            ledMap['touch1']['off'] != null) {
           touch1On.value = Color.fromARGB(
             255,
-            (ledMap['touch1']['on']['r'] as int).clamp(0, 255),
-            (ledMap['touch1']['on']['g'] as int).clamp(0, 255),
-            (ledMap['touch1']['on']['b'] as int).clamp(0, 255),
+            (ledMap['touch1']['on']['r'] ?? 0).clamp(0, 255),
+            (ledMap['touch1']['on']['g'] ?? 0).clamp(0, 255),
+            (ledMap['touch1']['on']['b'] ?? 0).clamp(0, 255),
           );
           touch1Off.value = Color.fromARGB(
             255,
-            (ledMap['touch1']['off']['r'] as int).clamp(0, 255),
-            (ledMap['touch1']['off']['g'] as int).clamp(0, 255),
-            (ledMap['touch1']['off']['b'] as int).clamp(0, 255),
+            (ledMap['touch1']['off']['r'] ?? 0).clamp(0, 255),
+            (ledMap['touch1']['off']['g'] ?? 0).clamp(0, 255),
+            (ledMap['touch1']['off']['b'] ?? 0).clamp(0, 255),
           );
         }
 
-        if (!isSingleKey && ledMap['touch2'] != null) {
+        if (!isSingleKey &&
+            ledMap['touch2'] != null &&
+            ledMap['touch2']['on'] != null &&
+            ledMap['touch2']['off'] != null) {
           touch2On.value = Color.fromARGB(
             255,
-            (ledMap['touch2']['on']['r'] as int).clamp(0, 255),
-            (ledMap['touch2']['on']['g'] as int).clamp(0, 255),
-            (ledMap['touch2']['on']['b'] as int).clamp(0, 255),
+            (ledMap['touch2']['on']['r'] ?? 0).clamp(0, 255),
+            (ledMap['touch2']['on']['g'] ?? 0).clamp(0, 255),
+            (ledMap['touch2']['on']['b'] ?? 0).clamp(0, 255),
           );
           touch2Off.value = Color.fromARGB(
             255,
-            (ledMap['touch2']['off']['r'] as int).clamp(0, 255),
-            (ledMap['touch2']['off']['g'] as int).clamp(0, 255),
-            (ledMap['touch2']['off']['b'] as int).clamp(0, 255),
+            (ledMap['touch2']['off']['r'] ?? 0).clamp(0, 255),
+            (ledMap['touch2']['off']['g'] ?? 0).clamp(0, 255),
+            (ledMap['touch2']['off']['b'] ?? 0).clamp(0, 255),
           );
         }
-      } catch (_) {}
+      } catch (e) {
+        print("❗️Error parsing ledColor: $e");
+      }
     }
 
     showDialog(
@@ -1143,18 +1249,28 @@ class HomePage extends BaseView<HomeController> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.yellow, // متن زرد
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: const Text("انصراف"),
-            ),
+TextButton(
+  onPressed: () => Navigator.of(context).pop(),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد برند
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    "انصراف",
+    style: TextStyle(
+      color: Color(0xFFF39530), // متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
             ElevatedButton(
               onPressed: () async {
                 try {
@@ -1322,13 +1438,28 @@ class _ColorPreviewPicker extends StatelessWidget {
                     vertical: 8,
                   ),
                   actions: [
-                    TextButton(
-                      child: const Text(
-                        'انصراف',
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
+TextButton(
+  onPressed: () => Navigator.of(context).pop(),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد برند
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    "انصراف",
+    style: TextStyle(
+      color: Color(0xFFF39530), // متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: tempColor,

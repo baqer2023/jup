@@ -180,20 +180,27 @@ Future<void> submitDevice() async {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                OutlinedButton(
-                  onPressed: () {
-                    Get.back();
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.yellow, width: 1.5),
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text(
-                    'انصراف',
-                    style: TextStyle(color: Colors.yellow),
-                  ),
-                ),
+OutlinedButton(
+  onPressed: () {
+    Get.back();
+  },
+  style: OutlinedButton.styleFrom(
+    side: const BorderSide(color: Color(0xFFF39530), width: 1.5), // حاشیه زرد برند
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: const Text(
+    'انصراف',
+    style: TextStyle(
+      color: Color(0xFFF39530), // متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: submitDevice,
@@ -248,16 +255,28 @@ void _showAddLocationDialog(HomeController homeController) {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.white, // پس‌زمینه دکمه انصراف
-            ),
-            child: const Text(
-              'انصراف',
-              style: TextStyle(color: Colors.yellow), // متن زرد
-            ),
-          ),
+TextButton(
+  onPressed: () => Navigator.of(context).pop(),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد برند
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    'انصراف',
+    style: TextStyle(
+      color: Color(0xFFF39530), // متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
           ElevatedButton(
             onPressed: () async {
               final name = nameController.text.trim();

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sms_autofill/sms_autofill.dart';
@@ -18,13 +17,16 @@ class OtpController extends GetxController with AppUtilsMixin {
 
   final OtpRepository _repo;
   final LoginRepository _loginRepo;
+
   late final String phoneNumber;
   TextEditingController verifyCodeTEC = TextEditingController();
+
   RxBool isLoadingConfirmCode = false.obs;
   RxBool isLoadingResendCode = false.obs;
   RxBool isVerifyOtp = false.obs;
   RxBool resendOTPEnable = false.obs;
-  RxString timerText = '2:00'.obs;
+
+  RxString timerText = '02:00'.obs;
   int counter = 120;
   Timer? _timer;
 
@@ -32,19 +34,18 @@ class OtpController extends GetxController with AppUtilsMixin {
   void onInit() {
     super.onInit();
     var data = Get.arguments;
-    if (data != null) {
-      phoneNumber = data['phoneNumber'];
-    } else {
-      phoneNumber = '';
-    }
+    phoneNumber = data?['phoneNumber'] ?? '';
     startTimer();
     initSmsAutoFill();
   }
 
+  /// شروع تایمر ۲ دقیقه‌ای
   void startTimer() {
+    resendOTPEnable.value = false;
     counter = 120;
-    timerText.value = '2:00';
+    timerText.value = '02:00';
     _timer?.cancel();
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (counter > 0) {
         counter--;
@@ -59,53 +60,31 @@ class OtpController extends GetxController with AppUtilsMixin {
     });
   }
 
-  // todo: pending for backend
-  /// for autofill verify code
+  /// فعال‌سازی شنود SMS
   void initSmsAutoFill() async {
     try {
       await SmsAutoFill().unregisterListener();
-    } catch (error) {
-      debugPrint('*****************');
-      debugPrint('Error unregisterListener: $error');
-      debugPrint('-----------------');
-    }
-    try {
       await SmsAutoFill().listenForCode();
       SmsAutoFill().code.listen((event) {
-        event.trim();
-        List<String> sms = [];
-        for (int i = 0; i < event.length; i++) {
-          String t = event.substring(i, i + 1);
-          sms.add(t);
-        }
-        String code = '';
-        for (int i = 0; i < sms.length; i++) {
-          code = code + sms[i];
-        }
-        verifyCodeTEC.text = code.trim();
+        verifyCodeTEC.text = event.trim();
         if (verifyCodeTEC.text.length == 5) {
           onTapVerifyCodeButton();
         }
       });
     } catch (error) {
-      debugPrint('*****************');
-      debugPrint('Error listenForCode: $error');
-      debugPrint('-----------------');
+      debugPrint('SMS autofill error: $error');
     }
   }
 
-  /// back to login page for edit phone number
+  /// برگشت به صفحه لاگین برای ویرایش شماره
   void onTapEditButton() => Get.back();
 
-  /// enable verify button when fill text field
+  /// فعال‌سازی دکمه تأیید وقتی کد کامل شد
   void onChangeOTPCode({required String value}) {
-    print('OTP Code changed: $value');
-    print('Length: ${value.length}');
     isVerifyOtp.value = value.length == 5;
-    print('isVerifyOtp: ${isVerifyOtp.value}');
   }
 
-  /// resend verify Code request
+  /// وقتی کاربر روی "ارسال مجدد کد" کلیک می‌کند
   void onTapResendOTPButton() {
     if (resendOTPEnable.value) {
       resendOTPEnable.value = false;
@@ -114,45 +93,51 @@ class OtpController extends GetxController with AppUtilsMixin {
     }
   }
 
-  /// request resend verify code
+  /// درخواست ارسال مجدد OTP
   void resendOTPRequest() {
     isLoadingResendCode.value = true;
     SignupRequestModel requestModel = SignupRequestModel(
       phoneNumber: phoneNumber,
     );
+
     _loginRepo.login(requestModel: requestModel).then((ResponseModel response) {
       isLoadingResendCode.value = false;
       responseHandler(
         statusCode: response.statusCode!,
-        message: response.message!,
+        message: response.message ?? '',
         onSuccess: () {
-          if (response.success) {
-            Get.snackbar(
-              'Success',
-              'OTP sent successfully',
-              snackPosition: SnackPosition.TOP,
-              duration: const Duration(seconds: 3),
-              backgroundColor: Colors.green,
-              colorText: Colors.white,
-            );
-          }
+          Get.snackbar(
+            'موفقیت',
+            'کد تأیید با موفقیت ارسال شد.',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        },
+        onFailure: () {
+          Get.snackbar(
+            'خطا',
+            response.message ?? 'ارسال مجدد کد با خطا مواجه شد.',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
         },
       );
     });
   }
 
-  /// request confirm verify code
+  /// بررسی و ارسال کد OTP به سرور
   void onTapVerifyCodeButton() {
-    if (!isVerifyOtp.value) {
-      print('Verify button pressed but OTP is not valid');
-      return;
-    }
+    if (!isVerifyOtp.value) return;
 
     isLoadingConfirmCode.value = true;
+
     OtpRequestModel requestModel = OtpRequestModel(
       phoneNumber: phoneNumber,
       verifyCode: verifyCodeTEC.text,
     );
+
     _repo.sendOtp(requestModel: requestModel).then((OtpResponseModel response) {
       isLoadingConfirmCode.value = false;
       responseHandler(
@@ -166,10 +151,9 @@ class OtpController extends GetxController with AppUtilsMixin {
             Get.offAllNamed(AppRoutes.HOME);
           } else {
             Get.snackbar(
-              'Error',
-              'OTP verified, but no token received.',
+              'خطا',
+              'کد تأیید درست است اما توکن دریافت نشد.',
               snackPosition: SnackPosition.TOP,
-              duration: const Duration(seconds: 3),
               backgroundColor: Colors.red,
               colorText: Colors.white,
             );
@@ -177,10 +161,9 @@ class OtpController extends GetxController with AppUtilsMixin {
         },
         onFailure: () {
           Get.snackbar(
-            'Error',
-            response.message ?? '',
+            'خطا',
+            response.message ?? 'کد وارد شده اشتباه است.',
             snackPosition: SnackPosition.TOP,
-            duration: const Duration(seconds: 3),
             backgroundColor: Colors.red,
             colorText: Colors.white,
           );

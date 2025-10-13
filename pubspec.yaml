@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   intl: ^0.18.1
   dio: ^5.9.0
-  connectivity_plus: ^6.1.5
+  connectivity_plus: ^6.1.4
   get: ^4.7.2
   flutter_svg: ^2.2.1
   another_flushbar: ^1.12.31
@@ -53,6 +53,10 @@ dependencies:
   persian_datetime_picker: ^3.1.1
   sliding_up_panel: ^2.0.0+1
   flutter_colorpicker: ^1.1.0
+  country_picker: ^2.0.15
+
+  
+
   
 
 dev_dependencies:

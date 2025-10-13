@@ -120,15 +120,28 @@ class _GroupsPageState extends State<GroupsPage> {
         "آیا مطمئن هستید که می‌خواهید این گروه را حذف کنید؟",
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.white, // بک‌گراند سفید
-            foregroundColor: Colors.yellow, // متن زرد
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-          child: const Text("انصراف"),
-        ),
+TextButton(
+  onPressed: () => Navigator.pop(ctx, false),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد برند
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    "انصراف",
+    style: TextStyle(
+      color: Color(0xFFF39530), // متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
         ElevatedButton(
           onPressed: () => Navigator.pop(ctx, true),
           style: ElevatedButton.styleFrom(
@@ -295,36 +308,90 @@ class _GroupCardState extends State<GroupCard> {
                       const SizedBox(height: 10),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: PopupMenuButton<int>(
-                          icon: const Icon(Icons.more_vert,
-                              size: 20, color: Colors.black87),
-                          onSelected: (value) {
-                            if (value == 0) {
-                              widget.onUserInfo(widget.groupId, widget.title,
-                                  widget.description);
-                            } else if (value == 1) {
-                              widget.onDeviceInfo(widget.groupId, widget.title,
-                                  widget.description);
-                            } else if (value == 2) {
-                              widget.onDelete(widget.groupId);
-                            }
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: 0,
-                              child: Text('اطلاعات کاربران'),
-                            ),
-                            PopupMenuItem(
-                              value: 1,
-                              child: Text('اطلاعات دستگاه‌ها'),
-                            ),
-                            PopupMenuItem(
-                              value: 2,
-                              child: Text('حذف گروه',
-                                  style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
+                        child:PopupMenuButton<int>(
+  color: Colors.white, // ← رنگ پس‌زمینه منو
+  icon: const Icon(
+    Icons.more_vert,
+    size: 20,
+    color: Colors.black87,
+  ),
+  onSelected: (value) {
+    if (value == 0) {
+      widget.onUserInfo(widget.groupId, widget.title, widget.description);
+    } else if (value == 1) {
+      widget.onDeviceInfo(widget.groupId, widget.title, widget.description);
+    } else if (value == 2) {
+      widget.onDelete(widget.groupId);
+    }
+  },
+  itemBuilder: (context) => [
+    PopupMenuItem<int>(
+      value: 0,
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          const SizedBox(width: 8),
+          SvgPicture.asset(
+            'assets/svg/grooups.svg',
+            width: 20,
+            height: 20,
+          ),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'اطلاعات کاربران',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ],
+      ),
+    ),
+    PopupMenuItem<int>(
+      value: 1,
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          const SizedBox(width: 8),
+          SvgPicture.asset(
+            'assets/svg/edit_custommer.svg',
+            width: 20,
+            height: 20,
+          ),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'اطلاعات دستگاه‌ها',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ],
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem<int>(
+      value: 2,
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          const SizedBox(width: 8),
+          SvgPicture.asset(
+            'assets/svg/deleting.svg',
+            width: 20,
+            height: 20,
+          ),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'حذف گروه',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+
                       ),
                     ],
                   ),

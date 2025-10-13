@@ -56,7 +56,7 @@ class DeviceSocketService extends GetxService {
       try {
         final heartbeatMsg = {
           "type": "heartbeat",
-          "timestamp": DateTime.now().millisecondsSinceEpoch
+          "timestamp": DateTime.now().millisecondsSinceEpoch,
         };
         _wsChannel!.sink.add(jsonEncode(heartbeatMsg));
       } catch (e) {
@@ -65,8 +65,10 @@ class DeviceSocketService extends GetxService {
     }
   }
 
-  Future<void> connect(String authToken,
-      {List<String> deviceIds = const []}) async {
+  Future<void> connect(
+    String authToken, {
+    List<String> deviceIds = const [],
+  }) async {
     if (isConnected.value) {
       await disconnect();
     }
@@ -126,9 +128,9 @@ class DeviceSocketService extends GetxService {
               "entityType": "DEVICE",
               "entityId": deviceId,
               "scope": "CLIENT_SCOPE", // Use CLIENT_SCOPE as in your Postman
-              "cmdId": cmdId
-            }
-          ]
+              "cmdId": cmdId,
+            },
+          ],
         };
 
         _subscriptionToDeviceMap[cmdId] = deviceId;
@@ -164,7 +166,8 @@ class DeviceSocketService extends GetxService {
 
           _consecutiveErrors++;
           print(
-              '❌ Consecutive errors: $_consecutiveErrors/$_maxConsecutiveErrors');
+            '❌ Consecutive errors: $_consecutiveErrors/$_maxConsecutiveErrors',
+          );
 
           if (_consecutiveErrors >= _maxConsecutiveErrors) {
             print('❌ Too many consecutive errors, disconnecting...');
@@ -189,11 +192,13 @@ class DeviceSocketService extends GetxService {
             final deviceId = _subscriptionToDeviceMap[subscriptionId];
             if (deviceId != null) {
               print(
-                  '📡 Processing telemetry for device $deviceId (subscription: $subscriptionId)');
+                '📡 Processing telemetry for device $deviceId (subscription: $subscriptionId)',
+              );
               _handleTelemetryData(telemetryData, deviceId);
             } else {
               print(
-                  '⚠️ Unknown subscription ID: $subscriptionId, available mappings: $_subscriptionToDeviceMap');
+                '⚠️ Unknown subscription ID: $subscriptionId, available mappings: $_subscriptionToDeviceMap',
+              );
               _handleTelemetryData(telemetryData);
             }
           }
@@ -240,8 +245,9 @@ class DeviceSocketService extends GetxService {
       print('Processing telemetry for device: $deviceId');
 
       if (deviceId != null) {
-        final existingStates =
-            Map<String, String>.from(deviceStates[deviceId] ?? {});
+        final existingStates = Map<String, String>.from(
+          deviceStates[deviceId] ?? {},
+        );
 
         data.forEach((key, value) {
           print('Processing key: $key with value: $value');
@@ -252,17 +258,17 @@ class DeviceSocketService extends GetxService {
               print('Extracted status value for $key: $statusValue');
 
               switch (key) {
-                case 'Touch_W1':
-                  existingStates['Touch_W1'] = statusValue;
+                case 'TW1':
+                  existingStates['TW1'] = statusValue;
                   break;
-                case 'Touch_W2':
-                  existingStates['Touch_W2'] = statusValue;
+                case 'TW2':
+                  existingStates['TW2'] = statusValue;
                   break;
-                case 'Touch_D1':
-                  existingStates['Touch_D1'] = statusValue;
+                case 'TD1':
+                  existingStates['TD1'] = statusValue;
                   break;
-                case 'Touch_D2':
-                  existingStates['Touch_D2'] = statusValue;
+                case 'TD2':
+                  existingStates['TD2'] = statusValue;
                   break;
                 case 'ledColor':
                   if (statusValue.startsWith('{')) {
@@ -287,7 +293,8 @@ class DeviceSocketService extends GetxService {
           onDeviceStatusUpdate?.call(deviceId, existingStates);
 
           print(
-              'Device $deviceId status updated via telemetry: $existingStates');
+            'Device $deviceId status updated via telemetry: $existingStates',
+          );
         } else {
           print('No valid status data found for device $deviceId');
           _updateDeviceConnectionStatus(deviceId, false);
@@ -371,9 +378,7 @@ class DeviceSocketService extends GetxService {
           'http://45.149.76.245:8080/api/plugins/telemetry/DEVICE/$deviceId/values/attributes';
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer $_authToken',
-        },
+        headers: {'Authorization': 'Bearer $_authToken'},
       );
 
       if (response.statusCode == 200) {
@@ -381,10 +386,10 @@ class DeviceSocketService extends GetxService {
         final Map<String, String> statusMap = {};
 
         for (final item in data) {
-          if (item['key'] == 'Touch_W1' ||
-              item['key'] == 'Touch_W2' ||
-              item['key'] == 'Touch_D1' ||
-              item['key'] == 'Touch_D2') {
+          if (item['key'] == 'TW1' ||
+              item['key'] == 'TW2' ||
+              item['key'] == 'TD1' ||
+              item['key'] == 'TD2') {
             statusMap[item['key']] = item['value'] ?? '';
           }
         }
@@ -426,7 +431,8 @@ class DeviceSocketService extends GetxService {
       lastDeviceActivity[deviceId] = DateTime.now();
     }
     print(
-        '📡 Device $deviceId connection status: ${isOnline ? "Online" : "Offline"}');
+      '📡 Device $deviceId connection status: ${isOnline ? "Online" : "Offline"}',
+    );
   }
 
   Future<void> _refreshDeviceStates() async {

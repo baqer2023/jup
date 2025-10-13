@@ -70,29 +70,34 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
   alignment: Alignment.bottomLeft, // پایین سمت چپ
   child: Padding(
     padding: const EdgeInsets.all(16.0),
-    child: TextButton(
-      style: TextButton.styleFrom(
-        backgroundColor: Colors.white, // بک‌گراند سفید
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      onPressed: () {
-        // وقتی زد انصراف، برگرد به GroupsPage و همه گروه‌ها رو دوباره لود کن
-        Get.offAll(() => GroupsPage());
-        final controller = Get.find<HomeControllerGroup>();
-        controller.fetchGroups(); // داده‌ها رو دوباره لود کن
-      },
-      child: const Text(
-        "انصراف",
-        style: TextStyle(
-          color: Colors.yellow, // متن زرد
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
+child: TextButton(
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد برند
+        width: 2,
       ),
     ),
+  ),
+  onPressed: () {
+    // وقتی زد "انصراف"، برگرد به GroupsPage و گروه‌ها رو دوباره لود کن
+    Get.offAll(() => GroupsPage());
+    final controller = Get.find<HomeControllerGroup>();
+    controller.fetchGroups(); // داده‌ها رو دوباره لود کن
+  },
+  child: const Text(
+    "انصراف",
+    style: TextStyle(
+      color: Color(0xFFF39530), // رنگ متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
+
   ),
 ),
 

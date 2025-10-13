@@ -97,10 +97,10 @@ class WeatherCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 20),
           SizedBox(
-            width: 20,
-            height: 20,
+            width: 52,
+            height: 52,
             child: weatherIcon,
           ),
         ],

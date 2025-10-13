@@ -19,7 +19,8 @@ class ReliableSocket extends GetxService {
 
   final RxMap<String, bool> deviceConnectionStatus = <String, bool>{}.obs;
   final RxMap<String, DateTime> lastDeviceActivity = <String, DateTime>{}.obs;
-  final RxMap<int, Map<String, dynamic>> subscriptionData = <int, Map<String, dynamic>>{}.obs;
+  final RxMap<int, Map<String, dynamic>> subscriptionData =
+      <int, Map<String, dynamic>>{}.obs;
 
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
@@ -34,10 +35,13 @@ class ReliableSocket extends GetxService {
     super.onInit();
 
     // گوش دادن به تغییر شبکه
-_connectivitySub = _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> resultList) {
-  print('🔄 Network changed: $resultList');
-  if (!_running) connect();
-});
+    _connectivitySub = _connectivity.onConnectivityChanged.listen((
+      List<ConnectivityResult> resultList,
+    ) {
+      print('🔄 Network changed: $resultList');
+      
+      if (!_running) connect();
+    });
   }
 
   @override
@@ -48,13 +52,15 @@ _connectivitySub = _connectivity.onConnectivityChanged.listen((List<Connectivity
   }
 
   Future<void> connect() async {
-    final url = 'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
+    final url =
+        'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
 
     while (true) {
       try {
         print('🟢 Connecting to WebSocket...');
         _ws = await WebSocket.connect(url);
         print('✅ WebSocket connected');
+        
 
         _running = true;
         _sendSubscription();
@@ -108,11 +114,13 @@ _connectivitySub = _connectivity.onConnectivityChanged.listen((List<Connectivity
       }
     }
 
-    _ws?.add(jsonEncode({
-      "tsSubCmds": [],
-      "historyCmds": [],
-      "attrSubCmds": attrSubCmds,
-    }));
+    _ws?.add(
+      jsonEncode({
+        "tsSubCmds": [],
+        "historyCmds": [],
+        "attrSubCmds": attrSubCmds,
+      }),
+    );
   }
 
   void _onMessage(dynamic message) {
@@ -120,6 +128,7 @@ _connectivitySub = _connectivity.onConnectivityChanged.listen((List<Connectivity
 
     try {
       final parsed = jsonDecode(message);
+      print(parsed);
       if (parsed is Map && parsed['errorCode'] == 0) {
         final subscriptionId = parsed['subscriptionId'] as int;
         final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
@@ -154,15 +163,18 @@ _connectivitySub = _connectivity.onConnectivityChanged.listen((List<Connectivity
           }
 
           if (timestamp == null && parsed.containsKey('latestValues')) {
-            final latestValues = parsed['latestValues'] as Map<String, dynamic>?;
-            if (latestValues != null && latestValues['lastActivityTime'] != null) {
+            final latestValues =
+                parsed['latestValues'] as Map<String, dynamic>?;
+            if (latestValues != null &&
+                latestValues['lastActivityTime'] != null) {
               timestamp = latestValues['lastActivityTime'] as int?;
             }
           }
 
           if (timestamp != null) {
-            lastDeviceActivity[deviceId] =
-                DateTime.fromMillisecondsSinceEpoch(timestamp);
+            lastDeviceActivity[deviceId] = DateTime.fromMillisecondsSinceEpoch(
+              timestamp,
+            );
             lastDeviceActivity.refresh();
           }
         }

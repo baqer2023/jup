@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_app32/app/services/realable_socket.dart';
+import 'package:collection/collection.dart';
+
 
 class ReliableSocketController extends GetxController {
   String authToken;
@@ -18,6 +21,7 @@ class ReliableSocketController extends GetxController {
 @override
 void onInit() {
   super.onInit();
+  print('🔄 Netwssssssssssssssssssssssssssssssssssssork changed: $deviceIds');
 
   // ایجاد instance از ReliableSocket
   _socket = ReliableSocket(authToken, deviceIds);
@@ -90,36 +94,47 @@ void onInit() {
 
   /// تغییر وضعیت سوئیچ
   Future<void> toggleSwitch(bool isOn, int switchNumber, String deviceId) async {
-    final keyW = 'Touch_W$switchNumber';
-    final keyD = 'Touch_D$switchNumber';
-    final valueW = isOn ? '${keyW}_On' : '${keyW}_Off';
-    final valueD = isOn ? '${keyD}_On' : '${keyD}_Off';
+  // 🧩 کلید جدید طبق ساختار TW1, TW2, ...
+  final key = 'TW$switchNumber';
+  final value = isOn ? '${key}_On' : '${key}_Off';
 
-    final payload = {'deviceId': deviceId, 'request': {keyW: valueW}};
+  // 📦 ساخت بدنه (payload) طبق فرمت جدید
+  final payload = {
+    'deviceId': deviceId,
+    'request': {key: value}
+  };
+ final dio = Dio();
+  final headers = {
+    'Authorization': 'Bearer $authToken',
+    'Content-Type': 'application/json; charset=utf-8',
+  };
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://45.149.76.245:8080/api/plugins/telemetry/changeDeviceState'),
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json; charset=utf-8'
-        },
-        body: json.encode(payload),
-      );
+  try {
+    final response = await dio.post(
+      'http://45.149.76.245:8080/api/plugins/telemetry/changeDeviceState',
+      options: Options(headers: headers),
+      data: json.encode(payload),
+    );
 
-      if (response.statusCode == 200) {
-        final deviceData = latestDeviceDataById[deviceId];
-        if (deviceData != null) {
-          deviceData[keyW] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
-          deviceData[keyD] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
-          deviceData.refresh();
-        }
+    if (response.statusCode == 200) {
+      print('✅ Switch $switchNumber toggled successfully.');
+      print('Response: ${response.data}');
 
-        await Future.delayed(const Duration(milliseconds: 500));
+      final deviceData = latestDeviceDataById[deviceId];
+      if (deviceData != null) {
+        deviceData[key] = [
+          [DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']
+        ];
+        deviceData.refresh();
       }
-    } catch (e) {
-      print('⚠️ Error toggling switch: $e');
+
+      await Future.delayed(const Duration(milliseconds: 500));
+    } else {
+      print('⚠️ Error: ${response.statusMessage}');
     }
+  } catch (e) {
+    print('⚠️ Dio error toggling switch: $e');
+  }
   }
 
   /// آپدیت وضعیت سوئیچ
@@ -133,4 +148,43 @@ void onInit() {
     ];
     latestDeviceDataById[deviceId]!.refresh();
   }
+
+
+
+void updateDeviceList(List<String> newDeviceIds) {
+  // ایجاد instance از ListEquality برای مقایسه دو لیست
+  final listEq = const ListEquality<String>();
+
+  // بررسی اینکه آیا واقعاً لیست تغییر کرده یا نه
+  if (listEq.equals(deviceIds, newDeviceIds)) return;
+
+  print('🔄 Updating device list: $newDeviceIds');
+  deviceIds = newDeviceIds;
+
+  // قطع اتصال قبلی
+  _socket.disconnect();
+
+  // ایجاد یک Socket جدید با لیست جدید دستگاه‌ها
+  _socket = ReliableSocket(authToken, deviceIds);
+
+  // راه‌اندازی مجدد listenerها
+  ever(_socket.deviceConnectionStatus, (status) {
+    deviceConnectionStatus.assignAll(status);
+  });
+
+  ever(_socket.lastDeviceActivity, (activity) {
+    lastDeviceActivity.assignAll(activity);
+  });
+
+  ever(_socket.subscriptionData, (msg) {
+    if (msg.isNotEmpty) {
+      _updateLatestDeviceData(msg.cast<int, Map<String, dynamic>>());
+    }
+  });
+
+  // اتصال مجدد
+  connect();
+}
+
+
 }

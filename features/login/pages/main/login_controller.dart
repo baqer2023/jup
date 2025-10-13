@@ -15,6 +15,11 @@ class LoginController extends GetxController with AppUtilsMixin {
   final LoginRepository _repo;
   TextEditingController userNameTEC = TextEditingController();
   TextEditingController passwordTEC = TextEditingController();
+
+  // 🔹 اضافه کردن کد کشور و پرچم
+  RxString selectedCountryCode = '+98'.obs; // پیش‌فرض ایران
+  RxString selectedCountryFlag = 'IR'.obs;
+
   RxBool isLoading = false.obs;
   RxBool isEnableConfirmButton = false.obs;
   RxBool isValid = true.obs;
@@ -23,54 +28,40 @@ class LoginController extends GetxController with AppUtilsMixin {
   /// request login
   void onTapCheckLoginOrSignup() {
     String phoneNumber = userNameTEC.text;
-    print('Raw phone number from field: $phoneNumber');
-
-    // Clean the phone number
+    // پاکسازی شماره
     phoneNumber = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
-    print('Cleaned phone number: $phoneNumber');
 
-    // If it starts with 98 (Iran country code), remove it
+    // حذف کد کشور اگر ایران باشه
     if (phoneNumber.startsWith('98')) {
       phoneNumber = phoneNumber.substring(2);
-      print('Removed country code, new number: $phoneNumber');
     }
 
-    print('Final phone number length: ${phoneNumber.length}');
-    print('Starts with 09: ${phoneNumber.startsWith('09')}');
-
-    // Check if the phone number is exactly 11 digits and starts with 09
     if (phoneNumber.length == 11 && phoneNumber.startsWith('09')) {
-      print('Phone number is valid - Enabling button');
       isValid.value = true;
       isEnableConfirmButton.value = true;
     } else {
-      print('Phone number is invalid - Disabling button');
-      print('Length check failed: ${phoneNumber.length != 11}');
-      print('Prefix check failed: ${!phoneNumber.startsWith('09')}');
       isEnableConfirmButton.value = false;
       isValid.value = false;
       isLoading.value = false;
     }
   }
 
-  void onTapLogin() {
-    String phoneNumber = userNameTEC.text;
-    // Clean the phone number
-    phoneNumber = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+void onTapLogin() {
+  String phoneNumber = userNameTEC.text;
+  phoneNumber = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // If it starts with 98 (Iran country code), remove it
-    if (phoneNumber.startsWith('98')) {
-      phoneNumber = phoneNumber.substring(2);
-    }
+  if (phoneNumber.startsWith('98')) phoneNumber = phoneNumber.substring(2);
 
-    if (phoneNumber.length == 11 && phoneNumber.startsWith('09')) {
-      print('Attempting login with phone number: $phoneNumber');
-      isLoading.value = true;
-      SignupRequestModel requestModel = SignupRequestModel(
-        phoneNumber: phoneNumber,
-      );
-      _repo.login(requestModel: requestModel).then((ResponseModel response) {
-        isLoading.value = false;
+  if (phoneNumber.length == 11 && phoneNumber.startsWith('09')) {
+    isLoading.value = true;
+    SignupRequestModel requestModel = SignupRequestModel(
+      phoneNumber: phoneNumber,
+    );
+    _repo.login(requestModel: requestModel).then((ResponseModel response) {
+      isLoading.value = false;
+
+      // ✅ بررسی statusCode
+      if (response.statusCode == 200) {
         responseHandler(
           statusCode: response.statusCode!,
           message: response.message ?? '',
@@ -83,16 +74,57 @@ class LoginController extends GetxController with AppUtilsMixin {
           },
           onFailure: () {},
         );
-      });
-    } else {
-      print('Login attempt failed - Invalid phone number');
-    }
+      } else if (response.statusCode == 400) {
+              // نمایش پیام واقعی سرور
+              String serverMessage = '';
+              try {
+                // if () {
+                //   serverMessage = response.data.toString();
+                //   print("serverMessagezzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+                //   print(serverMessage);
+                // } else {
+                //   serverMessage = response.message ?? 'مشکلی پیش آمده است.';
+                // }
+              } catch (_) {
+                serverMessage = response.message ?? 'مشکلی پیش آمده است.';
+              }
+
+  Get.rawSnackbar(
+    messageText: Text(
+      response.body.toString(),
+      style: const TextStyle(color: Colors.white, fontFamily: 'IranYekan'),
+    ),
+    snackPosition: SnackPosition.TOP, // ✅ حتما بالا
+    backgroundColor: Colors.redAccent,
+    margin: const EdgeInsets.all(16),
+    borderRadius: 8,
+    duration: const Duration(seconds: 3),
+  );
+            } else {
+        Get.snackbar(
+          'خطا',
+          response.message ?? 'مشکلی پیش آمده است.',
+          snackPosition: SnackPosition.TOP, // ✅ اینجا هم بالا
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      }
+    }).catchError((error) {
+      isLoading.value = false;
+      Get.snackbar(
+        'خطا',
+        'مشکلی در اتصال به سرور رخ داد.',
+        snackPosition: SnackPosition.TOP, // ✅ اینجا هم بالا
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    });
   }
+}
 
   @override
   void onInit() {
     super.onInit();
-    // Initialize the button state
     isEnableConfirmButton.value = false;
     isValid.value = false;
   }

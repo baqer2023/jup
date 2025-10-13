@@ -19,12 +19,12 @@ class Sidebar extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: Drawer(
         backgroundColor: Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
-            // 🔹 بخش لوگو با گرادینت و لوگوی وسط
+            // 🔹 Header
             DrawerHeader(
               padding: EdgeInsets.zero,
+              margin: EdgeInsets.zero,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -38,7 +38,6 @@ class Sidebar extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // لوگوی وسط
                   Expanded(
                     child: Center(
                       child: SvgPicture.asset(
@@ -49,7 +48,6 @@ class Sidebar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // سه SVG زیر لوگو
                   SizedBox(
                     height: 60,
                     child: Stack(
@@ -65,75 +63,57 @@ class Sidebar extends StatelessWidget {
               ),
             ),
 
-            // 🔹 داشبورد
-            ListTile(
-              leading: const Icon(Icons.dashboard, color: Colors.black87),
-              title: const Text(
-                'داشبورد',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontFamily: 'IranYekan',
-                ),
-                textAlign: TextAlign.right,
+            // 🔹 Items
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildSidebarItemWithDivider(context, 'داشبورد', () {
+                    Navigator.pop(context);
+                    Get.to(() => const HomePage());
+                  }),
+                  _buildSidebarItemWithDivider(context, 'دستگاه‌ها', () {
+                    Navigator.pop(context);
+                    Get.to(() => const DevicesPage());
+                  }),
+                  _buildSidebarItemWithDivider(context, 'سناریوها', () {}),
+                  _buildSidebarItemWithDivider(context, 'گروه‌ها', () {
+                    Navigator.pop(context);
+                    Get.to(() => GroupsPage());
+                  }, showDivider: false), // آخرین آیتم بدون دیوایدر
+                ],
               ),
-              onTap: () {
-                Navigator.pop(context);
-                Get.to(() => const HomePage());
-              },
             ),
-
-            // 🔹 دستگاه‌ها
-            ListTile(
-              leading: const Icon(Icons.devices, color: Colors.black87),
-              title: const Text(
-                'دستگاه‌ها',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontFamily: 'IranYekan',
-                ),
-                textAlign: TextAlign.right,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Get.to(() => const DevicesPage());
-              },
-            ),
-
-            // 🔹 سناریوها
-            ListTile(
-              leading: const Icon(Icons.edit_calendar_outlined, color: Colors.black87),
-              title: const Text(
-                'سناریوها',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontFamily: 'IranYekan',
-                ),
-                textAlign: TextAlign.right,
-              ),
-              onTap: () {},
-            ),
-
-            // 🔹 گروه‌ها
-            ListTile(
-              leading: const Icon(Icons.group, color: Colors.black87),
-              title: const Text(
-                'گروه‌ها',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontFamily: 'IranYekan',
-                ),
-                textAlign: TextAlign.right,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Get.to(() => GroupsPage());
-              },
-            ),
-
-            const Divider(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSidebarItemWithDivider(BuildContext context, String label, VoidCallback onTap, {bool showDivider = true}) {
+    return Column(
+      children: [
+        ListTile(
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          title: Text(
+            label,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontFamily: 'IranYekan',
+            ),
+          ),
+          onTap: onTap,
+        ),
+        if (showDivider)
+          Padding(
+            padding: const EdgeInsets.only(right: 16, left: 16), // نیمه عرض
+            child: Divider(
+              color: Colors.grey.shade300,
+              thickness: 1,
+            ),
+          ),
+      ],
     );
   }
 }

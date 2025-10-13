@@ -196,15 +196,28 @@ void _showAddCustomerDialog(
       ),
       actionsAlignment: MainAxisAlignment.center, // وسط چین کردن دکمه‌ها
       actions: [
-        TextButton(
-          onPressed: () => Get.back(),
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.yellow, // پس‌زمینه زرد
-            foregroundColor: Colors.black, // متن مشکی
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-          child: const Text("انصراف"),
-        ),
+TextButton(
+  onPressed: () => Get.back(),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد برند
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    "انصراف",
+    style: TextStyle(
+      color: Color(0xFFF39530), // متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
         ElevatedButton(
           onPressed: () async {
             final success = await controller.addNewCustomer(

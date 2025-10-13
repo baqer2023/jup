@@ -220,6 +220,8 @@ class DevicesPage extends BaseView<HomeController> {
   Widget _buildSmartDevicesGrid() {
     return Obx(() {
       final devices = controller.deviceList;
+      final ssssss = devices.map((d) => d.deviceId).toList();
+      
 
       if (devices.isEmpty) {
         return const Center(
@@ -234,18 +236,21 @@ class DevicesPage extends BaseView<HomeController> {
       }
 
       // تنها یکبار کنترلر را ایجاد کن اگر موجود نباشد
-      final reliableController = Get.put(
-        Get.isRegistered<ReliableSocketController>(
-              tag: 'smartDevicesController',
-            )
-            ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
-            : ReliableSocketController(
-                controller.token,
-                devices.map((d) => d.deviceId).toList(),
-              ),
+final reliableController = Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')
+    ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
+    : Get.put(
+        ReliableSocketController(
+          controller.token,
+          devices.map((d) => d.deviceId).toList(),
+        ),
         tag: 'smartDevicesController',
         permanent: true,
       );
+
+// بعد از این خط:
+reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
+
+
 
       return SingleChildScrollView(
         child: Column(
@@ -262,8 +267,8 @@ class DevicesPage extends BaseView<HomeController> {
               if (deviceData != null) {
                 // وضعیت سوئیچ‌ها
                 final key1Entries = [
-                  if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
-                  if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
+                  if (deviceData['TW1'] is List) ...deviceData['TW1'],
+                  if (deviceData['TD1'] is List) ...deviceData['TD1'],
                 ];
                 if (key1Entries.isNotEmpty) {
                   key1Entries.sort(
@@ -273,8 +278,8 @@ class DevicesPage extends BaseView<HomeController> {
                 }
 
                 final key2Entries = [
-                  if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
-                  if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
+                  if (deviceData['TW2'] is List) ...deviceData['TW2'],
+                  if (deviceData['TD2'] is List) ...deviceData['TD2'],
                 ];
                 if (key2Entries.isNotEmpty) {
                   key2Entries.sort(
@@ -438,19 +443,16 @@ class DevicesPage extends BaseView<HomeController> {
                               fontSize: 16,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          // Obx(() {
-                          //   final isOnline = reliableController
-                          //       .isDeviceConnected(deviceId);
-                          //   return Text(
-                          //     isOnline ? "آنلاین" : "آفلاین",
-                          //     style: TextStyle(
-                          //       fontSize: 11,
-                          //       fontWeight: FontWeight.w500,
-                          //       color: isOnline ? Colors.green : Colors.red,
-                          //     ),
-                          //   );
-                          // }),
+                          const SizedBox(height: 4),
+
+                          // نمایش نام مکان دستگاه
+                          Text(
+                            device.dashboardTitle ?? "بدون مکان",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -459,153 +461,184 @@ class DevicesPage extends BaseView<HomeController> {
                     children: [
                       Align(
                         alignment: Alignment.bottomLeft,
-                        child: PopupMenuButton<int>(
-                          color: Colors.white, // پس‌زمینه منو سفید
-                          icon: const Icon(
-                            Icons.more_vert,
-                            size: 20,
-                            color: Colors.black87,
-                          ),
-                          onSelected: (value) async {
-                            final homeController = Get.find<HomeController>();
+                        child:PopupMenuButton<int>(
+  color: Colors.white,
+  icon: const Icon(
+    Icons.more_vert,
+    size: 20,
+    color: Colors.black87,
+  ),
+  onSelected: (value) async {
+    final homeController = Get.find<HomeController>();
 
-                            if (value == 0) {
-                              showLedColorDialog(device: device);
-                            } else if (value == 1) {
-                              Get.to(() => DeviceConfigPage(sn: device.sn));
-                            } else if (value == 2) {
-                              // افزودن به میانبر فقط اگر دستگاه در dashboardDevices نیست
-                              if (!controller.dashboardDevices.any(
-                                (d) => d.deviceId == device.deviceId,
-                              )) {
-                                final token = controller.token;
-                                if (token == null) {
-                                  Get.snackbar(
-                                    "خطا",
-                                    "توکن معتبر پیدا نشد",
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                  );
-                                  return;
-                                }
+    if (value == 0) {
+      showLedColorDialog(device: device);
+    } else if (value == 1) {
+      Get.to(() => DeviceConfigPage(sn: device.sn));
+    } else if (value == 2) {
+      if (!controller.dashboardDevices.any((d) => d.deviceId == device.deviceId)) {
+        final token = controller.token;
+        if (token == null) {
+          Get.snackbar("خطا", "توکن معتبر پیدا نشد",
+              backgroundColor: Colors.red, colorText: Colors.white);
+          return;
+        }
 
-                                final headers = {
-                                  'Authorization': 'Bearer $token',
-                                  'Content-Type': 'application/json',
-                                };
+        final headers = {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        };
 
-                                final data = {"deviceId": device.deviceId};
+        final data = {"deviceId": device.deviceId};
 
-                                try {
-                                  final dio = Dio();
-                                  final response = await dio.post(
-                                    'http://45.149.76.245:8080/api/shortcut/addDevice',
-                                    data: data,
-                                    options: Options(headers: headers),
-                                  );
+        try {
+          final dio = Dio();
+          final response = await dio.post(
+            'http://45.149.76.245:8080/api/shortcut/addDevice',
+            data: data,
+            options: Options(headers: headers),
+          );
 
-                                  if (response.statusCode == 200 ||
-                                      response.statusCode == 201) {
-                                    Get.snackbar(
-                                      'موفقیت',
-                                      'دستگاه به داشبورد اضافه شد',
-                                      backgroundColor: Colors.green,
-                                      colorText: Colors.white,
-                                    );
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            Get.snackbar('موفقیت', 'دستگاه به داشبورد اضافه شد',
+                backgroundColor: Colors.green, colorText: Colors.white);
+            controller.dashboardDevices.add(device);
+          } else {
+            Get.snackbar('خطا', 'افزودن دستگاه موفق نبود: ${response.statusCode}',
+                backgroundColor: Colors.red, colorText: Colors.white);
+          }
+        } catch (e) {
+          Get.snackbar('خطا', 'مشکل در ارتباط با سرور: $e',
+              backgroundColor: Colors.red, colorText: Colors.white);
+        }
+      } else {
+        Get.snackbar('توجه', 'این دستگاه قبلاً به داشبورد اضافه شده است',
+            backgroundColor: Colors.orange, colorText: Colors.white);
+      }
+    } else if (value == 3) {
+      try {
+        await homeController.removeFromAllDashboard(device.deviceId);
+        await homeController.refreshAllData();
+        Get.snackbar('موفقیت', 'کلید از همه مکان‌ها حذف موقت شد',
+            backgroundColor: Colors.green, colorText: Colors.white);
+      } catch (e) {
+        Get.snackbar('خطا', 'عملیات حذف با خطا مواجه شد',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } else if (value == 4) {
+      try {
+        await homeController.completeRemoveDevice(device.deviceId);
+        await homeController.refreshAllData();
+        Get.snackbar('موفقیت', 'دستگاه با موفقیت حذف شد',
+            backgroundColor: Colors.green, colorText: Colors.white);
+      } catch (e) {
+        Get.snackbar('خطا', 'عملیات حذف با خطا مواجه شد',
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } else if (value == 5) {
+      await homeController.resetDevice(device.deviceId);
+      Get.snackbar('موفقیت', 'دستگاه ریست شد',
+          backgroundColor: Colors.green, colorText: Colors.white);
+    }
+  },
+  itemBuilder: (context) => [
+    // تنظیمات پیشرفته
+    PopupMenuItem<int>(
+      value: 0,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/settings.svg', width: 20, height: 20),
+          const SizedBox(width: 2),
+          Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
 
-                                    // اضافه کردن دستگاه به لیست محلی dashboardDevices
-                                    controller.dashboardDevices.add(device);
-                                  } else {
-                                    Get.snackbar(
-                                      'خطا',
-                                      'افزودن دستگاه موفق نبود: ${response.statusCode}',
-                                      backgroundColor: Colors.red,
-                                      colorText: Colors.white,
-                                    );
-                                  }
-                                } catch (e) {
-                                  Get.snackbar(
-                                    'خطا',
-                                    'مشکل در ارتباط با سرور: $e',
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                  );
-                                }
-                              } else {
-                                Get.snackbar(
-                                  'توجه',
-                                  'این دستگاه قبلاً به داشبورد اضافه شده است',
-                                  backgroundColor: Colors.orange,
-                                  colorText: Colors.white,
-                                );
-                              }
-                            } else if (value == 3) {
-                              await homeController.removeFromAllDashboard(
-                                device.deviceId,
-                              );
-                            } else if (value == 4) {
-                              await homeController.completeRemoveDevice(
-                                device.deviceId,
-                              );
-                            } else if (value == 5) {
-                              await homeController.resetDevice(device.deviceId);
-                              Get.snackbar(
-                                'موفقیت',
-                                'دستگاه ریست شد',
-                                backgroundColor: Colors.green,
-                                colorText: Colors.white,
-                              );
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 0,
-                              child: Text(
-                                'تنظیمات پیشرفته',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 1,
-                              child: Text(
-                                'پیکربندی',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            // فقط اگر دستگاه در dashboardDevices نیست، گزینه نمایش داده شود
-                            if (!controller.dashboardDevices.any(
-                              (d) => d.deviceId == device.deviceId,
-                            ))
-                              const PopupMenuItem(
-                                value: 2,
-                                child: Text(
-                                  'افزودن به داشبورد',
-                                  style: TextStyle(color: Colors.black),
-                                ),
-                              ),
-                            const PopupMenuItem(
-                              value: 3,
-                              child: Text(
-                                'حذف موقت کلید از همه مکانها',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 4,
-                              child: Text(
-                                'حذف کامل دستگاه',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 5,
-                              child: Text(
-                                'ریست دستگاه',
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            ),
-                          ],
-                        ),
+    const PopupMenuDivider(),
+
+    // پیکربندی
+    PopupMenuItem<int>(
+      value: 1,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/config.svg', width: 20, height: 20),
+          const SizedBox(width: 2),
+          Text('پیکربندی', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
+
+    // افزودن به داشبورد
+    if (!controller.dashboardDevices.any((d) => d.deviceId == device.deviceId)) ...[
+      const PopupMenuDivider(),
+      PopupMenuItem<int>(
+        value: 2,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          textDirection: TextDirection.rtl,
+          children: [
+            SvgPicture.asset('assets/svg/add_dashboard.svg', width: 20, height: 20),
+            const SizedBox(width: 2),
+            Text('افزودن به داشبورد', style: TextStyle(color: Colors.black)),
+          ],
+        ),
+      ),
+    ],
+
+    const PopupMenuDivider(),
+
+    // حذف موقت
+    PopupMenuItem<int>(
+      value: 3,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/delete_temp.svg', width: 20, height: 20),
+          const SizedBox(width: 2),
+          Text('حذف موقت کلید از همه مکان‌ها', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+    ),
+
+    const PopupMenuDivider(),
+
+    // حذف کامل
+    PopupMenuItem<int>(
+      value: 4,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/deleting.svg', width: 20, height: 20),
+          const SizedBox(width: 2),
+          Text('حذف کامل دستگاه', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+    ),
+
+    const PopupMenuDivider(),
+
+    // ریست دستگاه
+    PopupMenuItem<int>(
+      value: 5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/reset.svg', width: 20, height: 20),
+          const SizedBox(width: 2),
+          Text('ریست دستگاه', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
+  ],
+),
+
                       ),
                       const Spacer(),
                       Obx(() {
@@ -734,12 +767,12 @@ class DevicesPage extends BaseView<HomeController> {
       if (deviceData != null) {
         final keyEntries = switchNumber == 1
             ? [
-                if (deviceData['Touch_W1'] is List) ...deviceData['Touch_W1'],
-                if (deviceData['Touch_D1'] is List) ...deviceData['Touch_D1'],
+                if (deviceData['TW1'] is List) ...deviceData['TW1'],
+                if (deviceData['TD1'] is List) ...deviceData['TD1'],
               ]
             : [
-                if (deviceData['Touch_W2'] is List) ...deviceData['Touch_W2'],
-                if (deviceData['Touch_D2'] is List) ...deviceData['Touch_D2'],
+                if (deviceData['TW2'] is List) ...deviceData['TW2'],
+                if (deviceData['TD2'] is List) ...deviceData['TD2'],
               ];
 
         if (keyEntries.isNotEmpty) {
@@ -856,27 +889,29 @@ class DevicesPage extends BaseView<HomeController> {
           ),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Colors.yellow),
-                ),
-              ),
-              child: const Text(
-                'انصراف',
-                style: TextStyle(
-                  color: Colors.yellow,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+TextButton(
+  onPressed: () => Navigator.of(context).pop(),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // زرد اختصاصی شما
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    'انصراف',
+    style: TextStyle(
+      color: Color(0xFFF39530), // رنگ متن زرد اختصاصی
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
+
             ElevatedButton(
               onPressed: () async {
                 final name = nameController.text.trim();
@@ -1149,18 +1184,30 @@ class DevicesPage extends BaseView<HomeController> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.yellow, // متن زرد
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: const Text("انصراف"),
-            ),
+TextButton(
+  onPressed: () => Navigator.of(context).pop(),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    foregroundColor: const Color(0xFFF39530), // رنگ متن زرد خاص
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد خاص
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    "انصراف",
+    style: TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+      color: Color(0xFFF39530), // رنگ متن زرد خاص
+    ),
+  ),
+),
+
             ElevatedButton(
               onPressed: () async {
                 try {
@@ -1328,13 +1375,29 @@ class _ColorPreviewPicker extends StatelessWidget {
                     vertical: 8,
                   ),
                   actions: [
-                    TextButton(
-                      child: const Text(
-                        'انصراف',
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
+   TextButton(
+  onPressed: () => Navigator.of(context).pop(),
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // رنگ حاشیه زرد برند
+        width: 2,
+      ),
+    ),
+  ),
+  child: const Text(
+    'انصراف',
+    style: TextStyle(
+      color: Color(0xFFF39530), // رنگ متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+)
+,
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: tempColor,

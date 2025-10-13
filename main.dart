@@ -10,15 +10,16 @@ import 'package:my_app32/app/services/token_refresh_service.dart';
 import 'package:my_app32/app/theme/app_theme.dart';
 import 'package:my_app32/app/store/user_store_service.dart';
 import 'package:my_app32/app/services/storage_service.dart';
+import 'package:my_app32/features/offline/InternetWrapper.dart';
 
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // راه‌اندازی GetStorage
   await GetStorage.init();
 
-  // رجیستر سرویس‌ها
   Get.put<UserStoreService>(UserStoreService(StorageService()), permanent: true);
   Get.put<TokenRefreshService>(TokenRefreshService(), permanent: true);
 
@@ -36,13 +37,7 @@ class MyApp extends StatelessWidget {
     ]);
 
     return GetMaterialApp(
-      builder: (context, Widget? child) {
-        final MediaQueryData data = MediaQuery.of(context);
-        return MediaQuery(
-          data: data.copyWith(textScaler: const TextScaler.linear(1)),
-          child: child!,
-        );
-      },
+      navigatorKey: navigatorKey, // ✅ استفاده از navigatorKey
       title: 'app_name'.tr,
       theme: AppTheme.themeData(),
       initialBinding: MainBinding(),
@@ -52,6 +47,12 @@ class MyApp extends StatelessWidget {
       getPages: AppPages.pages,
       initialRoute: AppRoutes.SPLASH,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return InternetWrapper(
+          navigatorKey: navigatorKey, // پاس دادن navigatorKey
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

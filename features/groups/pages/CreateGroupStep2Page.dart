@@ -178,29 +178,33 @@ Row(
   mainAxisAlignment: MainAxisAlignment.spaceBetween,
   children: [
     // دکمه انصراف پایین سمت چپ
-    TextButton(
-      style: TextButton.styleFrom(
-        backgroundColor: Colors.white, // بک‌گراند سفید
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      onPressed: () {
-        // برگرد به GroupsPage و همه گروه‌ها را دوباره لود کن
-        Get.offAll(() => GroupsPage());
-        final controller = Get.find<HomeControllerGroup>();
-        controller.fetchGroups();
-      },
-      child: const Text(
-        "انصراف",
-        style: TextStyle(
-          color: Colors.yellow, // متن زرد
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
+TextButton(
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.white, // پس‌زمینه سفید
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+      side: const BorderSide(
+        color: Color(0xFFF39530), // حاشیه زرد برند
+        width: 2,
       ),
     ),
+  ),
+  onPressed: () {
+    // برگرد به GroupsPage و دوباره گروه‌ها رو لود کن
+    Get.offAll(() => GroupsPage());
+    final controller = Get.find<HomeControllerGroup>();
+    controller.fetchGroups();
+  },
+  child: const Text(
+    "انصراف",
+    style: TextStyle(
+      color: Color(0xFFF39530), // رنگ متن زرد برند
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  ),
+),
 
     // دکمه ثبت / بعدی (همان دکمه قبلی خودتان)
     ElevatedButton(
