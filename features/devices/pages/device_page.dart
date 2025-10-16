@@ -221,7 +221,6 @@ class DevicesPage extends BaseView<HomeController> {
     return Obx(() {
       final devices = controller.deviceList;
       final ssssss = devices.map((d) => d.deviceId).toList();
-      
 
       if (devices.isEmpty) {
         return const Center(
@@ -236,21 +235,24 @@ class DevicesPage extends BaseView<HomeController> {
       }
 
       // تنها یکبار کنترلر را ایجاد کن اگر موجود نباشد
-final reliableController = Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')
-    ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
-    : Get.put(
-        ReliableSocketController(
-          controller.token,
-          devices.map((d) => d.deviceId).toList(),
-        ),
-        tag: 'smartDevicesController',
-        permanent: true,
+      final reliableController =
+          Get.isRegistered<ReliableSocketController>(
+            tag: 'smartDevicesController',
+          )
+          ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
+          : Get.put(
+              ReliableSocketController(
+                controller.token,
+                devices.map((d) => d.deviceId).toList(),
+              ),
+              tag: 'smartDevicesController',
+              permanent: true,
+            );
+
+      // بعد از این خط:
+      reliableController.updateDeviceList(
+        devices.map((d) => d.deviceId).toList(),
       );
-
-// بعد از این خط:
-reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
-
-
 
       return SingleChildScrollView(
         child: Column(
@@ -304,29 +306,29 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
                   iconColor1 = switch1On
                       ? Color.fromARGB(
                           255,
-                          ledMap['touch1']['on']['r'],
-                          ledMap['touch1']['on']['g'],
-                          ledMap['touch1']['on']['b'],
+                          ledMap['t1']['on']['r'],
+                          ledMap['t1']['on']['g'],
+                          ledMap['t1']['on']['b'],
                         )
                       : Color.fromARGB(
                           255,
-                          ledMap['touch1']['off']['r'],
-                          ledMap['touch1']['off']['g'],
-                          ledMap['touch1']['off']['b'],
+                          ledMap['t1']['off']['r'],
+                          ledMap['t1']['off']['g'],
+                          ledMap['t1']['off']['b'],
                         );
 
                   iconColor2 = switch2On
                       ? Color.fromARGB(
                           255,
-                          ledMap['touch2']['on']['r'],
-                          ledMap['touch2']['on']['g'],
-                          ledMap['touch2']['on']['b'],
+                          ledMap['t2']['on']['r'],
+                          ledMap['t2']['on']['g'],
+                          ledMap['t2']['on']['b'],
                         )
                       : Color.fromARGB(
                           255,
-                          ledMap['touch2']['off']['r'],
-                          ledMap['touch2']['off']['g'],
-                          ledMap['touch2']['off']['b'],
+                          ledMap['t2']['off']['r'],
+                          ledMap['t2']['off']['g'],
+                          ledMap['t2']['off']['b'],
                         );
                 }
               }
@@ -461,7 +463,7 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
                     children: [
                       Align(
                         alignment: Alignment.bottomLeft,
-                        child:PopupMenuButton<int>(
+                        child: PopupMenuButton<int>(
   color: Colors.white,
   icon: const Icon(
     Icons.more_vert,
@@ -473,14 +475,18 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
 
     if (value == 0) {
       showLedColorDialog(device: device);
-    } else if (value == 1) {
-      Get.to(() => DeviceConfigPage(sn: device.sn));
     } else if (value == 2) {
-      if (!controller.dashboardDevices.any((d) => d.deviceId == device.deviceId)) {
+      if (!controller.dashboardDevices.any(
+        (d) => d.deviceId == device.deviceId,
+      )) {
         final token = controller.token;
         if (token == null) {
-          Get.snackbar("خطا", "توکن معتبر پیدا نشد",
-              backgroundColor: Colors.red, colorText: Colors.white);
+          Get.snackbar(
+            "خطا",
+            "توکن معتبر پیدا نشد",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
           return;
         }
 
@@ -500,49 +506,191 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
           );
 
           if (response.statusCode == 200 || response.statusCode == 201) {
-            Get.snackbar('موفقیت', 'دستگاه به داشبورد اضافه شد',
-                backgroundColor: Colors.green, colorText: Colors.white);
+            Get.snackbar(
+              'موفقیت',
+              'دستگاه به داشبورد اضافه شد',
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+            );
             controller.dashboardDevices.add(device);
           } else {
-            Get.snackbar('خطا', 'افزودن دستگاه موفق نبود: ${response.statusCode}',
-                backgroundColor: Colors.red, colorText: Colors.white);
+            Get.snackbar(
+              'خطا',
+              'افزودن دستگاه موفق نبود: ${response.statusCode}',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
           }
         } catch (e) {
-          Get.snackbar('خطا', 'مشکل در ارتباط با سرور: $e',
-              backgroundColor: Colors.red, colorText: Colors.white);
+          Get.snackbar(
+            'خطا',
+            'مشکل در ارتباط با سرور: $e',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
         }
       } else {
-        Get.snackbar('توجه', 'این دستگاه قبلاً به داشبورد اضافه شده است',
-            backgroundColor: Colors.orange, colorText: Colors.white);
+        Get.snackbar(
+          'توجه',
+          'این دستگاه قبلاً به داشبورد اضافه شده است',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
       }
-    } else if (value == 3) {
+    } 
+    // else if (value == 6) {
+    //   // 🔒 قفل کودک
+    //   // bool isLocked = device.isChildLocked ?? false;
+    //   // device.isChildLocked = !isLocked;
+
+    //   // Get.snackbar(
+    //   //   isLocked ? 'قفل کودک غیرفعال شد' : 'قفل کودک فعال شد',
+    //   //   '',
+    //   //   backgroundColor: isLocked ? Colors.orange : Colors.blue,
+    //   //   colorText: Colors.white,
+    //   );
+
+    //   // در صورت نیاز، اینجا درخواست API برای تغییر وضعیت قفل کودک بفرست
+    //   // await homeController.toggleChildLock(device.deviceId, device.isChildLocked);
+    // } 
+    else if (value == 3) {
       try {
         await homeController.removeFromAllDashboard(device.deviceId);
         await homeController.refreshAllData();
-        Get.snackbar('موفقیت', 'کلید از همه مکان‌ها حذف موقت شد',
-            backgroundColor: Colors.green, colorText: Colors.white);
+        Get.snackbar(
+          'موفقیت',
+          'کلید از همه مکان‌ها حذف موقت شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
       } catch (e) {
-        Get.snackbar('خطا', 'عملیات حذف با خطا مواجه شد',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar(
+          'خطا',
+          'عملیات حذف با خطا مواجه شد',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
-    } else if (value == 4) {
+    } 
+    else if (value == 4) {
       try {
         await homeController.completeRemoveDevice(device.deviceId);
         await homeController.refreshAllData();
-        Get.snackbar('موفقیت', 'دستگاه با موفقیت حذف شد',
-            backgroundColor: Colors.green, colorText: Colors.white);
+        Get.snackbar(
+          'موفقیت',
+          'دستگاه با موفقیت حذف شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
       } catch (e) {
-        Get.snackbar('خطا', 'عملیات حذف با خطا مواجه شد',
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar(
+          'خطا',
+          'عملیات حذف با خطا مواجه شد',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
-    } else if (value == 5) {
-      await homeController.resetDevice(device.deviceId);
-      Get.snackbar('موفقیت', 'دستگاه ریست شد',
-          backgroundColor: Colors.green, colorText: Colors.white);
+    } 
+    else if (value == 5) {
+      // 🔹 نمایش دیالوگ بازنشانی / پیکربندی
+      Get.dialog(
+        Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "بازنشانی / پیکربندی",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "می‌خواهید چه کاری انجام دهید؟",
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+                const SizedBox(height: 20),
+
+                // ⚙️ رفتن به پیکربندی
+                Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(Icons.settings, color: Colors.blue),
+                    title: const Text("رفتن به پیکربندی"),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => DeviceConfigPage(sn: device.sn));
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // 🔄 ریست دستگاه
+                Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(Icons.refresh, color: Colors.redAccent),
+                    title: const Text(
+                      "ریست دستگاه",
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
+                    onTap: () async {
+                      Get.back();
+                      await homeController.resetDevice(device.deviceId);
+                      Get.snackbar(
+                        'موفقیت',
+                        'دستگاه ریست شد',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // 🚫 انصراف
+                Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(Icons.cancel, color: Colors.amber),
+                    title: const Text(
+                      "انصراف",
+                      style: TextStyle(color: Colors.amber),
+                    ),
+                    onTap: () => Get.back(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
   },
   itemBuilder: (context) => [
-    // تنظیمات پیشرفته
+    // ⚙️ تنظیمات پیشرفته
     PopupMenuItem<int>(
       value: 0,
       child: Row(
@@ -551,30 +699,15 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
         children: [
           SvgPicture.asset('assets/svg/settings.svg', width: 20, height: 20),
           const SizedBox(width: 2),
-          Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
+          const Text('تنظیمات پیشرفته', style: TextStyle(color: Colors.black)),
         ],
       ),
     ),
 
-    const PopupMenuDivider(),
-
-    // پیکربندی
-    PopupMenuItem<int>(
-      value: 1,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        textDirection: TextDirection.rtl,
-        children: [
-          SvgPicture.asset('assets/svg/config.svg', width: 20, height: 20),
-          const SizedBox(width: 2),
-          Text('پیکربندی', style: TextStyle(color: Colors.black)),
-        ],
-      ),
-    ),
-
-    // افزودن به داشبورد
-    if (!controller.dashboardDevices.any((d) => d.deviceId == device.deviceId)) ...[
-      const PopupMenuDivider(),
+    // ➕ افزودن به داشبورد
+    if (!controller.dashboardDevices.any(
+      (d) => d.deviceId == device.deviceId,
+    ))
       PopupMenuItem<int>(
         value: 2,
         child: Row(
@@ -583,47 +716,30 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
           children: [
             SvgPicture.asset('assets/svg/add_dashboard.svg', width: 20, height: 20),
             const SizedBox(width: 2),
-            Text('افزودن به داشبورد', style: TextStyle(color: Colors.black)),
+            const Text('افزودن به داشبورد', style: TextStyle(color: Colors.black)),
           ],
         ),
       ),
-    ],
 
-    const PopupMenuDivider(),
-
-    // حذف موقت
+    // 🔒 قفل کودک
     PopupMenuItem<int>(
-      value: 3,
+      value: 6,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         textDirection: TextDirection.rtl,
         children: [
-          SvgPicture.asset('assets/svg/delete_temp.svg', width: 20, height: 20),
+          SvgPicture.asset('assets/svg/child_lock.svg',
+              width: 20, height: 20, color: Colors.blueAccent),
           const SizedBox(width: 2),
-          Text('حذف موقت کلید از همه مکان‌ها', style: TextStyle(color: Colors.red)),
+          const Text(
+            'قفل کودک',
+            style: TextStyle(color: Colors.black),
+          ),
         ],
       ),
     ),
 
-    const PopupMenuDivider(),
-
-    // حذف کامل
-    PopupMenuItem<int>(
-      value: 4,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        textDirection: TextDirection.rtl,
-        children: [
-          SvgPicture.asset('assets/svg/deleting.svg', width: 20, height: 20),
-          const SizedBox(width: 2),
-          Text('حذف کامل دستگاه', style: TextStyle(color: Colors.red)),
-        ],
-      ),
-    ),
-
-    const PopupMenuDivider(),
-
-    // ریست دستگاه
+    // 🔄 بازنشانی / پیکربندی
     PopupMenuItem<int>(
       value: 5,
       child: Row(
@@ -632,12 +748,49 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
         children: [
           SvgPicture.asset('assets/svg/reset.svg', width: 20, height: 20),
           const SizedBox(width: 2),
-          Text('ریست دستگاه', style: TextStyle(color: Colors.black)),
+          const Text(
+            'بازنشانی / پیکربندی',
+            style: TextStyle(color: Colors.black),
+          ),
+        ],
+      ),
+    ),
+
+    const PopupMenuDivider(),
+
+    // 🗑 حذف موقت
+    PopupMenuItem<int>(
+      value: 3,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/delete_temp.svg',
+              width: 20, height: 20, color: Colors.red),
+          const SizedBox(width: 2),
+          const Text('حذف موقت', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+    ),
+
+    
+    // ❌ حذف کامل
+    PopupMenuItem<int>(
+      value: 4,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/deleting.svg',
+              width: 20, height: 20, color: Colors.red),
+          const SizedBox(width: 2),
+          const Text('حذف کامل', style: TextStyle(color: Colors.red)),
         ],
       ),
     ),
   ],
 ),
+
 
                       ),
                       const Spacer(),
@@ -889,28 +1042,31 @@ reliableController.updateDeviceList(devices.map((d) => d.deviceId).toList());
           ),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
-TextButton(
-  onPressed: () => Navigator.of(context).pop(),
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // زرد اختصاصی شما
-        width: 2,
-      ),
-    ),
-  ),
-  child: const Text(
-    'انصراف',
-    style: TextStyle(
-      color: Color(0xFFF39530), // رنگ متن زرد اختصاصی
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-    ),
-  ),
-),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white, // پس‌زمینه سفید
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(
+                    color: Color(0xFFF39530), // زرد اختصاصی شما
+                    width: 2,
+                  ),
+                ),
+              ),
+              child: const Text(
+                'انصراف',
+                style: TextStyle(
+                  color: Color(0xFFF39530), // رنگ متن زرد اختصاصی
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
 
             ElevatedButton(
               onPressed: () async {
@@ -1089,33 +1245,33 @@ TextButton(
             ? jsonDecode(ledEntry)
             : (ledEntry as Map<String, dynamic>);
 
-        if (ledMap['touch1'] != null) {
+        if (ledMap['t1'] != null) {
           touch1On.value = Color.fromARGB(
             255,
-            (ledMap['touch1']['on']['r'] as int).clamp(0, 255),
-            (ledMap['touch1']['on']['g'] as int).clamp(0, 255),
-            (ledMap['touch1']['on']['b'] as int).clamp(0, 255),
+            (ledMap['t1']['on']['r'] as int).clamp(0, 255),
+            (ledMap['t1']['on']['g'] as int).clamp(0, 255),
+            (ledMap['t1']['on']['b'] as int).clamp(0, 255),
           );
           touch1Off.value = Color.fromARGB(
             255,
-            (ledMap['touch1']['off']['r'] as int).clamp(0, 255),
-            (ledMap['touch1']['off']['g'] as int).clamp(0, 255),
-            (ledMap['touch1']['off']['b'] as int).clamp(0, 255),
+            (ledMap['t1']['off']['r'] as int).clamp(0, 255),
+            (ledMap['t1']['off']['g'] as int).clamp(0, 255),
+            (ledMap['t1']['off']['b'] as int).clamp(0, 255),
           );
         }
 
-        if (!isSingleKey && ledMap['touch2'] != null) {
+        if (!isSingleKey && ledMap['t2'] != null) {
           touch2On.value = Color.fromARGB(
             255,
-            (ledMap['touch2']['on']['r'] as int).clamp(0, 255),
-            (ledMap['touch2']['on']['g'] as int).clamp(0, 255),
-            (ledMap['touch2']['on']['b'] as int).clamp(0, 255),
+            (ledMap['t2']['on']['r'] as int).clamp(0, 255),
+            (ledMap['t2']['on']['g'] as int).clamp(0, 255),
+            (ledMap['t2']['on']['b'] as int).clamp(0, 255),
           );
           touch2Off.value = Color.fromARGB(
             255,
-            (ledMap['touch2']['off']['r'] as int).clamp(0, 255),
-            (ledMap['touch2']['off']['g'] as int).clamp(0, 255),
-            (ledMap['touch2']['off']['b'] as int).clamp(0, 255),
+            (ledMap['t2']['off']['r'] as int).clamp(0, 255),
+            (ledMap['t2']['off']['g'] as int).clamp(0, 255),
+            (ledMap['t2']['off']['b'] as int).clamp(0, 255),
           );
         }
       } catch (_) {}
@@ -1184,29 +1340,32 @@ TextButton(
             ),
           ),
           actions: [
-TextButton(
-  onPressed: () => Navigator.of(context).pop(),
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    foregroundColor: const Color(0xFFF39530), // رنگ متن زرد خاص
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // حاشیه زرد خاص
-        width: 2,
-      ),
-    ),
-  ),
-  child: const Text(
-    "انصراف",
-    style: TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-      color: Color(0xFFF39530), // رنگ متن زرد خاص
-    ),
-  ),
-),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white, // پس‌زمینه سفید
+                foregroundColor: const Color(0xFFF39530), // رنگ متن زرد خاص
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(
+                    color: Color(0xFFF39530), // حاشیه زرد خاص
+                    width: 2,
+                  ),
+                ),
+              ),
+              child: const Text(
+                "انصراف",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Color(0xFFF39530), // رنگ متن زرد خاص
+                ),
+              ),
+            ),
 
             ElevatedButton(
               onPressed: () async {
@@ -1375,29 +1534,31 @@ class _ColorPreviewPicker extends StatelessWidget {
                     vertical: 8,
                   ),
                   actions: [
-   TextButton(
-  onPressed: () => Navigator.of(context).pop(),
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // رنگ حاشیه زرد برند
-        width: 2,
-      ),
-    ),
-  ),
-  child: const Text(
-    'انصراف',
-    style: TextStyle(
-      color: Color(0xFFF39530), // رنگ متن زرد برند
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-    ),
-  ),
-)
-,
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white, // پس‌زمینه سفید
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(
+                            color: Color(0xFFF39530), // رنگ حاشیه زرد برند
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        'انصراف',
+                        style: TextStyle(
+                          color: Color(0xFFF39530), // رنگ متن زرد برند
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: tempColor,

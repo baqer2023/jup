@@ -18,9 +18,10 @@ class SmartDevicesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // ثبت ReliableSocketController در صورت عدم وجود
-    final reliableController = Get.isRegistered<ReliableSocketController>(
-      tag: 'smartDevicesController',
-    )
+    final reliableController =
+        Get.isRegistered<ReliableSocketController>(
+          tag: 'smartDevicesController',
+        )
         ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
         : Get.put(
             ReliableSocketController(
@@ -33,19 +34,16 @@ class SmartDevicesPage extends StatelessWidget {
 
     // بروز رسانی لیست دستگاه‌ها
     reliableController.updateDeviceList(
-        homeController.dashboardDevices.map((d) => d.deviceId).toList());
+      homeController.dashboardDevices.map((d) => d.deviceId).toList(),
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("دستگاه‌های هوشمند"),
-      ),
+      appBar: AppBar(title: const Text("دستگاه‌های هوشمند")),
       body: Obx(() {
         final devices = homeController.dashboardDevices;
 
         if (devices.isEmpty) {
-          return const Center(
-            child: Text("هیچ دستگاهی یافت نشد"),
-          );
+          return const Center(child: Text("هیچ دستگاهی یافت نشد"));
         }
 
         return SizedBox(
@@ -74,7 +72,8 @@ class SmartDevicesPage extends StatelessWidget {
                   ];
                   if (key1Entries.isNotEmpty) {
                     key1Entries.sort(
-                        (a, b) => (b[0] as int).compareTo(a[0] as int));
+                      (a, b) => (b[0] as int).compareTo(a[0] as int),
+                    );
                     switch1On = key1Entries.first[1].toString().contains('On');
                   }
 
@@ -84,7 +83,8 @@ class SmartDevicesPage extends StatelessWidget {
                   ];
                   if (key2Entries.isNotEmpty) {
                     key2Entries.sort(
-                        (a, b) => (b[0] as int).compareTo(a[0] as int));
+                      (a, b) => (b[0] as int).compareTo(a[0] as int),
+                    );
                     switch2On = key2Entries.first[1].toString().contains('On');
                   }
 
@@ -98,29 +98,29 @@ class SmartDevicesPage extends StatelessWidget {
                     iconColor1 = switch1On
                         ? Color.fromARGB(
                             255,
-                            ledMap['touch1']['on']['r'],
-                            ledMap['touch1']['on']['g'],
-                            ledMap['touch1']['on']['b'],
+                            ledMap['t1']['on']['r'],
+                            ledMap['t1']['on']['g'],
+                            ledMap['t1']['on']['b'],
                           )
                         : Color.fromARGB(
                             255,
-                            ledMap['touch1']['off']['r'],
-                            ledMap['touch1']['off']['g'],
-                            ledMap['touch1']['off']['b'],
+                            ledMap['t1']['off']['r'],
+                            ledMap['t1']['off']['g'],
+                            ledMap['t1']['off']['b'],
                           );
 
                     iconColor2 = switch2On
                         ? Color.fromARGB(
                             255,
-                            ledMap['touch2']['on']['r'],
-                            ledMap['touch2']['on']['g'],
-                            ledMap['touch2']['on']['b'],
+                            ledMap['t2']['on']['r'],
+                            ledMap['t2']['on']['g'],
+                            ledMap['t2']['on']['b'],
                           )
                         : Color.fromARGB(
                             255,
-                            ledMap['touch2']['off']['r'],
-                            ledMap['touch2']['off']['g'],
-                            ledMap['touch2']['off']['b'],
+                            ledMap['t2']['off']['r'],
+                            ledMap['t2']['off']['g'],
+                            ledMap['t2']['off']['b'],
                           );
                   }
                 }
@@ -160,7 +160,9 @@ class SmartDevicesPage extends StatelessWidget {
     required ReliableSocketController reliableController,
   }) {
     bool anySwitchOn = switch1On || (!isSingleKey && switch2On);
-    Color borderColor = anySwitchOn ? Colors.blue.shade400 : Colors.grey.shade400;
+    Color borderColor = anySwitchOn
+        ? Colors.blue.shade400
+        : Colors.grey.shade400;
 
     return Card(
       color: Colors.white,
@@ -182,22 +184,30 @@ class SmartDevicesPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     _buildSwitchRow(
-                        deviceId: device.deviceId,
-                        switchNumber: 1,
-                        color: iconColor1,
-                        onToggle: (num, val) async {
-                          await reliableController.toggleSwitch(
-                              val, num, device.deviceId);
-                        }),
+                      deviceId: device.deviceId,
+                      switchNumber: 1,
+                      color: iconColor1,
+                      onToggle: (num, val) async {
+                        await reliableController.toggleSwitch(
+                          val,
+                          num,
+                          device.deviceId,
+                        );
+                      },
+                    ),
                     if (!isSingleKey)
                       _buildSwitchRow(
-                          deviceId: device.deviceId,
-                          switchNumber: 2,
-                          color: iconColor2,
-                          onToggle: (num, val) async {
-                            await reliableController.toggleSwitch(
-                                val, num, device.deviceId);
-                          }),
+                        deviceId: device.deviceId,
+                        switchNumber: 2,
+                        color: iconColor2,
+                        onToggle: (num, val) async {
+                          await reliableController.toggleSwitch(
+                            val,
+                            num,
+                            device.deviceId,
+                          );
+                        },
+                      ),
                   ],
                 ),
                 Column(
@@ -206,7 +216,9 @@ class SmartDevicesPage extends StatelessWidget {
                     Text(
                       device.title,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -235,27 +247,43 @@ class SmartDevicesPage extends StatelessWidget {
                   onSelected: (value) async {
                     final homeController = Get.find<HomeController>();
                     if (value == 3) {
-                      await homeController.removeFromAllDashboard(device.deviceId);
+                      await homeController.removeFromAllDashboard(
+                        device.deviceId,
+                      );
                       await homeController.refreshAllData();
-                      Get.snackbar('موفقیت', 'کلید حذف موقت شد',
-                          backgroundColor: Colors.green, colorText: Colors.white);
+                      Get.snackbar(
+                        'موفقیت',
+                        'کلید حذف موقت شد',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
                     } else if (value == 4) {
-                      await homeController.completeRemoveDevice(device.deviceId);
+                      await homeController.completeRemoveDevice(
+                        device.deviceId,
+                      );
                       await homeController.refreshAllData();
-                      Get.snackbar('موفقیت', 'دستگاه حذف شد',
-                          backgroundColor: Colors.green, colorText: Colors.white);
+                      Get.snackbar(
+                        'موفقیت',
+                        'دستگاه حذف شد',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
                     }
                   },
                   itemBuilder: (context) => const [
                     PopupMenuItem(
                       value: 3,
-                      child: Text('حذف موقت کلید از همه مکان‌ها',
-                          style: TextStyle(color: Colors.black)),
+                      child: Text(
+                        'حذف موقت کلید از همه مکان‌ها',
+                        style: TextStyle(color: Colors.black),
+                      ),
                     ),
                     PopupMenuItem(
                       value: 4,
-                      child: Text('حذف کامل دستگاه',
-                          style: TextStyle(color: Colors.black)),
+                      child: Text(
+                        'حذف کامل دستگاه',
+                        style: TextStyle(color: Colors.black),
+                      ),
                     ),
                   ],
                 ),
@@ -263,15 +291,17 @@ class SmartDevicesPage extends StatelessWidget {
                 Obx(() {
                   final lastSeen =
                       reliableController.lastDeviceActivity[device.deviceId];
-                  final isOnline = lastSeen != null &&
+                  final isOnline =
+                      lastSeen != null &&
                       DateTime.now().difference(lastSeen) <
                           const Duration(seconds: 30);
                   return Text(
                     isOnline ? "آنلاین" : "آفلاین",
                     style: TextStyle(
-                        color: isOnline ? Colors.green : Colors.red,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500),
+                      color: isOnline ? Colors.green : Colors.red,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
                   );
                 }),
               ],
@@ -288,8 +318,9 @@ class SmartDevicesPage extends StatelessWidget {
     required Color color,
     required Function(int switchNumber, bool value) onToggle,
   }) {
-    final reliableController =
-        Get.find<ReliableSocketController>(tag: 'smartDevicesController');
+    final reliableController = Get.find<ReliableSocketController>(
+      tag: 'smartDevicesController',
+    );
 
     return Obx(() {
       final deviceData = reliableController.latestDeviceDataById[deviceId];
@@ -344,8 +375,10 @@ class SmartDevicesPage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Text("کلید $switchNumber",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text(
+            "کلید $switchNumber",
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
         ],
       );
     });

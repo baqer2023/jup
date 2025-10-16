@@ -107,11 +107,11 @@ class LoginPage extends BaseView<LoginController> {
                             // شماره تلفن سمت چپ
 Expanded(
   child: TextField(
-    controller: controller.userNameTEC,
+    controller: controller.visiblePhoneTEC, // کنترلر فقط برای نمایش
     keyboardType: TextInputType.phone,
     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
     decoration: InputDecoration(
-      hintText: 'شماره تلفن',
+      hintText: 'شماره بدون 0',
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
       ),
@@ -127,26 +127,32 @@ Expanded(
       fillColor: Colors.white,
     ),
     onChanged: (value) {
-      String phone = value;
+      // مقدار واقعی برای ارسال به سرور (با 09)
+      String realPhone = value;
 
-      // اگر کد کشور ایران انتخاب شده باشه و شماره با 0 شروع نشده
       if (controller.selectedCountryCode.value == '+98') {
-        if (phone.startsWith('0')) {
-          phone = phone.substring(1); // حذف صفر اول
+        // اگه با صفر شروع نشده، صفر رو اضافه کن
+        if (!realPhone.startsWith('0')) {
+          realPhone = '0$realPhone';
         }
-        // اضافه کردن صفر اول برای ارسال
-        controller.userNameTEC.text = '0$phone';
-      } else {
-        // برای کشور دیگه بدون تغییر
-        controller.userNameTEC.text = phone;
       }
 
+      // فقط در کنترلر واقعی ذخیره کن برای ارسال
+      controller.userNameTEC.text = realPhone;
+
+      // هر بار همون متن نمایشی رو نگه داریم بدون 09
+      controller.visiblePhoneTEC.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.fromPosition(
+          TextPosition(offset: value.length),
+        ),
+      );
+
       controller.onTapCheckLoginOrSignup();
-      controller.userNameTEC.selection = TextSelection.fromPosition(
-          TextPosition(offset: controller.userNameTEC.text.length));
     },
   ),
 ),
+
 
                             const SizedBox(width: 12),
 

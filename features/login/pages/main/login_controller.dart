@@ -25,6 +25,9 @@ class LoginController extends GetxController with AppUtilsMixin {
   RxBool isValid = true.obs;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+final TextEditingController visiblePhoneTEC = TextEditingController(); // برای نمایش بدون 09
+
+
   /// request login
   void onTapCheckLoginOrSignup() {
     String phoneNumber = userNameTEC.text;
