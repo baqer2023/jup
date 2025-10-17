@@ -1501,114 +1501,140 @@ Obx(() {
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white, // پس‌زمینه سفید
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: const BorderSide(
-                    color: Color(0xFFF39530), // حاشیه زرد برند
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: const Text(
-                "انصراف",
-                style: TextStyle(
-                  color: Color(0xFFF39530), // متن زرد برند
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  final token2 = controller.token;
-                  var headers = {
-                    'Authorization': 'Bearer $token2',
-                    'Content-Type': 'application/json',
-                  };
+actions: [
+  // 🔸 دکمه انصراف
+  SizedBox(
+    height: 48,
+    child: TextButton(
+      onPressed: () => Navigator.of(context).pop(),
+      style: TextButton.styleFrom(
+        backgroundColor: Colors.white, // پس‌زمینه سفید
+        foregroundColor: const Color(0xFFF39530), // متن زرد برند
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(
+            color: Color(0xFFF39530), // حاشیه زرد برند
+            width: 2,
+          ),
+        ),
+        minimumSize: const Size(120, 48),
+      ),
+      child: const Text(
+        "انصراف",
+        style: TextStyle(
+          fontFamily: 'IranYekan',
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    ),
+  ),
 
-                  var data = json.encode({
-                    "deviceId": device.deviceId,
-                    "request": {
-                      "ledColor": {
-                        "touch1": {
-                          "on": {
-                            "r": touch1On.value.red,
-                            "g": touch1On.value.green,
-                            "b": touch1On.value.blue,
-                          },
-                          "off": {
-                            "r": touch1Off.value.red,
-                            "g": touch1Off.value.green,
-                            "b": touch1Off.value.blue,
-                          },
-                        },
-                        if (!isSingleKey)
-                          "touch2": {
-                            "on": {
-                              "r": touch2On.value.red,
-                              "g": touch2On.value.green,
-                              "b": touch2On.value.blue,
-                            },
-                            "off": {
-                              "r": touch2Off.value.red,
-                              "g": touch2Off.value.green,
-                              "b": touch2Off.value.blue,
-                            },
-                          },
-                      },
+  const SizedBox(width: 12),
+
+  // 🔹 دکمه ثبت
+  SizedBox(
+    height: 48,
+    child: ElevatedButton(
+      onPressed: () async {
+        try {
+          final token2 = controller.token;
+          var headers = {
+            'Authorization': 'Bearer $token2',
+            'Content-Type': 'application/json',
+          };
+
+          var data = json.encode({
+            "deviceId": device.deviceId,
+            "request": {
+              "ledColor": {
+                "touch1": {
+                  "on": {
+                    "r": touch1On.value.red,
+                    "g": touch1On.value.green,
+                    "b": touch1On.value.blue,
+                  },
+                  "off": {
+                    "r": touch1Off.value.red,
+                    "g": touch1Off.value.green,
+                    "b": touch1Off.value.blue,
+                  },
+                },
+                if (!isSingleKey)
+                  "touch2": {
+                    "on": {
+                      "r": touch2On.value.red,
+                      "g": touch2On.value.green,
+                      "b": touch2On.value.blue,
                     },
-                  });
-
-                  var dio = Dio();
-                  var response = await dio.request(
-                    'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
-                    options: Options(method: 'POST', headers: headers),
-                    data: data,
-                  );
-
-                  if (response.statusCode == 200) {
-                    Get.snackbar(
-                      'موفق',
-                      'رنگ کلید با موفقیت تغییر کرد',
-                      backgroundColor: Colors.green,
-                    );
-                    Navigator.of(context).pop();
-                  } else {
-                    Get.snackbar(
-                      'خطا',
-                      'خطا در تغییر رنگ: ${response.statusMessage}',
-                      backgroundColor: Colors.red,
-                    );
-                  }
-                } catch (e) {
-                  Get.snackbar(
-                    'خطا',
-                    'خطا در ارتباط با سرور: $e',
-                    backgroundColor: Colors.red,
-                  );
-                }
+                    "off": {
+                      "r": touch2Off.value.red,
+                      "g": touch2Off.value.green,
+                      "b": touch2Off.value.blue,
+                    },
+                  },
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // دکمه ثبت آبی
-                foregroundColor: Colors.white, // متن سفید
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: const Text('ثبت'),
-            ),
-          ],
+            },
+          });
+
+          var dio = Dio();
+          var response = await dio.request(
+            'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
+            options: Options(method: 'POST', headers: headers),
+            data: data,
+          );
+
+          if (response.statusCode == 200) {
+            Get.snackbar(
+              'موفق',
+              'رنگ کلید با موفقیت تغییر کرد',
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.TOP,
+            );
+            Navigator.of(context).pop();
+          } else {
+            Get.snackbar(
+              'خطا',
+              'خطا در تغییر رنگ: ${response.statusMessage}',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.TOP,
+            );
+          }
+        } catch (e) {
+          Get.snackbar(
+            'خطا',
+            'خطا در ارتباط با سرور: $e',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+          );
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue, // رنگ آبی برند
+        foregroundColor: Colors.white, // رنگ متن سفید
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        minimumSize: const Size(120, 48),
+        elevation: 2,
+      ),
+      child: const Text(
+        'ثبت',
+        style: TextStyle(
+          fontFamily: 'IranYekan',
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    ),
+  ),
+],
+
         );
       },
     );

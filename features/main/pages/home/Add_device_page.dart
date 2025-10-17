@@ -254,53 +254,85 @@ void _showAddLocationDialog(HomeController homeController) {
             ],
           ),
         ),
-        actions: [
-TextButton(
-  onPressed: () => Navigator.of(context).pop(),
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // حاشیه زرد برند
-        width: 2,
+actions: [
+  // 🔸 دکمه انصراف
+  Expanded(
+    child: SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        onPressed: () => Navigator.of(context).pop(),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFFF39530),
+          side: const BorderSide(
+            color: Color(0xFFF39530),
+            width: 2,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'IranYekan',
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        child: const Text('انصراف'),
       ),
     ),
   ),
-  child: const Text(
-    'انصراف',
-    style: TextStyle(
-      color: Color(0xFFF39530), // متن زرد برند
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
+
+  const SizedBox(width: 12),
+
+  // 🔹 دکمه ثبت
+  Expanded(
+    child: SizedBox(
+      height: 48,
+      child: ElevatedButton(
+        onPressed: () async {
+          final name = nameController.text.trim();
+          if (name.isEmpty) {
+            Get.snackbar(
+              'خطا',
+              'لطفاً نام مکان را وارد کنید',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.TOP,
+            );
+            return;
+          }
+
+          await homeController.addLocation(name);
+          Navigator.of(context).pop();
+
+          Get.snackbar(
+            'موفق',
+            'مکان با موفقیت اضافه شد',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'IranYekan',
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+          elevation: 2,
+        ),
+        child: const Text('ثبت'),
+      ),
     ),
   ),
-),
-          ElevatedButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              if (name.isEmpty) {
-                Get.snackbar(
-                  'خطا',
-                  'لطفاً نام مکان را وارد کنید',
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
-                );
-                return;
-              }
-              await homeController.addLocation(name);
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue, // پس‌زمینه آبی
-            ),
-            child: const Text(
-              'ثبت',
-              style: TextStyle(color: Colors.white), // متن سفید
-            ),
-          ),
-        ],
+],
+
+
       );
     },
   );
