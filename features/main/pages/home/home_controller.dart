@@ -41,12 +41,15 @@ class HomeController extends GetxController with AppUtilsMixin {
   RxList<DeviceItem> dashboardDevices = <DeviceItem>[].obs;
   RxString selectedLocationId = ''.obs;
   late Future<WeatherData> weatherFuture;
+  String serverUrl = 'http://45.149.76.245:8080';
 
   @override
   void onInit() {
     super.onInit();
     _initializeToken();
     fetchHomeDevices();
+    selectedLocationId.value = '';
+    
 
     // مقدار اولیه آب‌وهوا
     weatherFuture = WeatherApiService(
@@ -397,4 +400,71 @@ class HomeController extends GetxController with AppUtilsMixin {
       );
     }
   }
+
+ Future<void> renameDevice({
+  required String deviceId,
+  required String label,
+  required String oldDashboardId,
+  required String newDashboardId,
+}) async {
+  final token = this.token; // فرض: توکن از قبل تو کنترلر ذخیره شده
+  if (token == null) {
+    Get.snackbar(
+      'خطا',
+      'توکن معتبر پیدا نشد',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+    return;
+  }
+
+  final headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+
+  final data = json.encode({
+    "deviceId": deviceId,
+    "label": label,
+    "oldDashboardId": oldDashboardId,
+    "newDashboardId": newDashboardId,
+  });
+
+  print('در حال ارسال نام جدید: $label');
+
+  try {
+    final dio = Dio();
+    final response = await dio.post(
+      'http://45.149.76.245:8080/api/editDevice', // آدرس سرور جدید
+      options: Options(headers: headers),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      Get.snackbar(
+        'موفقیت',
+        'نام کلید با موفقیت ویرایش شد',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+      print(json.encode(response.data));
+    } else {
+      Get.snackbar(
+        'خطا',
+        'ویرایش کلید با خطا مواجه شد: ${response.statusCode}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print(response.statusMessage);
+    }
+  } catch (e) {
+    Get.snackbar(
+      'خطا',
+      'مشکل در برقراری ارتباط با سرور: $e',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  }
+}
+
 }

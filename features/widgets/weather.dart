@@ -51,56 +51,54 @@ class WeatherCard extends StatelessWidget {
     final weatherIcon = _getWeatherIcon(weather.weather.first.description);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2), // کمتر شد
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            '$temp°',
-            style: TextStyle(
-              fontFamily: 'IranYekan',
-              fontSize: 18, // خیلی کوچکتر
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[600],
-            ),
-          ),
-          const SizedBox(width: 6),
-          Flexible(
+          /// ✅ بخش متن
+          Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  condition,
-                  style: TextStyle(
-                    fontFamily: 'IranYekan',
-                    fontSize: 10, // خیلی کوچکتر
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[600],
+                  '$condition - $temp°',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
+                  overflow: TextOverflow.ellipsis, // ✅ جلوگیری از شکستن
+                  maxLines: 1,
+                  softWrap: false,
                 ),
-                const SizedBox(height: 1),
+                const SizedBox(height: 2),
                 Text(
                   '$dayName، تهران',
-                  style: TextStyle(
-                    fontFamily: 'IranYekan',
-                    fontSize: 9, // خیلی کوچکتر
-                    fontWeight: FontWeight.normal,
-                    color: Colors.blue[600],
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black54,
                   ),
+                  overflow: TextOverflow.ellipsis, // ✅ جلوگیری از رفتن به سطر بعد
+                  maxLines: 1,
+                  softWrap: false,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 20),
+
+          const SizedBox(width: 8),
+
+          /// ✅ آیکون ثابت در ابعاد
           SizedBox(
-            width: 52,
-            height: 52,
+            width: 28,
+            height: 28,
             child: weatherIcon,
           ),
         ],
@@ -128,9 +126,10 @@ class WeatherCard extends StatelessWidget {
     else if (desc.contains('thunderstorm')) asset = 'assets/svg/thunderstorm.svg';
     else return const Icon(Icons.help_outline, size: 20, color: Colors.grey);
 
-    return SvgPicture.asset(asset, width: 20, height: 20);
+    return SvgPicture.asset(asset, width: 28, height: 28);
   }
 }
+
 
 class WeatherLoadingShimmer extends StatelessWidget {
   const WeatherLoadingShimmer({super.key});

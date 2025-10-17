@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,6 +18,11 @@ class DevicesPage extends BaseView<HomeController> {
 
   @override
   Widget body() {
+        // ریست مقادیر بعد از اولین رندر
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.selectedLocationId.value = '';
+      controller.deviceList.clear();
+    });
     return Scaffold(
       endDrawer: const Sidebar(),
       appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
@@ -26,195 +30,192 @@ class DevicesPage extends BaseView<HomeController> {
     );
   }
 
-  Widget _buildDevicesContent() {
-    return Obx(() {
-      final locations = controller.userLocations;
-      final visibleLocations = locations
-          .where((loc) => loc.title != "میانبر")
-          .toList();
+Widget _buildDevicesContent() {
+  return Obx(() {
+    final locations = controller.userLocations;
+    final visibleLocations = locations
+        .where((loc) => loc.title != "میانبر")
+        .toList();
 
-      final devices = controller.deviceList;
+    final devices = controller.deviceList;
 
-      return RefreshIndicator(
-        onRefresh: controller.refreshAllData,
+
+    return RefreshIndicator(
+       onRefresh: controller.refreshAllData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
+          children: [
+            const SizedBox(height: 24),
 
-              // دکمه‌ها و عنوان
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Get.to(() => const AddDevicePage());
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.lightBlue.shade400,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
+            // دکمه‌ها و عنوان
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Get.to(() => const AddDevicePage());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.lightBlue.shade400,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text('ثبت دستگاه'),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: _showAddLocationDialog,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.yellow.shade700,
-                            side: BorderSide(
-                              color: Colors.yellow.shade700,
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                          child: const Text('افزودن مکان'),
                         ),
-                      ],
-                    ),
-                    const Text(
-                      'دستگاه‌ها',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        child: const Text('ثبت دستگاه'),
                       ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _showAddLocationDialog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.yellow.shade700,
+                          side: BorderSide(
+                            color: Colors.yellow.shade700,
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: const Text('افزودن مکان'),
+                      ),
+                    ],
+                  ),
+                  const Text(
+                    'دستگاه‌ها',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              const Divider(thickness: 2),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
+            const Divider(thickness: 2),
+            const SizedBox(height: 16),
 
-              // لیست مکان‌ها
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SizedBox(
-                  height: 45, // ارتفاع ثابت برای آیتم‌ها
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      // فیلتر کردن مکان‌ها: "میانبر" نمایش داده نمی‌شود
-                      children: locations
-                          .where((loc) => loc.title != "میانبر")
-                          .map((loc) {
-                            return Obx(() {
-                              final isSelected =
-                                  controller.selectedLocationId.value == loc.id;
+            // لیست مکان‌ها
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                height: 45, // ارتفاع ثابت برای آیتم‌ها
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: locations
+                        .where((loc) => loc.title != "میانبر")
+                        .map((loc) {
+                      return Obx(() {
+                        final isSelected = controller.selectedLocationId.value.isNotEmpty &&
+                            controller.selectedLocationId.value == loc.id;
 
-                              return GestureDetector(
-                                onTap: () {
-                                  controller.selectedLocationId.value = loc.id;
-                                  controller.fetchDevicesByLocation(loc.id);
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.only(right: 8),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? Colors.yellow
-                                          : Colors.grey.shade300,
-                                      width: isSelected ? 2 : 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      loc.title,
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Colors.yellow.shade700
-                                            : Colors.grey,
-                                        fontWeight: isSelected
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
+                        return GestureDetector(
+                          onTap: () {
+                            controller.selectedLocationId.value = loc.id;
+                            controller.fetchDevicesByLocation(loc.id);
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.yellow
+                                    : Colors.grey.shade300,
+                                width: isSelected ? 2 : 1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
                                 ),
-                              );
-                            });
-                          })
-                          .toList(),
-                    ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                loc.title,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.yellow.shade700
+                                      : Colors.grey,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      });
+                    }).toList(),
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-              // لیست دستگاه‌ها
-              if (devices.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // SVG نمایشی
-                        SizedBox(
-                          height: 180,
-                          child: SvgPicture.asset(
-                            'assets/svg/NDeviceF.svg',
-                            fit: BoxFit.fill,
-                          ),
+            // لیست دستگاه‌ها
+            if (devices.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: 180,
+                        child: SvgPicture.asset(
+                          'assets/svg/NDeviceF.svg',
+                          fit: BoxFit.fill,
                         ),
-                        const SizedBox(height: 20),
-
-                        // متن راهنما
-                        const Text(
-                          "تا کنون دستگاهی ثبت نشده‌است،\nجهت ثبت دستگاه جدید روی دکمه ثبت دستگاه کلیک کنید",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                            height: 1.5,
-                          ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "تا کنون دستگاهی ثبت نشده‌است،\nجهت ثبت دستگاه جدید روی دکمه ثبت دستگاه کلیک کنید",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                          height: 1.5,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                )
-              else
-                _buildSmartDevicesGrid(),
-            ],
-          ),
+                ),
+              )
+            else
+              _buildSmartDevicesGrid(),
+          ],
         ),
-      );
-    });
-  }
+      ),
+    );
+  });
+}
+
 
   // ------------------- Smart Devices Grid (بهینه) -------------------
   Widget _buildSmartDevicesGrid() {
@@ -433,30 +434,97 @@ class DevicesPage extends BaseView<HomeController> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // عنوان و آنلاین/آفلاین بالا سمت راست
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
+// عنوان دستگاه + نوع کلید + وضعیت آنلاین/آفلاین
+Column(
+  crossAxisAlignment: CrossAxisAlignment.end,
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    // ردیف نوع کلید + وضعیت آنلاین/آفلاین
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // وضعیت آنلاین / آفلاین به شکل بیضی
+        Obx(() {
+          final lastSeen = reliableController.lastDeviceActivity[deviceId];
+          final isOnline = lastSeen != null &&
+              DateTime.now().difference(lastSeen) < const Duration(seconds: 30);
 
-                          // نمایش نام مکان دستگاه
-                          Text(
-                            device.dashboardTitle ?? "بدون مکان",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: isOnline ? Colors.blue : Colors.grey,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              isOnline ? "آنلاین" : "آفلاین",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }),
+        const SizedBox(width: 6),
+         // متن نوع کلید
+        Text(
+          isSingleKey ? "کلید تک پل" : "کلید دو پل",
+          textAlign: TextAlign.right,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        
+      ],
+    ),
+    const SizedBox(height: 4),
+
+    // عنوان دستگاه
+    Text(
+      title,
+      textAlign: TextAlign.right,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    ),
+    const SizedBox(height: 4),
+
+    // مکان دستگاه با آیکن SVG
+Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+   
+    Flexible(
+      child: Text(
+        device.dashboardTitle ?? "بدون مکان",
+        textAlign: TextAlign.right,
+        style: TextStyle(
+          fontSize: 13,
+          color: Colors.grey.shade600,
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+    const SizedBox(width: 4),
+     SvgPicture.asset(
+      'assets/svg/location.svg', // مسیر فایل SVG
+      width: 24,
+      height: 24,
+      // color: Colors.grey.shade600,
+    ),
+    
+  ],
+),
+
+  ],
+),
                     ],
                   ),
                   Row(
@@ -472,8 +540,160 @@ class DevicesPage extends BaseView<HomeController> {
   ),
   onSelected: (value) async {
     final homeController = Get.find<HomeController>();
+    final controller = homeController; // اگر کلا از controller استفاده می‌کنیم
 
-    if (value == 0) {
+    if (value == 1) {
+      // 📝 ویرایش کلید و تغییر مکان
+      final TextEditingController nameController =
+          TextEditingController(text: device.title ?? '');
+      final RxString selectedDashboardId = (device.dashboardId ?? '').obs;
+
+      Get.dialog(
+        Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "ویرایش کلید",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'نام جدید کلید',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 🔹 انتخاب مکان
+                  Obx(() {
+                    final locations = controller.userLocations;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          "انتخاب مکان",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: locations.map((loc) {
+                            final isSelected =
+                                selectedDashboardId.value == loc.id;
+                            return GestureDetector(
+                              onTap: () => selectedDashboardId.value = loc.id,
+                              child: Chip(
+                                label: Text(
+                                  loc.title,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.black87,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                                backgroundColor: isSelected
+                                    ? Colors.blue.shade400
+                                    : Colors.blue.shade50,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 10),
+                        OutlinedButton(
+                          onPressed: () => _showAddLocationDialog(),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                                color: Colors.black, width: 1.5),
+                          ),
+                          child: const Text('افزودن مکان'),
+                        ),
+                      ],
+                    );
+                  }),
+
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+ElevatedButton.icon(
+  onPressed: () async {
+    final newLabel = nameController.text.trim();
+    final newDashboardId = selectedDashboardId.value;
+
+    if (newLabel.isEmpty || newDashboardId.isEmpty) {
+      Get.snackbar(
+        'خطا',
+        'لطفاً نام کلید و مکان را انتخاب کنید',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      await controller.renameDevice(
+        deviceId: deviceId ?? '', // deviceId به جای serialNumber
+        label: newLabel,
+        oldDashboardId: device.dashboardId ?? '', // داشبورد قدیمی
+        newDashboardId: newDashboardId, // داشبورد جدید
+      );
+      Get.back();
+      await controller.refreshAllData();
+      Get.snackbar(
+        'موفقیت',
+        'کلید با موفقیت ویرایش شد',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'خطا',
+        'مشکل در ویرایش کلید: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  },
+  icon: const Icon(Icons.check, size: 18),
+  label: const Text('تأیید'),
+),
+
+                      OutlinedButton.icon(
+                        onPressed: () => Get.back(),
+                        icon: const Icon(Icons.close, size: 18),
+                        label: const Text('بستن'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (value == 0) {
       showLedColorDialog(device: device);
     } else if (value == 2) {
       if (!controller.dashboardDevices.any(
@@ -537,23 +757,7 @@ class DevicesPage extends BaseView<HomeController> {
           colorText: Colors.white,
         );
       }
-    } 
-    // else if (value == 6) {
-    //   // 🔒 قفل کودک
-    //   // bool isLocked = device.isChildLocked ?? false;
-    //   // device.isChildLocked = !isLocked;
-
-    //   // Get.snackbar(
-    //   //   isLocked ? 'قفل کودک غیرفعال شد' : 'قفل کودک فعال شد',
-    //   //   '',
-    //   //   backgroundColor: isLocked ? Colors.orange : Colors.blue,
-    //   //   colorText: Colors.white,
-    //   );
-
-    //   // در صورت نیاز، اینجا درخواست API برای تغییر وضعیت قفل کودک بفرست
-    //   // await homeController.toggleChildLock(device.deviceId, device.isChildLocked);
-    // } 
-    else if (value == 3) {
+    } else if (value == 3) {
       try {
         await homeController.removeFromAllDashboard(device.deviceId);
         await homeController.refreshAllData();
@@ -571,8 +775,7 @@ class DevicesPage extends BaseView<HomeController> {
           colorText: Colors.white,
         );
       }
-    } 
-    else if (value == 4) {
+    } else if (value == 4) {
       try {
         await homeController.completeRemoveDevice(device.deviceId);
         await homeController.refreshAllData();
@@ -590,9 +793,8 @@ class DevicesPage extends BaseView<HomeController> {
           colorText: Colors.white,
         );
       }
-    } 
-    else if (value == 5) {
-      // 🔹 نمایش دیالوگ بازنشانی / پیکربندی
+    } else if (value == 5) {
+      // 🔹 بازنشانی / پیکربندی
       Get.dialog(
         Dialog(
           backgroundColor: Colors.white,
@@ -618,8 +820,6 @@ class DevicesPage extends BaseView<HomeController> {
                   style: TextStyle(fontSize: 14, color: Colors.black54),
                 ),
                 const SizedBox(height: 20),
-
-                // ⚙️ رفتن به پیکربندی
                 Card(
                   color: Colors.white,
                   elevation: 2,
@@ -635,10 +835,7 @@ class DevicesPage extends BaseView<HomeController> {
                     },
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
-                // 🔄 ریست دستگاه
                 Card(
                   color: Colors.white,
                   elevation: 2,
@@ -663,10 +860,7 @@ class DevicesPage extends BaseView<HomeController> {
                     },
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
-                // 🚫 انصراف
                 Card(
                   color: Colors.white,
                   elevation: 2,
@@ -690,11 +884,21 @@ class DevicesPage extends BaseView<HomeController> {
     }
   },
   itemBuilder: (context) => [
-    // ⚙️ تنظیمات پیشرفته
+    PopupMenuItem<int>(
+      value: 1,
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/edit.svg',
+              width: 20, height: 20, color: Colors.blueAccent),
+          const SizedBox(width: 2),
+          const Text('ویرایش کلید', style: TextStyle(color: Colors.black)),
+        ],
+      ),
+    ),
     PopupMenuItem<int>(
       value: 0,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         textDirection: TextDirection.rtl,
         children: [
           SvgPicture.asset('assets/svg/settings.svg', width: 20, height: 20),
@@ -703,15 +907,12 @@ class DevicesPage extends BaseView<HomeController> {
         ],
       ),
     ),
-
-    // ➕ افزودن به داشبورد
     if (!controller.dashboardDevices.any(
       (d) => d.deviceId == device.deviceId,
     ))
       PopupMenuItem<int>(
         value: 2,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           textDirection: TextDirection.rtl,
           children: [
             SvgPicture.asset('assets/svg/add_dashboard.svg', width: 20, height: 20),
@@ -720,49 +921,33 @@ class DevicesPage extends BaseView<HomeController> {
           ],
         ),
       ),
-
-    // 🔒 قفل کودک
     PopupMenuItem<int>(
       value: 6,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         textDirection: TextDirection.rtl,
         children: [
           SvgPicture.asset('assets/svg/child_lock.svg',
               width: 20, height: 20, color: Colors.blueAccent),
           const SizedBox(width: 2),
-          const Text(
-            'قفل کودک',
-            style: TextStyle(color: Colors.black),
-          ),
+          const Text('قفل کودک', style: TextStyle(color: Colors.black)),
         ],
       ),
     ),
-
-    // 🔄 بازنشانی / پیکربندی
     PopupMenuItem<int>(
       value: 5,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         textDirection: TextDirection.rtl,
         children: [
           SvgPicture.asset('assets/svg/reset.svg', width: 20, height: 20),
           const SizedBox(width: 2),
-          const Text(
-            'بازنشانی / پیکربندی',
-            style: TextStyle(color: Colors.black),
-          ),
+          const Text('بازنشانی / پیکربندی', style: TextStyle(color: Colors.black)),
         ],
       ),
     ),
-
     const PopupMenuDivider(),
-
-    // 🗑 حذف موقت
     PopupMenuItem<int>(
       value: 3,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         textDirection: TextDirection.rtl,
         children: [
           SvgPicture.asset('assets/svg/delete_temp.svg',
@@ -772,13 +957,9 @@ class DevicesPage extends BaseView<HomeController> {
         ],
       ),
     ),
-
-    
-    // ❌ حذف کامل
     PopupMenuItem<int>(
       value: 4,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         textDirection: TextDirection.rtl,
         children: [
           SvgPicture.asset('assets/svg/deleting.svg',
@@ -792,6 +973,8 @@ class DevicesPage extends BaseView<HomeController> {
 ),
 
 
+
+
                       ),
                       const Spacer(),
                       Obx(() {
@@ -800,61 +983,27 @@ class DevicesPage extends BaseView<HomeController> {
                               tag: 'smartDevicesController',
                             );
 
-                        final lastSeen =
-                            reliableController.lastDeviceActivity[deviceId];
+                        final lastSeen = reliableController.lastDeviceActivity[deviceId];
+  String lastActivityText;
 
-                        // بررسی آنلاین بودن: اگر آخرین فعالیت کمتر از 5 ثانیه پیش بود آنلاین است
-                        final isOnline =
-                            lastSeen != null &&
-                            DateTime.now().difference(lastSeen) <
-                                const Duration(seconds: 30);
-                        print(lastSeen);
-                        print(DateTime.now());
-                        if (isOnline) {
-                          // فقط آنلاین نشان داده شود
-                          return Text(
-                            "آنلاین",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          );
-                        } else {
-                          // آفلاین: بالای متن آفلاین، پایین آخرین زمان فعالیت
-                          String lastActivityText;
-                          if (lastSeen != null) {
-                            final formattedDate =
-                                "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
-                            final formattedTime =
-                                "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
-                            lastActivityText =
-                                "آخرین فعالیت: $formattedDate - $formattedTime";
-                          } else {
-                            lastActivityText = "آخرین فعالیت: نامشخص";
-                          }
+  if (lastSeen != null) {
+    final formattedDate =
+        "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+    final formattedTime =
+        "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+    lastActivityText = "آخرین همگام سازی: $formattedDate - $formattedTime";
+  } else {
+    lastActivityText = "آخرین همگام سازی: نامشخص";
+  }
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "آفلاین",
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                lastActivityText,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          );
-                        }
+  return Text(
+    lastActivityText,
+    style: TextStyle(
+      color: Colors.grey[600],
+      fontSize: 10,
+    ),
+    textAlign: TextAlign.right,
+  );
                       }),
                     ],
                   ),
