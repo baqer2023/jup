@@ -218,7 +218,7 @@ Widget _buildDevicesContent() {
 
 
   // ------------------- Smart Devices Grid (بهینه) -------------------
-  Widget _buildSmartDevicesGrid() {
+ Widget _buildSmartDevicesGrid() {
     return Obx(() {
       final devices = controller.deviceList;
       final ssssss = devices.map((d) => d.deviceId).toList();
@@ -261,6 +261,9 @@ Widget _buildDevicesContent() {
             return Obx(() {
               final deviceData =
                   reliableController.latestDeviceDataById[device.deviceId];
+
+
+              print(deviceData);
 
               bool switch1On = false;
               bool switch2On = false;
@@ -367,6 +370,7 @@ Widget _buildDevicesContent() {
       );
     });
   }
+
 
   // ------------------- Smart Device Card -------------------
   Widget _buildSmartDeviceCard({
@@ -921,18 +925,18 @@ ElevatedButton.icon(
           ],
         ),
       ),
-    PopupMenuItem<int>(
-      value: 6,
-      child: Row(
-        textDirection: TextDirection.rtl,
-        children: [
-          SvgPicture.asset('assets/svg/child_lock.svg',
-              width: 20, height: 20, color: Colors.blueAccent),
-          const SizedBox(width: 2),
-          const Text('قفل کودک', style: TextStyle(color: Colors.black)),
-        ],
-      ),
-    ),
+    // PopupMenuItem<int>(
+    //   value: 6,
+    //   child: Row(
+    //     textDirection: TextDirection.rtl,
+    //     children: [
+    //       SvgPicture.asset('assets/svg/child_lock.svg',
+    //           width: 20, height: 20, color: Colors.blueAccent),
+    //       const SizedBox(width: 2),
+    //       const Text('قفل کودک', style: TextStyle(color: Colors.black)),
+    //     ],
+    //   ),
+    // ),
     PopupMenuItem<int>(
       value: 5,
       child: Row(
@@ -1524,82 +1528,88 @@ actions: [
   SizedBox(
     height: 48,
     child: ElevatedButton(
-      onPressed: () async {
-        try {
-          final token2 = controller.token;
-          var headers = {
-            'Authorization': 'Bearer $token2',
-            'Content-Type': 'application/json',
-          };
+onPressed: () async {
+  try {
+    final token = controller.token; // یا از authToken استفاده کن اگه معتبرتره
+    final dio = Dio();
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
 
-          var data = json.encode({
-            "deviceId": device.deviceId,
-            "request": {
-              "ledColor": {
-                "touch1": {
-                  "on": {
-                    "r": touch1On.value.red,
-                    "g": touch1On.value.green,
-                    "b": touch1On.value.blue,
-                  },
-                  "off": {
-                    "r": touch1Off.value.red,
-                    "g": touch1Off.value.green,
-                    "b": touch1Off.value.blue,
-                  },
-                },
-                if (!isSingleKey)
-                  "touch2": {
-                    "on": {
-                      "r": touch2On.value.red,
-                      "g": touch2On.value.green,
-                      "b": touch2On.value.blue,
-                    },
-                    "off": {
-                      "r": touch2Off.value.red,
-                      "g": touch2Off.value.green,
-                      "b": touch2Off.value.blue,
-                    },
-                  },
+    final data = json.encode({
+      "deviceId": device.deviceId,
+      "request": {
+        "ledColor": {
+          "t1": {
+            "on": {
+              "r": touch1On.value.red,
+              "g": touch1On.value.green,
+              "b": touch1On.value.blue,
+            },
+            "off": {
+              "r": touch1Off.value.red,
+              "g": touch1Off.value.green,
+              "b": touch1Off.value.blue,
+            },
+          },
+          if (!isSingleKey)
+            "t2": {
+              "on": {
+                "r": touch2On.value.red,
+                "g": touch2On.value.green,
+                "b": touch2On.value.blue,
+              },
+              "off": {
+                "r": touch2Off.value.red,
+                "g": touch2Off.value.green,
+                "b": touch2Off.value.blue,
               },
             },
-          });
-
-          var dio = Dio();
-          var response = await dio.request(
-            'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
-            options: Options(method: 'POST', headers: headers),
-            data: data,
-          );
-
-          if (response.statusCode == 200) {
-            Get.snackbar(
-              'موفق',
-              'رنگ کلید با موفقیت تغییر کرد',
-              backgroundColor: Colors.green,
-              colorText: Colors.white,
-              snackPosition: SnackPosition.TOP,
-            );
-            Navigator.of(context).pop();
-          } else {
-            Get.snackbar(
-              'خطا',
-              'خطا در تغییر رنگ: ${response.statusMessage}',
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-              snackPosition: SnackPosition.TOP,
-            );
-          }
-        } catch (e) {
-          Get.snackbar(
-            'خطا',
-            'خطا در ارتباط با سرور: $e',
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.TOP,
-          );
-        }
+        },
       },
+    });
+
+    print('🔹 Sending LED color payload: $data');
+
+    final response = await dio.post(
+      'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
+      options: Options(headers: headers),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      print('✅ Success: ${response.data}');
+      Get.snackbar(
+        'موفق',
+        'رنگ کلید با موفقیت تغییر کرد',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      Navigator.of(context).pop();
+    } else {
+      print('⚠️ Response: ${response.statusCode} ${response.statusMessage}');
+      Get.snackbar(
+        'خطا',
+        'خطا در تغییر رنگ: ${response.statusMessage}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+    }
+  } on DioException catch (e) {
+    print('❌ Dio error: ${e.message}');
+    print('❌ Response data: ${e.response?.data}');
+    Get.snackbar(
+      'خطا',
+      'خطا در ارتباط با سرور: ${e.message}',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+    );
+  }
+},
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.blue, // رنگ آبی برند
         foregroundColor: Colors.white, // رنگ متن سفید
