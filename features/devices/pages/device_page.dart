@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
 import 'package:my_app32/app/services/realable_controller.dart';
 import 'package:my_app32/features/config/device_config_page.dart';
+import 'package:my_app32/features/devices/pages/edit_device_page.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/pages/home/Add_device_page.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
@@ -546,158 +547,16 @@ Row(
     final homeController = Get.find<HomeController>();
     final controller = homeController; // اگر کلا از controller استفاده می‌کنیم
 
-    if (value == 1) {
-      // 📝 ویرایش کلید و تغییر مکان
-      final TextEditingController nameController =
-          TextEditingController(text: device.title ?? '');
-      final RxString selectedDashboardId = (device.dashboardId ?? '').obs;
-
-      Get.dialog(
-        Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "ویرایش کلید",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'نام جدید کلید',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 🔹 انتخاب مکان
-                  Obx(() {
-                    final locations = controller.userLocations;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          "انتخاب مکان",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 8,
-                          children: locations.map((loc) {
-                            final isSelected =
-                                selectedDashboardId.value == loc.id;
-                            return GestureDetector(
-                              onTap: () => selectedDashboardId.value = loc.id,
-                              child: Chip(
-                                label: Text(
-                                  loc.title,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.black87,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                                backgroundColor: isSelected
-                                    ? Colors.blue.shade400
-                                    : Colors.blue.shade50,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 10),
-                        OutlinedButton(
-                          onPressed: () => _showAddLocationDialog(),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                                color: Colors.black, width: 1.5),
-                          ),
-                          child: const Text('افزودن مکان'),
-                        ),
-                      ],
-                    );
-                  }),
-
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-ElevatedButton.icon(
-  onPressed: () async {
-    final newLabel = nameController.text.trim();
-    final newDashboardId = selectedDashboardId.value;
-
-    if (newLabel.isEmpty || newDashboardId.isEmpty) {
-      Get.snackbar(
-        'خطا',
-        'لطفاً نام کلید و مکان را انتخاب کنید',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    try {
-      await controller.renameDevice(
-        deviceId: deviceId ?? '', // deviceId به جای serialNumber
-        label: newLabel,
-        oldDashboardId: device.dashboardId ?? '', // داشبورد قدیمی
-        newDashboardId: newDashboardId, // داشبورد جدید
-      );
-      Get.back();
-      await controller.refreshAllData();
-      Get.snackbar(
-        'موفقیت',
-        'کلید با موفقیت ویرایش شد',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-    } catch (e) {
-      Get.snackbar(
-        'خطا',
-        'مشکل در ویرایش کلید: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  },
-  icon: const Icon(Icons.check, size: 18),
-  label: const Text('تأیید'),
-),
-
-                      OutlinedButton.icon(
-                        onPressed: () => Get.back(),
-                        icon: const Icon(Icons.close, size: 18),
-                        label: const Text('بستن'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    } else if (value == 0) {
+if (value == 1) {
+  // 📝 ویرایش دستگاه در صفحه‌ی جدا
+  Get.to(() => EditDevicePage(
+        deviceId: device.deviceId,
+        serialNumber: device.sn,
+        initialName: device.title ?? '',
+        initialDashboardId: device.dashboardId ?? '',
+      ));
+}
+else if (value == 0) {
       showLedColorDialog(device: device);
     } else if (value == 2) {
       if (!controller.dashboardDevices.any(

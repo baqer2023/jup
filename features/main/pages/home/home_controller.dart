@@ -401,7 +401,7 @@ class HomeController extends GetxController with AppUtilsMixin {
     }
   }
 
- Future<void> renameDevice({
+Future<void> renameDevice({
   required String deviceId,
   required String label,
   required String oldDashboardId,
@@ -423,27 +423,31 @@ class HomeController extends GetxController with AppUtilsMixin {
     'Content-Type': 'application/json',
   };
 
-  final data = json.encode({
+  // 🔹 payload داینامیک بسته به تغییر داشبورد
+  final Map<String, dynamic> payload = {
     "deviceId": deviceId,
     "label": label,
-    "oldDashboardId": oldDashboardId,
-    "newDashboardId": newDashboardId,
-  });
+  };
 
-  print('در حال ارسال نام جدید: $label');
+  if (oldDashboardId != newDashboardId) {
+    payload["oldDashboardId"] = oldDashboardId;
+    payload["newDashboardId"] = newDashboardId;
+  }
+
+  print('در حال ارسال نام جدید: $label با payload: $payload');
 
   try {
     final dio = Dio();
     final response = await dio.post(
-      'http://45.149.76.245:8080/api/editDevice', // آدرس سرور جدید
+      'http://45.149.76.245:8080/api/editDevice', // آدرس سرور
       options: Options(headers: headers),
-      data: data,
+      data: json.encode(payload),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       Get.snackbar(
         'موفقیت',
-        'نام کلید با موفقیت ویرایش شد',
+        'نام دستگاه با موفقیت ویرایش شد',
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -451,7 +455,7 @@ class HomeController extends GetxController with AppUtilsMixin {
     } else {
       Get.snackbar(
         'خطا',
-        'ویرایش کلید با خطا مواجه شد: ${response.statusCode}',
+        'ویرایش دستگاه با خطا مواجه شد: ${response.statusCode}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -466,5 +470,6 @@ class HomeController extends GetxController with AppUtilsMixin {
     );
   }
 }
+
 
 }
