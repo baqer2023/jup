@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/pages/CreateGroupStep1Page.dart';
+import 'package:my_app32/features/groups/pages/EditGroupPage.dart';
 import 'package:my_app32/features/groups/pages/group_device_page.dart';
 import 'package:my_app32/features/groups/pages/group_customers_page.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
@@ -16,8 +17,9 @@ class GroupsPage extends StatefulWidget {
 }
 
 class _GroupsPageState extends State<GroupsPage> {
-  final HomeControllerGroup controller =
-      Get.put(HomeControllerGroup(Get.find()));
+  final HomeControllerGroup controller = Get.put(
+    HomeControllerGroup(Get.find()),
+  );
 
   @override
   void initState() {
@@ -25,14 +27,12 @@ class _GroupsPageState extends State<GroupsPage> {
     _loadGroups();
   }
 
-  /// متد برای اطمینان از آماده بودن توکن قبل از fetchGroups
   void _loadGroups() {
     controller.initializeTokenGroup().then((_) {
       controller.fetchGroups();
     });
   }
 
-  /// وقتی صفحه دوباره برگشته شد یا از صفحه‌ای دیگر برگشتیم، دوباره داده‌ها لود می‌شوند
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -79,6 +79,7 @@ class _GroupsPageState extends State<GroupsPage> {
           padding: const EdgeInsets.all(16),
           itemCount: controller.groups.length,
           itemBuilder: (context, index) {
+            // print(controller.groups[index]);
             final group = controller.groups[index];
             return GroupCard(
               title: group['title'] ?? 'بدون عنوان',
@@ -88,79 +89,91 @@ class _GroupsPageState extends State<GroupsPage> {
               allocatedDevices: group['allocatedDevices'] ?? 0,
               allocatedUsers: group['allocatedUsers'] ?? 0,
               onUserInfo: (id, name, desc) {
-                Get.to(() => GroupCustomersPage(
-                      groupId: id,
-                      groupName: name,
-                      groupDescription: desc,
-                    ))?.then((_) => _loadGroups());
+                Get.to(
+                  () => GroupCustomersPage(
+                    groupId: id,
+                    groupName: name,
+                    groupDescription: desc,
+                  ),
+                )?.then((_) => _loadGroups());
               },
               onDeviceInfo: (id, name, desc) {
-                Get.to(() => GroupDevicesPage(
-                      groupId: id,
-                      groupName: name,
-                      groupDescription: desc,
-                    ))?.then((_) => _loadGroups());
+                Get.to(
+                  () => GroupDevicesPage(
+                    groupId: id,
+                    groupName: name,
+                    groupDescription: desc,
+                  ),
+                )?.then((_) => _loadGroups());
               },
               onDelete: (id) async {
-  final confirm = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: Colors.white, // بک‌گراند کلی سفید
-      titlePadding: EdgeInsets.zero, // حذف padding پیش‌فرض برای هدر سفارشی
-      title: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        color: Colors.blue, // هدر آبی
-        child: const Text(
-          "حذف گروه",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-      content: const Text(
-        "آیا مطمئن هستید که می‌خواهید این گروه را حذف کنید؟",
-      ),
-      actions: [
-TextButton(
-  onPressed: () => Navigator.pop(ctx, false),
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // حاشیه زرد برند
-        width: 2,
-      ),
-    ),
-  ),
-  child: const Text(
-    "انصراف",
-    style: TextStyle(
-      color: Color(0xFFF39530), // متن زرد برند
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-    ),
-  ),
-),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue, // بک‌گراند آبی
-            foregroundColor: Colors.white, // متن سفید
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-          child: const Text("حذف"),
-        ),
-      ],
-    ),
-  );
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: Colors.white,
+                    titlePadding: EdgeInsets.zero,
+                    title: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      color: Colors.blue,
+                      child: const Text(
+                        "حذف گروه",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    content: const Text(
+                      "آیا مطمئن هستید که می‌خواهید این گروه را حذف کنید؟",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: const BorderSide(
+                              color: Color(0xFFF39530),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: const Text(
+                          "انصراف",
+                          style: TextStyle(
+                            color: Color(0xFFF39530),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text("حذف"),
+                      ),
+                    ],
+                  ),
+                );
 
-  if (confirm == true) {
-    await controller.deleteGroup(id);
-    _loadGroups(); // دوباره لود کردن گروه‌ها
-  }
-},
-
+                if (confirm == true) {
+                  await controller.deleteGroup(id);
+                  _loadGroups();
+                }
+              },
             );
           },
         );
@@ -220,8 +233,7 @@ class _GroupCardState extends State<GroupCard> {
 
   @override
   Widget build(BuildContext context) {
-    Color borderColor =
-        _isActive ? Colors.blue.shade400 : Colors.grey.shade400;
+    Color borderColor = _isActive ? Colors.blue.shade400 : Colors.grey.shade400;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -276,8 +288,11 @@ class _GroupCardState extends State<GroupCard> {
                                       style: const TextStyle(fontSize: 13),
                                     ),
                                     const SizedBox(width: 4),
-                                    const Icon(Icons.devices,
-                                        size: 16, color: Colors.blueGrey),
+                                    const Icon(
+                                      Icons.devices,
+                                      size: 16,
+                                      color: Colors.blueGrey,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
@@ -290,8 +305,11 @@ class _GroupCardState extends State<GroupCard> {
                                       style: const TextStyle(fontSize: 13),
                                     ),
                                     const SizedBox(width: 4),
-                                    const Icon(Icons.person,
-                                        size: 16, color: Colors.blueGrey),
+                                    const Icon(
+                                      Icons.person,
+                                      size: 16,
+                                      color: Colors.blueGrey,
+                                    ),
                                   ],
                                 ),
                               ],
@@ -303,95 +321,169 @@ class _GroupCardState extends State<GroupCard> {
                       if (widget.description.isNotEmpty)
                         Text(
                           widget.description,
-                          style: const TextStyle(color: Colors.grey, fontSize: 14),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
                         ),
                       const SizedBox(height: 10),
+                      // 🔹 منوی پاپ‌آپ با گزینه‌های جدید
                       Align(
                         alignment: Alignment.centerLeft,
-                        child:PopupMenuButton<int>(
-  color: Colors.white, // ← رنگ پس‌زمینه منو
-  icon: const Icon(
-    Icons.more_vert,
-    size: 20,
-    color: Colors.black87,
-  ),
-  onSelected: (value) {
-    if (value == 0) {
-      widget.onUserInfo(widget.groupId, widget.title, widget.description);
-    } else if (value == 1) {
-      widget.onDeviceInfo(widget.groupId, widget.title, widget.description);
-    } else if (value == 2) {
-      widget.onDelete(widget.groupId);
-    }
-  },
-  itemBuilder: (context) => [
-    PopupMenuItem<int>(
-      value: 0,
-      child: Row(
-        textDirection: TextDirection.rtl,
-        children: [
-          const SizedBox(width: 8),
-          SvgPicture.asset(
-            'assets/svg/grooups.svg',
-            width: 20,
-            height: 20,
-          ),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'اطلاعات کاربران',
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ],
-      ),
-    ),
-    PopupMenuItem<int>(
-      value: 1,
-      child: Row(
-        textDirection: TextDirection.rtl,
-        children: [
-          const SizedBox(width: 8),
-          SvgPicture.asset(
-            'assets/svg/edit_custommer.svg',
-            width: 20,
-            height: 20,
-          ),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'اطلاعات دستگاه‌ها',
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ],
-      ),
-    ),
-    const PopupMenuDivider(),
-    PopupMenuItem<int>(
-      value: 2,
-      child: Row(
-        textDirection: TextDirection.rtl,
-        children: [
-          const SizedBox(width: 8),
-          SvgPicture.asset(
-            'assets/svg/deleting.svg',
-            width: 20,
-            height: 20,
-          ),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'حذف گروه',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    ),
-  ],
-),
+                        child: PopupMenuButton<int>(
+                          color: Colors.white,
+                          icon: const Icon(
+                            Icons.more_vert,
+                            size: 20,
+                            color: Colors.black87,
+                          ),
+                          onSelected: (value) {
+                            if (value == 0) {
+                              print(widget.description);
+                              // 🔹 ویرایش گروه
+                              Get.to(
+                                () => EditGroupPage(
+                                  groupId: widget.groupId,
+                                  initialTitle: widget.title,
+                                  initialDescription: widget.description,
+                                ),
+                              );
+                            } else if (value == 1) {
+                              widget.onUserInfo(
+                                widget.groupId,
+                                widget.title,
+                                widget.description,
+                              );
+                            } else if (value == 2) {
+                              widget.onDeviceInfo(
+                                widget.groupId,
+                                widget.title,
+                                widget.description,
+                              );
+                            } else if (value == 3) {
+                              print(
+                                'افزودن گروه به داشبورد: ${widget.groupId}',
+                              );
+                            } else if (value == 4) {
+                              widget.onDelete(widget.groupId);
+                            }
+                          },
 
+                          itemBuilder: (context) => [
+                            PopupMenuItem<int>(
+                              value: 0,
+                              child: Row(
+                                textDirection: TextDirection.rtl,
+                                children: [
+                                  const SizedBox(width: 8),
+                                  SvgPicture.asset(
+                                    'assets/svg/edit_group.svg',
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'ویرایش گروه',
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem<int>(
+                              value: 1,
+                              child: Row(
+                                textDirection: TextDirection.rtl,
+                                children: [
+                                  const SizedBox(width: 8),
+                                  SvgPicture.asset(
+                                    'assets/svg/custommers_info_froup.svg',
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'اطلاعات کاربران',
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem<int>(
+                              value: 2,
+                              child: Row(
+                                textDirection: TextDirection.rtl,
+                                children: [
+                                  const SizedBox(width: 8),
+                                  SvgPicture.asset(
+                                    'assets/svg/device_info_group.svg',
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'اطلاعات دستگاه‌ها',
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem<int>(
+                              value: 3,
+                              child: Row(
+                                textDirection: TextDirection.rtl,
+                                children: [
+                                  const SizedBox(width: 8),
+                                  SvgPicture.asset(
+                                    'assets/svg/add_dashboard.svg',
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'افزودن گروه به داشبورد',
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem<int>(
+                              value: 4,
+                              child: Row(
+                                textDirection: TextDirection.rtl,
+                                children: [
+                                  const SizedBox(width: 8),
+                                  SvgPicture.asset(
+                                    'assets/svg/deleting.svg',
+                                    width: 20,
+                                    height: 20,
+                                    color: Colors.red,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'حذف گروه',
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

@@ -48,6 +48,7 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
         child: Column(
           children: [
             TextField(
+              textDirection: TextDirection.rtl,
               controller: nameController,
               decoration: const InputDecoration(
                 labelText: "نام گروه",
@@ -56,6 +57,7 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
             ),
             const SizedBox(height: 16),
             TextField(
+              textDirection: TextDirection.rtl,
               controller: descController,
               decoration: const InputDecoration(
                 labelText: "توضیحات",

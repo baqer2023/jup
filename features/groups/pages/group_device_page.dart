@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:my_app32/app/services/realable_controller.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
 import 'package:my_app32/features/groups/models/customer_device_model.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
@@ -255,9 +256,25 @@ class _DeviceCardSimpleCustomState extends State<DeviceCardSimpleCustom> {
     final double cardWidth = MediaQuery.of(context).size.width * 0.9;
     final borderColor = isActive ? Colors.blue.shade400 : Colors.grey.shade400;
 
-    // استفاده از اطلاعات کامل DeviceItem در صورت وجود
     final displayName = widget.deviceItem?.title ?? widget.customerDevice.label;
     final deviceType = getDeviceTypeName();
+
+    ReliableSocketController? reliableController;
+    if (Get.isRegistered<ReliableSocketController>(tag: 'smartDevicesController')) {
+      reliableController = Get.find<ReliableSocketController>(tag: 'smartDevicesController');
+    }
+
+    String lastActivityText = "آخرین همگام سازی: نامشخص";
+    if (reliableController != null) {
+      final lastSeen = reliableController.lastDeviceActivity[widget.deviceItem?.deviceId ?? ''];
+      if (lastSeen != null) {
+        final formattedDate =
+            "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+        final formattedTime =
+            "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+        lastActivityText = "آخرین همگام سازی: $formattedDate - $formattedTime";
+      }
+    }
 
     return Center(
       child: Stack(
@@ -282,24 +299,107 @@ class _DeviceCardSimpleCustomState extends State<DeviceCardSimpleCustom> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ستون سوئیچ سمت چپ
                   Switch(
                     value: isActive,
                     onChanged: (val) => setState(() => isActive = val),
                   ),
+
                   const SizedBox(width: 12),
+
+                  // ستون اطلاعات دستگاه سمت راست
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          displayName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                        // آنلاین/آفلاین + نوع کلید
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (reliableController != null)
+                              Obx(() {
+                                final lastSeen =
+                                    reliableController!.lastDeviceActivity[widget.deviceItem?.deviceId ?? ''];
+                                final isOnline = lastSeen != null &&
+                                    DateTime.now().difference(lastSeen) < const Duration(seconds: 30);
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: isOnline ? Colors.blue : Colors.grey,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    isOnline ? "آنلاین" : "آفلاین",
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                                  ),
+                                );
+                              }),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                deviceType,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          "نوع: $deviceType",
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+
+                        // نام دستگاه
+                        Flexible(
+                          child: Text(
+                            displayName,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+
+                        // مکان دستگاه
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                widget.deviceItem?.dashboardTitle ?? "بدون مکان",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            SvgPicture.asset(
+                              'assets/svg/location.svg',
+                              width: 20,
+                              height: 20,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+
+                        // آخرین همگام سازی
+                        Flexible(
+                          child: Text(
+                            lastActivityText,
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
+                          ),
                         ),
                       ],
                     ),
@@ -308,6 +408,8 @@ class _DeviceCardSimpleCustomState extends State<DeviceCardSimpleCustom> {
               ),
             ),
           ),
+
+          // دایره وضعیت بالا وسط
           Positioned(
             top: -circleSize / 4,
             left: 0,

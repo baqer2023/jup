@@ -49,7 +49,6 @@ class HomeController extends GetxController with AppUtilsMixin {
     _initializeToken();
     fetchHomeDevices();
     selectedLocationId.value = '';
-    
 
     // مقدار اولیه آب‌وهوا
     weatherFuture = WeatherApiService(
@@ -291,6 +290,71 @@ class HomeController extends GetxController with AppUtilsMixin {
     }
   }
 
+  Future<void> updateLocation({
+    required String title,
+    String? dashboardId,
+  }) async {
+    if (title.trim().isEmpty) {
+      Get.snackbar(
+        'خطا',
+        'لطفاً نام مکان را وارد کنید',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    print(dashboardId);
+    try {
+      final url = Uri.parse(
+        'http://45.149.76.245:8080/api/dashboard/addOrUpdate',
+      );
+
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      // ✅ اگر dashboardId وجود داشت، همراه title بفرستیم
+      final body = {
+        "title": title.trim(),
+        if (dashboardId != null && dashboardId.isNotEmpty) "id": dashboardId,
+      };
+
+      final data = json.encode(body);
+
+      final response = await http.post(url, headers: headers, body: data);
+
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          'موفقیت',
+          dashboardId != null
+              ? 'مکان با موفقیت ویرایش شد'
+              : 'مکان با موفقیت اضافه شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+
+        // بازخوانی لیست مکان‌ها پس از بروزرسانی
+        await fetchUserLocations();
+      } else {
+        Get.snackbar(
+          'خطا',
+          'عملیات ناموفق بود: ${response.statusCode}',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'خطا',
+        'خطا در برقراری ارتباط با سرور: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   // ------------------- Remove From Dashboard (Temporary) -------------------
   Future<void> removeFromAllDashboard(String deviceId) async {
     try {
@@ -401,75 +465,70 @@ class HomeController extends GetxController with AppUtilsMixin {
     }
   }
 
-Future<void> renameDevice({
-  required String deviceId,
-  required String label,
-  required String oldDashboardId,
-  required String newDashboardId,
-}) async {
-  final token = this.token; // فرض: توکن از قبل تو کنترلر ذخیره شده
-  if (token == null) {
-    Get.snackbar(
-      'خطا',
-      'توکن معتبر پیدا نشد',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-    );
-    return;
-  }
-
-  final headers = {
-    'Authorization': 'Bearer $token',
-    'Content-Type': 'application/json',
-  };
-
-  // 🔹 payload داینامیک بسته به تغییر داشبورد
-  final Map<String, dynamic> payload = {
-    "deviceId": deviceId,
-    "label": label,
-  };
-
-  if (oldDashboardId != newDashboardId) {
-    payload["oldDashboardId"] = oldDashboardId;
-    payload["newDashboardId"] = newDashboardId;
-  }
-
-  print('در حال ارسال نام جدید: $label با payload: $payload');
-
-  try {
-    final dio = Dio();
-    final response = await dio.post(
-      'http://45.149.76.245:8080/api/editDevice', // آدرس سرور
-      options: Options(headers: headers),
-      data: json.encode(payload),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      Get.snackbar(
-        'موفقیت',
-        'نام دستگاه با موفقیت ویرایش شد',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-      print(json.encode(response.data));
-    } else {
+  Future<void> renameDevice({
+    required String deviceId,
+    required String label,
+    required String oldDashboardId,
+    required String newDashboardId,
+  }) async {
+    final token = this.token; // فرض: توکن از قبل تو کنترلر ذخیره شده
+    if (token == null) {
       Get.snackbar(
         'خطا',
-        'ویرایش دستگاه با خطا مواجه شد: ${response.statusCode}',
+        'توکن معتبر پیدا نشد',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-      print(response.statusMessage);
+      return;
     }
-  } catch (e) {
-    Get.snackbar(
-      'خطا',
-      'مشکل در برقراری ارتباط با سرور: $e',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-    );
+
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
+
+    // 🔹 payload داینامیک بسته به تغییر داشبورد
+    final Map<String, dynamic> payload = {"deviceId": deviceId, "label": label};
+
+    if (oldDashboardId != newDashboardId) {
+      payload["oldDashboardId"] = oldDashboardId;
+      payload["newDashboardId"] = newDashboardId;
+    }
+
+    print('در حال ارسال نام جدید: $label با payload: $payload');
+
+    try {
+      final dio = Dio();
+      final response = await dio.post(
+        'http://45.149.76.245:8080/api/editDevice', // آدرس سرور
+        options: Options(headers: headers),
+        data: json.encode(payload),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Get.snackbar(
+          'موفقیت',
+          'نام دستگاه با موفقیت ویرایش شد',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        print(json.encode(response.data));
+      } else {
+        Get.snackbar(
+          'خطا',
+          'ویرایش دستگاه با خطا مواجه شد: ${response.statusCode}',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        print(response.statusMessage);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'خطا',
+        'مشکل در برقراری ارتباط با سرور: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
-}
-
-
 }
