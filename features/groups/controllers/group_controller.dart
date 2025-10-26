@@ -227,7 +227,7 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
           'Authorization': 'Bearer $tokenGroup',
           'Content-Type': 'application/json',
         },
-        body: json.encode({'id': deviceIdGroup}),
+        body: json.encode({'customerId': deviceIdGroup}),
       );
 
       if (response.statusCode == 200) {
@@ -331,7 +331,7 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
   }
 
   Future<String?> updateGroup({
-    required String id,
+    required String customerId,
     required String title,
     required String description,
   }) async {
@@ -339,7 +339,7 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
       Get.snackbar("خطا", "نام گروه را وارد کنید");
       return null;
     }
-    print(id);
+    print(customerId);
     try {
       final headers = {
         'Authorization': 'Bearer $tokenGroup',
@@ -347,7 +347,7 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
       };
 
       final data = json.encode({
-        "id": id, // اینجا هم id رو بفرستید چون ویرایش هست
+        "customerId": customerId, // اینجا هم id رو بفرستید چون ویرایش هست
         "title": title,
         "description": description,
       });
@@ -498,10 +498,12 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
         groups.value = dataList
             .map(
               (e) => {
-                "id": e['id'],
+                "customerId": e['customerId'],
                 "title": e['title'],
                 "allocatedDevices": e['allocatedDevices'],
                 "allocatedUsers": e['allocatedUsers'],
+                "description": e['description'],
+
               },
             )
             .toList();

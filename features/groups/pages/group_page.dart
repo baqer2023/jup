@@ -84,29 +84,29 @@ class _GroupsPageState extends State<GroupsPage> {
             return GroupCard(
               title: group['title'] ?? 'بدون عنوان',
               description: group['description'] ?? '',
-              groupId: group['id'] ?? '',
+              groupId: group['customerId'] ?? '',
               isActive: group['isActive'] ?? false,
               allocatedDevices: group['allocatedDevices'] ?? 0,
               allocatedUsers: group['allocatedUsers'] ?? 0,
-              onUserInfo: (id, name, desc) {
+              onUserInfo: (customerId, name, desc) {
                 Get.to(
                   () => GroupCustomersPage(
-                    groupId: id,
+                    groupId: customerId,
                     groupName: name,
                     groupDescription: desc,
                   ),
                 )?.then((_) => _loadGroups());
               },
-              onDeviceInfo: (id, name, desc) {
+              onDeviceInfo: (customerId, name, desc) {
                 Get.to(
                   () => GroupDevicesPage(
-                    groupId: id,
+                    groupId: customerId,
                     groupName: name,
                     groupDescription: desc,
                   ),
                 )?.then((_) => _loadGroups());
               },
-              onDelete: (id) async {
+              onDelete: (customerId) async {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -170,7 +170,7 @@ class _GroupsPageState extends State<GroupsPage> {
                 );
 
                 if (confirm == true) {
-                  await controller.deleteGroup(id);
+                  await controller.deleteGroup(customerId);
                   _loadGroups();
                 }
               },
@@ -201,9 +201,9 @@ class GroupCard extends StatefulWidget {
   final bool isActive;
   final int allocatedDevices;
   final int allocatedUsers;
-  final Function(String id, String name, String description) onUserInfo;
-  final Function(String id, String name, String description) onDeviceInfo;
-  final Function(String id) onDelete;
+  final Function(String customerId, String name, String description) onUserInfo;
+  final Function(String customerId, String name, String description) onDeviceInfo;
+  final Function(String customerId) onDelete;
 
   const GroupCard({
     super.key,
@@ -317,15 +317,15 @@ class _GroupCardState extends State<GroupCard> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      if (widget.description.isNotEmpty)
-                        Text(
-                          widget.description,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
+                      // const SizedBox(height: 10),
+                      // if (widget.description.isNotEmpty)
+                      //   Text(
+                      //     widget.description,
+                      //     style: const TextStyle(
+                      //       color: Colors.grey,
+                      //       fontSize: 14,
+                      //     ),
+                      //   ),
                       const SizedBox(height: 10),
                       // 🔹 منوی پاپ‌آپ با گزینه‌های جدید
                       Align(

@@ -38,7 +38,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
     setState(() => isSubmitting = true);
 
     final savedId = await controller.updateGroup(
-      id: widget.groupId,
+      customerId: widget.groupId,
       title: nameController.text,
       description: descController.text,
     );
