@@ -21,33 +21,44 @@ class Sidebar extends StatelessWidget {
         backgroundColor: Colors.white,
         child: Column(
           children: [
-            // 🔹 Header
-            DrawerHeader(
-              padding: EdgeInsets.zero,
-              margin: EdgeInsets.zero,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF007DC0),
-                    Color(0xFF00B8E7),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
+            // 🔹 Header مشابه لاگین، بدون خط زیرش
+            Container(
+              width: double.infinity,
+              color: Colors.white,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'assets/svg/Login.svg',
-                        width: 100,
-                        height: 80,
-                        fit: BoxFit.contain,
-                      ),
+                  // گرادینت + لوگو
+                  SizedBox(
+                    width: double.infinity,
+                    height: 120,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF007DC0),
+                                Color(0xFF00B8E7),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: SvgPicture.asset(
+                            'assets/svg/Login.svg',
+                            width: 120,
+                            height: 80,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+
+                  // سه SVG زیر لوگو
                   SizedBox(
                     height: 60,
                     child: Stack(
@@ -63,7 +74,7 @@ class Sidebar extends StatelessWidget {
               ),
             ),
 
-            // 🔹 Items
+            // 🔹 لیست آیتم‌ها — بدون هیچ فاصله یا خط اضافی زیر هدر
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -80,7 +91,7 @@ class Sidebar extends StatelessWidget {
                   _buildSidebarItemWithDivider(context, 'گروه‌ها', () {
                     Navigator.pop(context);
                     Get.to(() => GroupsPage());
-                  }, showDivider: false), // آخرین آیتم بدون دیوایدر
+                  }, showDivider: false),
                 ],
               ),
             ),
@@ -90,7 +101,12 @@ class Sidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebarItemWithDivider(BuildContext context, String label, VoidCallback onTap, {bool showDivider = true}) {
+  Widget _buildSidebarItemWithDivider(
+    BuildContext context,
+    String label,
+    VoidCallback onTap, {
+    bool showDivider = true,
+  }) {
     return Column(
       children: [
         ListTile(
@@ -107,10 +123,11 @@ class Sidebar extends StatelessWidget {
         ),
         if (showDivider)
           Padding(
-            padding: const EdgeInsets.only(right: 16, left: 16), // نیمه عرض
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Divider(
               color: Colors.grey.shade300,
               thickness: 1,
+              height: 1,
             ),
           ),
       ],

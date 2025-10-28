@@ -60,37 +60,104 @@ class _EditGroupPageState extends State<EditGroupPage> {
   @override
   Widget build(BuildContext context) {
     
-    return Scaffold(
-      appBar: AppBar(title: const Text("ویرایش گروه")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+return Scaffold(
+  appBar: AppBar(title: const Text("ویرایش گروه")),
+  body: Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      children: [
+        TextField(
+  textAlign: TextAlign.right,
+  controller: nameController,
+  decoration: InputDecoration(
+    label: Align(
+      alignment: Alignment.centerRight,
+      child: const Text("نام گروه"),
+    ),
+    border: const OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2),
+    ),
+  ),
+),
+
+        const SizedBox(height: 16),
+        TextField(
+  textAlign: TextAlign.right, // متن راست‌چین
+  controller: descController,
+  decoration: InputDecoration(
+    label: Align(
+      alignment: Alignment.centerRight, // لیبل راست‌چین
+      child: const Text("توضیحات"),
+    ),
+    border: const OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2), // حاشیه آبی هنگام فوکوس
+    ),
+  ),
+),
+
+        const Spacer(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "نام گروه",
-                border: OutlineInputBorder(),
+            OutlinedButton(
+              onPressed: () {
+                Get.back();
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFF39530), width: 1.5),
+                backgroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                minimumSize: const Size.fromHeight(50),
+              ),
+              child: const Text(
+                'انصراف',
+                style: TextStyle(
+                  color: Color(0xFFF39530),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: "توضیحات",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const Spacer(),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: isSubmitting ? null : handleUpdate,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                minimumSize: const Size.fromHeight(50),
+              ),
               child: isSubmitting
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("به‌روزرسانی"),
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "به‌روزرسانی",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
           ],
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
+
   }
 }

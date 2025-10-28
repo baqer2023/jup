@@ -101,70 +101,79 @@ class OtpPage extends BaseView<OtpController> {
                   const SizedBox(height: 24),
 
                   Row(
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    // 🔹 فیلد ورود کد تأیید
+    Expanded(
+      flex: 3,
+      child: Container(
+        height: 56, // ارتفاع ثابت برای هم‌سطح بودن
+        alignment: Alignment.center,
+        child: TextFormFieldWidget(
+          controller: controller.verifyCodeTEC,
+          keyboardType: TextInputType.number,
+          maxLength: 5,
+          onChanged: (value) =>
+              controller.onChangeOTPCode(value: value),
+          label: const Text(
+            'کد تأیید',
+            style: TextStyle(fontFamily: 'IranYekan'),
+          ),
+        ),
+      ),
+    ),
+    const SizedBox(width: 12),
+
+    // 🔹 دکمه ارسال مجدد
+    Expanded(
+      flex: 1,
+      child: Obx(
+        () => Container(
+          height: 56,
+          alignment: Alignment.center,
+          child: OutlineButtonWidget(
+            onTap: controller.resendOTPEnable.value
+                ? () => controller.onTapResendOTPButton()
+                : null,
+            color: controller.resendOTPEnable.value
+                ? AppColors.primaryColor
+                : AppColors.gray[400]!,
+            child: controller.resendOTPEnable.value
+                ? const Text(
+                    'ارسال مجدد',
+                    style: TextStyle(
+                      fontFamily: 'IranYekan',
+                      fontSize: 14,
+                      color: AppColors.primaryColor,
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(
-                        flex: 3,
-                        child: TextFormFieldWidget(
-                          controller: controller.verifyCodeTEC,
-                          keyboardType: TextInputType.number,
-                          maxLength: 5,
-                          onChanged: (value) =>
-                              controller.onChangeOTPCode(value: value),
-                          label: const Text(
-                            'کد تأیید',
-                            style: TextStyle(fontFamily: 'IranYekan'),
-                          ),
+                      Text(
+                        controller.timerText.value,
+                        style: const TextStyle(
+                          fontFamily: 'IranYekan',
+                          fontSize: 14,
+                          color: Colors.grey,
                         ),
                       ),
-                      const SizedBox(width: 12),
-
-                      // 🔹 دکمه ارسال مجدد کد با تایمر
-                      Expanded(
-                        flex: 1,
-                        child: Obx(() => SizedBox(
-                              height: 56,
-                              child: OutlineButtonWidget(
-                                onTap: controller.resendOTPEnable.value
-                                    ? () => controller.onTapResendOTPButton()
-                                    : null,
-                                color: controller.resendOTPEnable.value
-                                    ? AppColors.primaryColor
-                                    : AppColors.gray[400]!,
-                                child: controller.resendOTPEnable.value
-                                    ? Text(
-                                        'ارسال مجدد',
-                                        style: const TextStyle(
-                                          fontFamily: 'IranYekan',
-                                          fontSize: 14,
-                                          color: AppColors.primaryColor,
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            controller.timerText.value,
-                                            style: const TextStyle(
-                                              fontFamily: 'IranYekan',
-                                              fontSize: 14,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          SvgPicture.asset(
-                                            'assets/svg/ic_timer.svg',
-                                            width: 24,
-                                            height: 24,
-                                            color: AppColors.gray[600],
-                                          ),
-                                        ],
-                                      ),
-                              ),
-                            )),
+                      const SizedBox(width: 6),
+                      SvgPicture.asset(
+                        'assets/svg/ic_timer.svg',
+                        width: 20,
+                        height: 20,
+                        color: AppColors.gray[600],
                       ),
                     ],
                   ),
+          ),
+        ),
+      ),
+    ),
+  ],
+),
+
 
                   const SizedBox(height: 48),
 

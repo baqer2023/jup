@@ -51,51 +51,45 @@ class WeatherCard extends StatelessWidget {
     final weatherIcon = _getWeatherIcon(weather.weather.first.description);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.7),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.end,
+
         children: [
-          /// ✅ بخش متن
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '$condition - $temp°',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis, // ✅ جلوگیری از شکستن
-                  maxLines: 1,
-                  softWrap: false,
+          /// ✅ بخش متن راست‌چین
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$condition - $temp°',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '$dayName، تهران',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black54,
-                  ),
-                  overflow: TextOverflow.ellipsis, // ✅ جلوگیری از رفتن به سطر بعد
-                  maxLines: 1,
-                  softWrap: false,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$dayName، تهران',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black54,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
-          const SizedBox(width: 8),
+          /// ✅ فاصله بسیار کم بین متن و آیکون
+          const SizedBox(width: 10),
 
-          /// ✅ آیکون ثابت در ابعاد
+          /// ✅ آیکون
           SizedBox(
             width: 28,
             height: 28,
@@ -129,6 +123,7 @@ class WeatherCard extends StatelessWidget {
     return SvgPicture.asset(asset, width: 28, height: 28);
   }
 }
+
 
 
 class WeatherLoadingShimmer extends StatelessWidget {

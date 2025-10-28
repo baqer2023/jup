@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
-import 'package:my_app32/app/store/user_store_service.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
 import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
@@ -27,41 +26,34 @@ class EditDevicePage extends StatelessWidget {
         TextEditingController(text: serialNumber);
     final TextEditingController nameController =
         TextEditingController(text: initialName);
-    final RxString selectedDashboardId =
-        initialDashboardId.obs;
+    final RxString selectedDashboardId = initialDashboardId.obs;
 
     final homeController = Get.find<HomeController>();
-    final dio = Dio();
 
-Future<void> updateDevice() async {
-  final name = nameController.text.trim();
-  final dashboardId = selectedDashboardId.value;
+    Future<void> updateDevice() async {
+      final name = nameController.text.trim();
+      final dashboardId = selectedDashboardId.value;
 
-  if (name.isEmpty || dashboardId.isEmpty) {
-    Get.snackbar(
-      'خطا',
-      'لطفاً همه فیلدها و مکان را پر کنید',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-    );
-    return;
-  }
+      if (name.isEmpty || dashboardId.isEmpty) {
+        Get.snackbar(
+          'خطا',
+          'لطفاً همه فیلدها و مکان را پر کنید',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
 
-  final homeController = Get.find<HomeController>();
+      await homeController.renameDevice(
+        deviceId: deviceId,
+        label: name,
+        oldDashboardId: initialDashboardId,
+        newDashboardId: dashboardId,
+      );
 
-  await homeController.renameDevice(
-    deviceId: deviceId,
-    label: name,
-    oldDashboardId: initialDashboardId,
-    newDashboardId: dashboardId,
-  );
-
-  // بعد از تغییر موفقیت‌آمیز
-  await homeController.refreshAllData();
-  Get.offAll(() => const HomePage());
-}
-
-
+      await homeController.refreshAllData();
+      Get.offAll(() => const HomePage());
+    }
 
     return Scaffold(
       endDrawer: const Sidebar(),
@@ -75,8 +67,12 @@ Future<void> updateDevice() async {
             TextField(
               controller: serialController,
               enabled: false,
+              textAlign: TextAlign.right,
               decoration: InputDecoration(
-                labelText: 'شماره سریال',
+                label: Align(
+                  alignment: Alignment.centerRight,
+                  child: const Text('شماره سریال'),
+                ),
                 border: const OutlineInputBorder(),
                 filled: true,
                 fillColor: Colors.grey.shade200,
@@ -85,59 +81,102 @@ Future<void> updateDevice() async {
             const SizedBox(height: 16),
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'نام دستگاه',
-                border: OutlineInputBorder(),
+              textAlign: TextAlign.right,
+              decoration: InputDecoration(
+                label: Align(
+                  alignment: Alignment.centerRight,
+                  child: const Text('نام دستگاه'),
+                ),
+                border: const OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide:
+                      BorderSide(color: Colors.grey.shade400, width: 1),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             Obx(() {
               final locations = homeController.userLocations;
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      children: locations.map((loc) {
-                        final isSelected =
-                            selectedDashboardId.value == loc.id;
-                        return GestureDetector(
-                          onTap: () => selectedDashboardId.value = loc.id,
-                          child: Chip(
-                            label: Text(
-                              loc.title,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.black87,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    // دکمه افزودن
+                    GestureDetector(
+                      onTap: () => _showAddLocationDialog(homeController),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border:
+                              Border.all(color: Colors.grey.shade300, width: 1),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
-                            backgroundColor: isSelected
-                                ? Colors.blue.shade400
-                                : Colors.blue.shade50,
-                          ),
-                        );
-                      }).toList(),
+                          ],
+                        ),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.add, size: 18, color: Colors.black87),
+                            SizedBox(width: 6),
+                            Text(
+                              'افزودن',
+                              style:
+                                  TextStyle(color: Colors.black87, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    onPressed: () => _showAddLocationDialog(homeController),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.black, width: 1.5),
-                    ),
-                    child: const Text(
-                      'افزودن',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                ],
+
+                    // لیست مکان‌ها
+                    ...locations.map((loc) {
+                      final isSelected = selectedDashboardId.value == loc.id;
+                      return GestureDetector(
+  onTap: () => selectedDashboardId.value = loc.id,
+  child: Container(
+    margin: const EdgeInsets.only(right: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(
+        color: isSelected ? Colors.yellow.shade700 : Colors.grey.shade300,
+        width: isSelected ? 2 : 1,
+      ),
+      borderRadius: BorderRadius.circular(30),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Center(
+      child: Text(
+        loc.title,
+        style: TextStyle(
+          color: isSelected ? Colors.yellow.shade700 : Colors.grey.shade700,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 14,
+        ),
+      ),
+    ),
+  ),
+)
+;
+                    }).toList(),
+                  ],
+                ),
               );
             }),
             const Spacer(),
@@ -147,9 +186,14 @@ Future<void> updateDevice() async {
                 OutlinedButton(
                   onPressed: () => Get.back(),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFF39530), width: 1.5),
+                    side:
+                        const BorderSide(color: Color(0xFFF39530), width: 1.5),
                     backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    minimumSize: const Size.fromHeight(50),
                   ),
                   child: const Text(
                     'انصراف',
@@ -166,10 +210,14 @@ Future<void> updateDevice() async {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    minimumSize: const Size.fromHeight(50),
                   ),
                   child: const Text(
                     'ویرایش دستگاه',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ],
@@ -186,41 +234,142 @@ Future<void> updateDevice() async {
     showDialog(
       context: Get.context!,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text('افزودن مکان',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'نام مکان',
-              border: OutlineInputBorder(),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: SizedBox(
+            width: 360,
+            child: AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: const Text(
+                  'افزودن مکان',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              content: TextField(
+                controller: nameController,
+                textAlign: TextAlign.right,
+                decoration: InputDecoration(
+                  label: Align(
+                    alignment: Alignment.centerRight,
+                    child: const Text('نام مکان'),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        BorderSide(color: Colors.grey.shade400, width: 1),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                ),
+              ),
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              actions: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFFF39530),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(
+                                color: Color(0xFFF39530),
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          child: const Text(
+                            'انصراف',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 100,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final name = nameController.text.trim();
+                            if (name.isEmpty) {
+                              Get.snackbar(
+                                'خطا',
+                                'لطفاً نام مکان را وارد کنید',
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+                            await homeController.addLocation(name);
+                            Navigator.of(context).pop();
+                            Get.snackbar(
+                              'موفق',
+                              'مکان اضافه شد',
+                              backgroundColor: Colors.green,
+                              colorText: Colors.white,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'ثبت',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('انصراف'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) {
-                  Get.snackbar('خطا', 'نام مکان را وارد کنید',
-                      backgroundColor: Colors.red, colorText: Colors.white);
-                  return;
-                }
-                await homeController.addLocation(name);
-                Navigator.of(context).pop();
-                Get.snackbar('موفق', 'مکان اضافه شد',
-                    backgroundColor: Colors.green, colorText: Colors.white);
-              },
-              child: const Text('ثبت'),
-            ),
-          ],
         );
       },
     );

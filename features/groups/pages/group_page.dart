@@ -127,45 +127,68 @@ class _GroupsPageState extends State<GroupsPage> {
                     content: const Text(
                       "آیا مطمئن هستید که می‌خواهید این گروه را حذف کنید؟",
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: const BorderSide(
-                              color: Color(0xFFF39530),
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        child: const Text(
-                          "انصراف",
-                          style: TextStyle(
-                            color: Color(0xFFF39530),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                        ),
-                        child: const Text("حذف"),
-                      ),
-                    ],
+actions: [
+  Row(
+    mainAxisSize: MainAxisSize.min, // فقط به اندازه محتوا جا می‌گیرد
+    children: [
+      // 🔸 دکمه انصراف
+      SizedBox(
+        width: 100, // عرض ثابت
+        height: 44,
+        child: ElevatedButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFFF39530),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(
+                color: Color(0xFFF39530),
+                width: 2,
+              ),
+            ),
+            elevation: 0,
+          ),
+          child: const Text(
+            "انصراف",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+
+      const SizedBox(width: 4), // فاصله کم بین دکمه‌ها
+
+      // 🔹 دکمه حذف
+      SizedBox(
+        width: 100, // همان عرض با دکمه انصراف
+        height: 44,
+        child: ElevatedButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            "حذف",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+],
+
                   ),
                 );
 

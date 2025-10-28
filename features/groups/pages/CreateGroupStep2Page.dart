@@ -178,71 +178,86 @@ Row(
   mainAxisAlignment: MainAxisAlignment.spaceBetween,
   children: [
     // دکمه انصراف پایین سمت چپ
-TextButton(
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // حاشیه زرد برند
-        width: 2,
-      ),
-    ),
-  ),
-  onPressed: () {
-    // برگرد به GroupsPage و دوباره گروه‌ها رو لود کن
-    Get.offAll(() => GroupsPage());
-    final controller = Get.find<HomeControllerGroup>();
-    controller.fetchGroups();
-  },
-  child: const Text(
-    "انصراف",
-    style: TextStyle(
-      color: Color(0xFFF39530), // رنگ متن زرد برند
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-    ),
-  ),
-),
-
-    // دکمه ثبت / بعدی (همان دکمه قبلی خودتان)
-    ElevatedButton(
-      onPressed: () async {
-        if (selectedDevices.isEmpty) {
-          Get.to(() => CreateGroupStep3Page(
-                groupName: widget.groupName,
-                groupDescription: widget.groupDescription,
-                groupId: widget.groupId,
-              ));
-          return;
-        }
-
-        final success = await controller.assignDevicesPayload(
-          selectedDevices,
-          widget.groupId,
-        );
-
-        if (success) {
-          Get.to(() => CreateGroupStep3Page(
-                groupName: widget.groupName,
-                groupDescription: widget.groupDescription,
-                groupId: widget.groupId,
-              ));
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+    SizedBox(
+      width: 100,
+      height: 44,
+      child: TextButton(
+        style: TextButton.styleFrom(
+          backgroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(
+              color: Color(0xFFF39530),
+              width: 2,
+            ),
+          ),
+        ),
+        onPressed: () {
+          // برگرد به GroupsPage و دوباره گروه‌ها رو لود کن
+          Get.offAll(() => GroupsPage());
+          final controller = Get.find<HomeControllerGroup>();
+          controller.fetchGroups();
+        },
+        child: const Text(
+          "انصراف",
+          style: TextStyle(
+            color: Color(0xFFF39530),
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
         ),
       ),
-      child: const Text("ثبت / بعدی"),
+    ),
+
+    // دکمه ثبت / بعدی
+    SizedBox(
+      width: 100,
+      height: 44,
+      child: ElevatedButton(
+        onPressed: () async {
+          if (selectedDevices.isEmpty) {
+            Get.to(() => CreateGroupStep3Page(
+                  groupName: widget.groupName,
+                  groupDescription: widget.groupDescription,
+                  groupId: widget.groupId,
+                ));
+            return;
+          }
+
+          final success = await controller.assignDevicesPayload(
+            selectedDevices,
+            widget.groupId,
+          );
+
+          if (success) {
+            Get.to(() => CreateGroupStep3Page(
+                  groupName: widget.groupName,
+                  groupDescription: widget.groupDescription,
+                  groupId: widget.groupId,
+                ));
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: const Text(
+          "ثبت / بعدی",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
     ),
   ],
 ),
+
 
           ],
         ),

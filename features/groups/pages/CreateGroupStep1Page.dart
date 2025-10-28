@@ -40,118 +40,148 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      endDrawer: const Sidebar(),
-      appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              textDirection: TextDirection.rtl,
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "نام گروه",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              textDirection: TextDirection.rtl,
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: "توضیحات",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Align(
-  alignment: Alignment.bottomLeft, // پایین سمت چپ
-  child: Padding(
+return Scaffold(
+  endDrawer: const Sidebar(),
+  appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
+  body: Padding(
     padding: const EdgeInsets.all(16.0),
-child: TextButton(
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // حاشیه زرد برند
-        width: 2,
-      ),
+    child: Column(
+      children: [
+        TextField(
+  textAlign: TextAlign.right, // متن راست‌چین
+  controller: nameController,
+  decoration: InputDecoration(
+    label: Align(
+      alignment: Alignment.centerRight, // لیبل راست‌چین
+      child: const Text("نام گروه"),
     ),
-  ),
-  onPressed: () {
-    // وقتی زد "انصراف"، برگرد به GroupsPage و گروه‌ها رو دوباره لود کن
-    Get.offAll(() => GroupsPage());
-    final controller = Get.find<HomeControllerGroup>();
-    controller.fetchGroups(); // داده‌ها رو دوباره لود کن
-  },
-  child: const Text(
-    "انصراف",
-    style: TextStyle(
-      color: Color(0xFFF39530), // رنگ متن زرد برند
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
+    border: const OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2), // حاشیه آبی هنگام فوکوس
     ),
   ),
 ),
 
+        const SizedBox(height: 16),
+TextField(
+  textAlign: TextAlign.right, // متن راست‌چین
+  controller: descController,
+  decoration: InputDecoration(
+    label: Align(
+      alignment: Alignment.centerRight, // لیبل راست‌چین
+      child: const Text("توضیحات"),
+    ),
+    border: const OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2), // حاشیه آبی هنگام فوکوس
+    ),
   ),
 ),
 
-                if (savedId == null)
-                  ElevatedButton(
-  onPressed: isSubmitting ? null : handleSave,
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.blue, // ✅ بک‌گراند آبی
-    foregroundColor: Colors.white, // ✅ متن و آیکن سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8), // گوشه‌های کمی گرد
-    ),
-  ),
-  child: isSubmitting
-      ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Colors.white, // ✅ لودینگ هم سفید
-          ),
-        )
-      : const Text("ثبت"),
-),
-
-                if (savedId != null)
-                  ElevatedButton(
-  onPressed: () {
-    Get.to(() => CreateGroupStep2Page(
-          groupName: nameController.text,
-          groupDescription: descController.text,
-          groupId: extractCustomerId(savedId!), // پاس دادن آی‌دی
-        ));
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.blue, // ✅ پس‌زمینه آبی
-    foregroundColor: Colors.white, // ✅ متن سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  ),
-  child: const Text("بعدی"),
-)
-,
-              ],
+        const Spacer(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Align(
+              alignment: Alignment.bottomLeft, // پایین سمت چپ
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: 100,
+                  height: 44,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(
+                          color: Color(0xFFF39530),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      Get.offAll(() => GroupsPage());
+                      final controller = Get.find<HomeControllerGroup>();
+                      controller.fetchGroups();
+                    },
+                    child: const Text(
+                      "انصراف",
+                      style: TextStyle(
+                        color: Color(0xFFF39530),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
+
+            if (savedId == null)
+              SizedBox(
+                width: 100,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: isSubmitting ? null : handleSave,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          "ثبت",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+
+            if (savedId != null)
+              SizedBox(
+                width: 100,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.to(() => CreateGroupStep2Page(
+                          groupName: nameController.text,
+                          groupDescription: descController.text,
+                          groupId: extractCustomerId(savedId!),
+                        ));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    "بعدی",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
           ],
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
+
   }
 }
 

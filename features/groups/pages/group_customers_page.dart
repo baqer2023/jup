@@ -195,30 +195,46 @@ void _showAddCustomerDialog(
         ),
       ),
       actionsAlignment: MainAxisAlignment.center, // وسط چین کردن دکمه‌ها
-      actions: [
-TextButton(
-  onPressed: () => Get.back(),
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.white, // پس‌زمینه سفید
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-      side: const BorderSide(
-        color: Color(0xFFF39530), // حاشیه زرد برند
-        width: 2,
+actions: [
+  Row(
+    mainAxisSize: MainAxisSize.min, // فقط به اندازه محتوا جا می‌گیرد
+    children: [
+      // 🔸 دکمه انصراف
+      SizedBox(
+        width: 100, // عرض ثابت
+        height: 44,
+        child: ElevatedButton(
+          onPressed: () => Get.back(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFFF39530),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(
+                color: Color(0xFFF39530),
+                width: 2,
+              ),
+            ),
+            elevation: 0,
+          ),
+          child: const Text(
+            "انصراف",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
       ),
-    ),
-  ),
-  child: const Text(
-    "انصراف",
-    style: TextStyle(
-      color: Color(0xFFF39530), // متن زرد برند
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-    ),
-  ),
-),
-        ElevatedButton(
+
+      const SizedBox(width: 4), // فاصله خیلی کم بین دکمه‌ها
+
+      // 🔹 دکمه ثبت
+      SizedBox(
+        width: 100, // همان عرض
+        height: 44,
+        child: ElevatedButton(
           onPressed: () async {
             final success = await controller.addNewCustomer(
               customerId: widget.groupId,
@@ -231,21 +247,30 @@ TextButton(
             if (success) {
               Get.back();
               Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
-              // دوباره لیست مشتری‌ها رو لود کن
               controller.fetchGroupUsers(widget.groupId);
             }
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue, // پس‌زمینه آبی
-            foregroundColor: Colors.white, // متن سفید
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: const Text("ثبت"),
+          child: const Text(
+            "ثبت",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
         ),
-      ],
+      ),
+    ],
+  ),
+],
+
     ),
   );
 }
