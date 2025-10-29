@@ -56,158 +56,416 @@ class HomePage extends BaseView<HomeController> {
       ),
     );
   }
+  
+Widget _buildMainContent(HomeController controller) {
+  return Obx(() {
+    final devices = controller.dashboardDevices;
+    final groups = [];
+    final scenarios = [];
+    final energyConsumption = [];
 
-  Widget _buildMainContent(HomeController controller) {
-    return Obx(() {
-      final devices = controller.dashboardDevices;
-
-      return RefreshIndicator(
-        onRefresh: controller.refreshAllData,
-        child: NotificationListener<OverscrollIndicatorNotification>(
-          onNotification: (overscroll) {
-            overscroll.disallowIndicator(); // جلوگیری از glow افقی
-            return true;
-          },
-          child: ScrollConfiguration(
-            behavior: const ScrollBehavior().copyWith(
-              overscroll: false,
-            ), // غیرفعال کردن افکت overscroll
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(), // scroll عمودی
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16),
-
-                  // --- چهار بخش بالای همه ---
-// --- چهار بخش بالای همه با پس‌زمینه کارت مانند ---
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16),
-  child: Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: Colors.grey.shade200, // پس‌زمینه خاکستری روشن
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        return GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 2.5,
-          children: [
-            // بالا چپ - سنسور
-            _infoBox(
-              iconPath: 'assets/svg/enableSencor.svg',
-              text: 'نیاز به اتصال سنسور دما',
-            ),
-
-            // بالا راست - آب و هوا
-Container(
-  padding: const EdgeInsets.all(6),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(12),
-  ),
-  child: Directionality(
-    textDirection: ui.TextDirection.ltr, // ⬅️ راست‌چین کردن کل محتوا
-    child: Row(
-      children: [
-        Expanded(
-          child: WeatherDisplay(
-            weatherFuture: controller.weatherFuture,
-            // اگر داخل WeatherDisplay متن داریم، مطمئن شو textAlign: TextAlign.right ست شده
-          ),
-        ),
-      ],
-    ),
-  ),
-),
-
-
-            // پایین چپ - ساعت و تاریخ
-            StreamBuilder<DateTime>(
-              stream: Stream.periodic(
-                const Duration(seconds: 1),
-                (_) => DateTime.now(),
-              ),
-              builder: (context, snapshot) {
-                final now = snapshot.data ?? DateTime.now();
-                final jalali = Jalali.fromDateTime(now);
-                final time =
-                    '${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
-                final date = jalali.formatFullDate();
-                return _infoBox(
-                  iconPath: 'assets/svg/time.svg',
-                  text: '$time\n$date',
-                );
-              },
-            ),
-
-            // پایین راست - دستگاه فعال
-            _infoBox(
-              iconPath: 'assets/svg/enableDevice.svg',
-              text: 'هنوز دستگاه فعالی نیست',
-            ),
-          ],
-        );
-      },
-    ),
-  ),
-),
-
-
-
-                  const SizedBox(height: 10),
-                  const Divider(),
-                  const SizedBox(height: 30),
-
-                  // Grid یا حالت خالی دستگاه‌ها
-                  if (devices.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              height: 300,
-                              width: 300,
-                              child: SvgPicture.asset(
-                                'assets/svg/EmptyDashboard.svg',
-                                fit: BoxFit.fill,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildSmartDevicesGrid(controller),
+    Widget buildSection({
+      required String title,
+      required Widget child,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Material(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(16),
+          elevation: 4,
+          shadowColor: Colors.black.withOpacity(0.1),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                  const SizedBox(height: 32),
-                ],
-              ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                child,
+              ],
             ),
           ),
         ),
       );
-    });
-  }
+    }
+
+    return RefreshIndicator(
+      onRefresh: controller.refreshAllData,
+      child: NotificationListener<OverscrollIndicatorNotification>(
+        onNotification: (overscroll) {
+          overscroll.disallowIndicator();
+          return true;
+        },
+        child: ScrollConfiguration(
+          behavior: const ScrollBehavior().copyWith(overscroll: false),
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 16),
+
+                // 🔸 بخش بالایی چهار کارت
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          childAspectRatio: 2.5,
+                          children: [
+                            _infoBox(
+                              iconPath: 'assets/svg/enableSencor.svg',
+                              text: 'نیاز به اتصال سنسور دما',
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Directionality(
+                                textDirection: ui.TextDirection.ltr,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: WeatherDisplay(
+                                        weatherFuture: controller.weatherFuture,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            StreamBuilder<DateTime>(
+                              stream: Stream.periodic(
+                                const Duration(seconds: 1),
+                                (_) => DateTime.now(),
+                              ),
+                              builder: (context, snapshot) {
+                                final now = snapshot.data ?? DateTime.now();
+                                final jalali = Jalali.fromDateTime(now);
+                                final time =
+                                    '${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
+                                final date = jalali.formatFullDate();
+                                return _infoBox(
+                                  iconPath: 'assets/svg/time.svg',
+                                  text: '$time\n$date',
+                                );
+                              },
+                            ),
+                            _infoBox(
+                              iconPath: 'assets/svg/enableDevice.svg',
+                              text: 'هنوز دستگاه فعالی نیست',
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // 🔸 بخش دستگاه‌ها
+                buildSection(
+                  title: 'دستگاه‌ها',
+                  child: devices.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+  SizedBox(
+    height: 200, // می‌تونی کم یا زیاد کنی
+    child: SvgPicture.asset(
+      'assets/svg/EmptyDashboard.svg',
+      fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
+      width: double.infinity, // عرض کل Container رو می‌گیره
+    ),
+  ),
+  const SizedBox(height: 20),
+  const Text(
+    'هیچ گروهی ایجاد نشده است',
+    style: TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+      fontWeight: FontWeight.w500,
+    ),
+    textAlign: TextAlign.center, // متن هم وسط چین بشه
+  ),
+],
+
+                          ),
+                        )
+                      : _buildSmartDevicesGrid(controller),
+                ),
+
+                // 🔸 بخش گروه‌ها
+                buildSection(
+                  title: 'گروه‌ها',
+                  child: groups.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+  SizedBox(
+    height: 200, // می‌تونی کم یا زیاد کنی
+    child: SvgPicture.asset(
+      'assets/svg/EmptyGroups.svg',
+      fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
+      width: double.infinity, // عرض کل Container رو می‌گیره
+    ),
+  ),
+  const SizedBox(height: 20),
+  const Text(
+    'هیچ گروهی ایجاد نشده است',
+    style: TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+      fontWeight: FontWeight.w500,
+    ),
+    textAlign: TextAlign.center, // متن هم وسط چین بشه
+  ),
+],
+
+                          ),
+                        )
+                      : Column(
+                          children: groups.map((g) => _buildGroupCard(g)).toList(),
+                        ),
+                ),
+
+                // 🔸 بخش سناریوها
+                buildSection(
+                  title: 'سناریو ها',
+                  child: scenarios.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+  SizedBox(
+    height: 200, // می‌تونی کم یا زیاد کنی
+    child: SvgPicture.asset(
+      'assets/svg/EmptySenario.svg',
+      fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
+      width: double.infinity, // عرض کل Container رو می‌گیره
+    ),
+  ),
+  const SizedBox(height: 20),
+  const Text(
+    'هیچ سناریویی ایجاد نشده است',
+    style: TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+      fontWeight: FontWeight.w500,
+    ),
+    textAlign: TextAlign.center, // متن هم وسط چین بشه
+  ),
+],
+
+                          ),
+                        )
+                      : Column(
+                          children: scenarios.map((s) => _buildScenarioCard(s)).toList(),
+                        ),
+                ),
+
+                // 🔸 بخش مصرف انرژی
+                buildSection(
+                  title: 'مصرف انرژی',
+                  child: energyConsumption.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+  SizedBox(
+    height: 200, // می‌تونی کم یا زیاد کنی
+    child: SvgPicture.asset(
+      'assets/svg/EmptyEnergy.svg',
+      fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
+      width: double.infinity, // عرض کل Container رو می‌گیره
+    ),
+  ),
+  const SizedBox(height: 20),
+  const Text(
+    'هیچ مصرف انرژیی ایجاد نشده است',
+    style: TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+      fontWeight: FontWeight.w500,
+    ),
+    textAlign: TextAlign.center, // متن هم وسط چین بشه
+  ),
+],
+
+                          ),
+                        )
+                      : Column(
+                          children: energyConsumption
+                              .map((e) => _buildEnergyCard(e))
+                              .toList(),
+                        ),
+                ),
+
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  });
+}
+
+
+Widget _buildGroupCard(dynamic group) {
+  // کارت ساده برای نمایش گروه (فعلاً داده‌ها خالی هستند)
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 200,
+              width: 200,
+              child: SvgPicture.asset(
+                'assets/svg/EmptyGroups.svg',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'هیچ گروهی ایجاد نشده است',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+
+
+Widget _buildScenarioCard(dynamic scenario) {
+   // کارت ساده برای نمایش گروه (فعلاً داده‌ها خالی هستند)
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 200,
+              width: 200,
+              child: SvgPicture.asset(
+                'assets/svg/EmptySenario.svg',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'هیچ سناریویی ایجاد نشده است',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildEnergyCard(dynamic energy) {
+  // کارت ساده برای نمایش گروه (فعلاً داده‌ها خالی هستند)
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 200,
+              width: 200,
+              child: SvgPicture.asset(
+                'assets/svg/EmptyEnergy.svg',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'هیچ مصرف انرژیی ایجاد نشده است',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
 
   Widget _infoBox({
@@ -278,139 +536,234 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
     reliableController.updateDeviceList(
       devices.map((d) => d.deviceId).toList(),
     );
+return Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    // 🔹 عنوان بالا
+// Padding(
+//   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//   child: Align(
+//     alignment: Alignment.centerRight, // متن سمت راست بالا
+//     child: const Text(
+//       'دستگاه‌ها',
+//       textDirection:ui.TextDirection.rtl, // برای اطمینان از راست‌چینی
+//       style: TextStyle(
+//         fontSize: 20,
+//         fontWeight: FontWeight.bold,
+//       ),
+//     ),
+//   ),
+// ),
+    // 🔹 اسلایدر دستگاه‌ها
+    SizedBox(
+      height: 340,
+      child: Builder(
+        builder: (context) {
+          final pageController = PageController(viewportFraction: 0.85);
+          final currentPage = 0.obs;
 
-    return SizedBox(
-      height: 280,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        itemCount: devices.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final device = devices[index];
+          pageController.addListener(() {
+            if (pageController.page != null) {
+              currentPage.value = pageController.page!.round();
+            }
+          });
 
-          return SizedBox(
-            width: 280,
-            child: Obx(() {
-              final deviceData =
-                  reliableController.latestDeviceDataById[device.deviceId];
+          return Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: pageController,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: devices.length,
+                  clipBehavior: Clip.none,
+                  itemBuilder: (context, index) {
+                    final device = devices[index];
 
-              print("⚠️ Device Data: $deviceData");
+                    return AnimatedBuilder(
+                      animation: pageController,
+                      builder: (context, child) {
+                        double scale = 1.0;
+                        double opacity = 1.0;
 
-              bool switch1On = false;
-              bool switch2On = false;
-              Color iconColor1 = Colors.grey;
-              Color iconColor2 = Colors.grey;
+                        if (pageController.position.haveDimensions) {
+                          final page = pageController.page ?? 0.0;
+                          final diff = (index - page).abs();
+                          scale = (1 - (diff * 0.1)).clamp(0.9, 1.0);
+                          opacity = (1 - (diff * 0.5)).clamp(0.5, 1.0);
+                        }
 
-              if (deviceData != null) {
-                // بررسی TW1 و TD1
-                final key1Entries = [
-                  if (deviceData['TW1'] is List) ...deviceData['TW1'],
-                  if (deviceData['TD1'] is List) ...deviceData['TD1'],
-                ];
-                if (key1Entries.isNotEmpty) {
-                  key1Entries.sort(
-                    (a, b) => (b[0] as int).compareTo(a[0] as int),
-                  );
-                  final val = key1Entries.first[1];
-                  if (val is Map) {
-                    switch1On = val['c']?.toString().contains('On') ?? false;
-                  } else {
-                    switch1On = val.toString().contains('On');
-                  }
-                }
+                        return Opacity(
+                          opacity: opacity,
+                          child: Transform.scale(
+                            scale: scale,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8)
+                                  .copyWith(top: 25),
+                              child: SizedBox(
+                                width: 280,
+                                child: Obx(() {
+                                  final deviceData = reliableController
+                                          .latestDeviceDataById[device.deviceId];
 
-                // بررسی TW2 و TD2
-                final key2Entries = [
-                  if (deviceData['TW2'] is List) ...deviceData['TW2'],
-                  if (deviceData['TD2'] is List) ...deviceData['TD2'],
-                ];
-                if (key2Entries.isNotEmpty) {
-                  key2Entries.sort(
-                    (a, b) => (b[0] as int).compareTo(a[0] as int),
-                  );
-                  final val = key2Entries.first[1];
-                  if (val is Map) {
-                    switch2On = val['c']?.toString().contains('On') ?? false;
-                  } else {
-                    switch2On = val.toString().contains('On');
-                  }
-                }
+                                  bool switch1On = false;
+                                  bool switch2On = false;
+                                  Color iconColor1 = Colors.grey;
+                                  Color iconColor2 = Colors.grey;
 
-                // بررسی رنگ LED
-                if (deviceData['ledColor'] is List &&
-                    deviceData['ledColor'].isNotEmpty) {
-                  final ledEntry = deviceData['ledColor'][0][1];
-                  Map<String, dynamic> ledMap;
-                  if (ledEntry is String) {
-                    try {
-                      ledMap = jsonDecode(ledEntry);
-                    } catch (e) {
-                      ledMap = {};
-                    }
-                  } else if (ledEntry is Map<String, dynamic>) {
-                    ledMap = ledEntry;
-                  } else {
-                    ledMap = {};
-                  }
+                                  if (deviceData != null) {
+                                    // بررسی TW1 و TD1
+                                    final key1Entries = [
+                                      if (deviceData['TW1'] is List)
+                                        ...deviceData['TW1'],
+                                      if (deviceData['TD1'] is List)
+                                        ...deviceData['TD1'],
+                                    ];
+                                    if (key1Entries.isNotEmpty) {
+                                      key1Entries.sort((a, b) =>
+                                          (b[0] as int).compareTo(a[0] as int));
+                                      final val = key1Entries.first[1];
+                                      switch1On = val is Map
+                                          ? val['c']
+                                                  ?.toString()
+                                                  .contains('On') ??
+                                              false
+                                          : val.toString().contains('On');
+                                    }
 
-                  if (ledMap.isNotEmpty) {
-                    iconColor1 = switch1On
-                        ? Color.fromARGB(
-                            255,
-                            ledMap['t1']['on']['r'],
-                            ledMap['t1']['on']['g'],
-                            ledMap['t1']['on']['b'],
-                          )
-                        : Color.fromARGB(
-                            255,
-                            ledMap['t1']['off']['r'],
-                            ledMap['t1']['off']['g'],
-                            ledMap['t1']['off']['b'],
-                          );
+                                    // بررسی TW2 و TD2
+                                    final key2Entries = [
+                                      if (deviceData['TW2'] is List)
+                                        ...deviceData['TW2'],
+                                      if (deviceData['TD2'] is List)
+                                        ...deviceData['TD2'],
+                                    ];
+                                    if (key2Entries.isNotEmpty) {
+                                      key2Entries.sort((a, b) =>
+                                          (b[0] as int).compareTo(a[0] as int));
+                                      final val = key2Entries.first[1];
+                                      switch2On = val is Map
+                                          ? val['c']
+                                                  ?.toString()
+                                                  .contains('On') ??
+                                              false
+                                          : val.toString().contains('On');
+                                    }
 
-                    iconColor2 = switch2On
-                        ? Color.fromARGB(
-                            255,
-                            ledMap['t2']['on']['r'],
-                            ledMap['t2']['on']['g'],
-                            ledMap['t2']['on']['b'],
-                          )
-                        : Color.fromARGB(
-                            255,
-                            ledMap['t2']['off']['r'],
-                            ledMap['t2']['off']['g'],
-                            ledMap['t2']['off']['b'],
-                          );
-                  }
-                }
-              }
+                                    // بررسی رنگ LED
+                                    if (deviceData['ledColor'] is List &&
+                                        deviceData['ledColor'].isNotEmpty) {
+                                      final ledEntry =
+                                          deviceData['ledColor'][0][1];
+                                      Map<String, dynamic> ledMap;
+                                      if (ledEntry is String) {
+                                        try {
+                                          ledMap = jsonDecode(ledEntry);
+                                        } catch (e) {
+                                          ledMap = {};
+                                        }
+                                      } else if (ledEntry
+                                          is Map<String, dynamic>) {
+                                        ledMap = ledEntry;
+                                      } else {
+                                        ledMap = {};
+                                      }
 
-              final isSingleKey = device.deviceTypeName == 'key-1';
+                                      if (ledMap.isNotEmpty) {
+                                        iconColor1 = switch1On
+                                            ? Color.fromARGB(
+                                                255,
+                                                ledMap['t1']['on']['r'],
+                                                ledMap['t1']['on']['g'],
+                                                ledMap['t1']['on']['b'],
+                                              )
+                                            : Color.fromARGB(
+                                                255,
+                                                ledMap['t1']['off']['r'],
+                                                ledMap['t1']['off']['g'],
+                                                ledMap['t1']['off']['b'],
+                                              );
 
-              return _buildSmartDeviceCard(
-                title: device.title,
-                deviceId: device.deviceId,
-                switch1On: switch1On,
-                switch2On: switch2On,
-                iconColor1: iconColor1,
-                iconColor2: iconColor2,
-                onToggle: (switchNumber, value) async {
-                  await reliableController.toggleSwitch(
-                    value,
-                    switchNumber,
-                    device.deviceId,
-                  );
-                },
-                isSingleKey: isSingleKey,
-                device: device,
-              );
-            }),
+                                        iconColor2 = switch2On
+                                            ? Color.fromARGB(
+                                                255,
+                                                ledMap['t2']['on']['r'],
+                                                ledMap['t2']['on']['g'],
+                                                ledMap['t2']['on']['b'],
+                                              )
+                                            : Color.fromARGB(
+                                                255,
+                                                ledMap['t2']['off']['r'],
+                                                ledMap['t2']['off']['g'],
+                                                ledMap['t2']['off']['b'],
+                                              );
+                                      }
+                                    }
+                                  }
+
+                                  final isSingleKey =
+                                      device.deviceTypeName == 'key-1';
+
+                                  return _buildSmartDeviceCard(
+                                    title: device.title,
+                                    deviceId: device.deviceId,
+                                    switch1On: switch1On,
+                                    switch2On: switch2On,
+                                    iconColor1: iconColor1,
+                                    iconColor2: iconColor2,
+                                    onToggle: (switchNumber, value) async {
+                                      await reliableController.toggleSwitch(
+                                        value,
+                                        switchNumber,
+                                        device.deviceId,
+                                      );
+                                    },
+                                    isSingleKey: isSingleKey,
+                                    device: device,
+                                  );
+                                }),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              // 🔹 نقطه‌های نشانگر پایین
+              Obx(() {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 12, bottom: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      devices.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: currentPage.value == index ? 12 : 8,
+                        height: currentPage.value == index ? 12 : 8,
+                        decoration: BoxDecoration(
+                          color: currentPage.value == index
+                              ? Colors.blueAccent
+                              : Colors.grey.shade400,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
           );
         },
       ),
-    );
+    ),
+  ],
+);
+
+
   });
 }
 
@@ -533,7 +886,7 @@ Widget _buildSmartDeviceCard({
                           textAlign: TextAlign.right,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 12,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -650,84 +1003,130 @@ Widget _buildSmartDeviceCard({
                               backgroundColor: Colors.green,
                               colorText: Colors.white);
                         } else if (value == 5) {
-                          Get.dialog(
-                            Dialog(
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text(
-                                      "بازنشانی / پیکربندی",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      "می‌خواهید چه کاری انجام دهید؟",
-                                      style: TextStyle(
-                                          fontSize: 14, color: Colors.black54),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    Card(
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12)),
-                                      child: ListTile(
-                                        leading: const Icon(Icons.settings,
-                                            color: Colors.blue),
-                                        title: const Text("رفتن به پیکربندی"),
-                                        onTap: () {
-                                          Get.back();
-                                          Get.to(() => DeviceConfigPage(sn: device.sn));
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Card(
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12)),
-                                      child: ListTile(
-                                        leading: const Icon(Icons.refresh,
-                                            color: Colors.redAccent),
-                                        title: const Text("ریست دستگاه",
-                                            style: TextStyle(color: Colors.redAccent)),
-                                        onTap: () async {
-                                          Get.back();
-                                          await homeController
-                                              .resetDevice(device.deviceId);
-                                          Get.snackbar('موفقیت', 'دستگاه ریست شد',
-                                              backgroundColor: Colors.green,
-                                              colorText: Colors.white);
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Card(
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12)),
-                                      child: ListTile(
-                                        leading: const Icon(Icons.cancel,
-                                            color: Colors.amber),
-                                        title: const Text("انصراف",
-                                            style: TextStyle(color: Colors.amber)),
-                                        onTap: () => Get.back(),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }
+  Get.dialog(
+    Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "بازنشانی / پیکربندی",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "می‌خواهید چه کاری انجام دهید؟",
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+
+            // --- گزینه پیکربندی ---
+            Card(
+              color: const Color(0xFFF8F9FA),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  Get.back();
+                  Get.to(() => DeviceConfigPage(sn: device.sn));
+                },
+                child: ListTile(
+                  trailing: const Icon(Icons.settings, color: Colors.blueAccent),
+                  title: const Text(
+                    textDirection: ui.TextDirection.rtl,
+                    "رفتن به پیکربندی",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // --- گزینه ریست ---
+            Card(
+              color: const Color(0xFFF8F9FA),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  Get.back();
+                  await homeController.resetDevice(device.deviceId);
+                  Get.snackbar(
+                    'موفقیت',
+                    'دستگاه ریست شد',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                },
+                child: ListTile(
+                  trailing: const Icon(Icons.refresh, color: Colors.redAccent),
+                  title: const Text(
+                    textDirection: ui.TextDirection.rtl,
+                    "ریست دستگاه",
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // --- گزینه انصراف ---
+            Card(
+              color: const Color(0xFFF8F9FA),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => Get.back(),
+                child: ListTile(
+                  trailing: const Icon(Icons.cancel, color: Colors.amber),
+                  title: const Text(
+                    textDirection: ui.TextDirection.rtl,
+                    "انصراف",
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
                       },
                       itemBuilder: (context) => [
                         PopupMenuItem<int>(
@@ -800,7 +1199,7 @@ Widget _buildSmartDeviceCard({
                         ),
                       ],
                     ),
-                    const SizedBox(width: 6),
+                    // const SizedBox(width:2),
                     // آیکن تنظیمات LED (سمت راست)
                     GestureDetector(
                       onTap: () {
@@ -808,8 +1207,8 @@ Widget _buildSmartDeviceCard({
                       },
                       child: SvgPicture.asset(
                         'assets/svg/advanced_settings.svg',
-                        width: 20,
-                        height: 20,
+                        width: 15,
+                        height: 15,
                         color: Colors.black87,
                       ),
                     ),
@@ -818,31 +1217,34 @@ Widget _buildSmartDeviceCard({
                     const Spacer(),
 
                     // آخرین همگام‌سازی
-                    Obx(() {
-                      final lastSeen =
-                          reliableController.lastDeviceActivity[deviceId];
-                      String lastActivityText;
+    Flexible(
+      child: Obx(() {
+        final lastSeen = reliableController.lastDeviceActivity[deviceId];
+        String lastActivityText;
 
-                      if (lastSeen != null) {
-                        final formattedDate =
-                            "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
-                        final formattedTime =
-                            "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
-                        lastActivityText =
-                            "آخرین همگام سازی: $formattedDate - $formattedTime";
-                      } else {
-                        lastActivityText = "آخرین همگام سازی: نامشخص";
-                      }
+        if (lastSeen != null) {
+          final formattedDate =
+              "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+          final formattedTime =
+              "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+          lastActivityText = "آخرین همگام سازی: $formattedDate - $formattedTime";
+        } else {
+          lastActivityText = "آخرین همگام سازی: نامشخص";
+        }
 
-                      return Text(
-                        lastActivityText,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 10,
-                        ),
-                        textAlign: TextAlign.right,
-                      );
-                    }),
+        return Text(
+          lastActivityText,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 10,
+          ),
+          textAlign: TextAlign.right,
+          maxLines: 2,          // اجازه می‌ده متن به 2 خط شکسته شود
+          overflow: TextOverflow.ellipsis, // اگر بیش از 2 خط بود، ... نشان بده
+          softWrap: true,
+        );
+      }),
+    ),
                   ],
                 ),
               ],
@@ -969,8 +1371,8 @@ Widget _buildSwitchRow({
         children: [
           // دایره رنگ وضعیت
           Container(
-            width: 20,
-            height: 20,
+            width: 15,
+            height: 15,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: circleColor,
@@ -984,14 +1386,14 @@ Widget _buildSwitchRow({
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
 
           // دکمه روشن/خاموش
           GestureDetector(
             onTap: () => onToggle(switchNumber, !isOn),
             child: Container(
-              width: 40,
-              height: 40,
+              width: 30,
+              height: 30,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: buttonColor,
@@ -1003,13 +1405,13 @@ Widget _buildSwitchRow({
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 2),
 
           // نام کلید
           Text(
             "کلید $switchNumber",
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1020,134 +1422,6 @@ Widget _buildSwitchRow({
 }
 
 
-
-//   void _showAddLocationDialog() {
-//     final TextEditingController nameController = TextEditingController();
-
-//     showDialog(
-//       context: Get.context!,
-//       builder: (context) {
-//         return AlertDialog(
-//           backgroundColor: Colors.white, // پس‌زمینه مدال
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(20),
-//           ),
-//           elevation: 10, // سایه ملایم
-//           title: const Text(
-//             'افزودن مکان',
-//             style: TextStyle(
-//               fontWeight: FontWeight.bold,
-//               color: Colors.black,
-//               fontSize: 18,
-//             ),
-//             textAlign: TextAlign.center,
-//           ),
-//           content: SizedBox(
-//             width: double.maxFinite,
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               children: [
-// TextField(
-//   controller: nameController,
-//   textAlign: TextAlign.right, // متن راست‌چین
-//   decoration: InputDecoration(
-//     label: Align(
-//       alignment: Alignment.centerRight, // لیبل راست‌چین
-//       child: const Text('نام مکان'),
-//     ),
-//     hintText: 'نام مکان را وارد کنید',
-//     border: OutlineInputBorder(
-//       borderRadius: BorderRadius.circular(12),
-//     ),
-//     contentPadding: const EdgeInsets.symmetric(
-//       horizontal: 12,
-//       vertical: 10,
-//     ),
-//     focusedBorder: OutlineInputBorder(
-//       borderRadius: BorderRadius.circular(12),
-//       borderSide: const BorderSide(color: Colors.blue, width: 2), // حاشیه آبی هنگام فوکوس
-//     ),
-//     enabledBorder: OutlineInputBorder(
-//       borderRadius: BorderRadius.circular(12),
-//       borderSide: BorderSide(color: Colors.grey.shade400, width: 1), // حاشیه حالت معمولی
-//     ),
-//   ),
-// ),
-
-//                 const SizedBox(height: 20),
-//               ],
-//             ),
-//           ),
-//           actionsPadding: const EdgeInsets.symmetric(
-//             horizontal: 16,
-//             vertical: 8,
-//           ),
-//           actionsAlignment: MainAxisAlignment.spaceBetween,
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.of(context).pop(),
-//               style: TextButton.styleFrom(
-//                 backgroundColor: Colors.white, // پس‌زمینه سفید
-//                 padding: const EdgeInsets.symmetric(
-//                   horizontal: 24,
-//                   vertical: 12,
-//                 ),
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(12),
-//                   side: const BorderSide(
-//                     color: Color(0xFFF39530), // زرد اختصاصی شما
-//                     width: 2,
-//                   ),
-//                 ),
-//               ),
-//               child: const Text(
-//                 'انصراف',
-//                 style: TextStyle(
-//                   color: Color(0xFFF39530), // رنگ متن زرد اختصاصی
-//                   fontWeight: FontWeight.bold,
-//                   fontSize: 16,
-//                 ),
-//               ),
-//             ),
-
-//             ElevatedButton(
-//               onPressed: () async {
-//                 final name = nameController.text.trim();
-//                 if (name.isEmpty) {
-//                   Get.snackbar(
-//                     'خطا',
-//                     'لطفاً نام مکان را وارد کنید',
-//                     backgroundColor: Colors.red,
-//                     colorText: Colors.white,
-//                   );
-//                   return;
-//                 }
-//                 await controller.addLocation(name);
-//                 Navigator.of(context).pop();
-//               },
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: Colors.blue,
-//                 padding: const EdgeInsets.symmetric(
-//                   horizontal: 24,
-//                   vertical: 12,
-//                 ),
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(12),
-//                 ),
-//               ),
-//               child: const Text(
-//                 'ثبت',
-//                 style: TextStyle(
-//                   color: Colors.white,
-//                   fontWeight: FontWeight.bold,
-//                 ),
-//               ),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
 
   Widget _buildLoadingDeviceCard({required String title}) {
     return Card(

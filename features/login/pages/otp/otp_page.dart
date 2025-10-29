@@ -100,38 +100,31 @@ class OtpPage extends BaseView<OtpController> {
 
                   const SizedBox(height: 24),
 
-                  Row(
-  crossAxisAlignment: CrossAxisAlignment.center,
-  children: [
-    // 🔹 فیلد ورود کد تأیید
-    Expanded(
-      flex: 3,
-      child: Container(
-        height: 56, // ارتفاع ثابت برای هم‌سطح بودن
-        alignment: Alignment.center,
+IntrinsicHeight(
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      // 🔹 فیلد ورود کد تأیید
+      Expanded(
+        flex: 3,
         child: TextFormFieldWidget(
           controller: controller.verifyCodeTEC,
           keyboardType: TextInputType.number,
           maxLength: 5,
-          onChanged: (value) =>
-              controller.onChangeOTPCode(value: value),
+          onChanged: (value) => controller.onChangeOTPCode(value: value),
           label: const Text(
             'کد تأیید',
             style: TextStyle(fontFamily: 'IranYekan'),
           ),
         ),
       ),
-    ),
-    const SizedBox(width: 12),
+      const SizedBox(width: 12),
 
-    // 🔹 دکمه ارسال مجدد
-    Expanded(
-      flex: 1,
-      child: Obx(
-        () => Container(
-          height: 56,
-          alignment: Alignment.center,
-          child: OutlineButtonWidget(
+      // 🔹 دکمه ارسال مجدد
+      Expanded(
+        flex: 1,
+        child: Obx(
+          () => OutlineButtonWidget(
             onTap: controller.resendOTPEnable.value
                 ? () => controller.onTapResendOTPButton()
                 : null,
@@ -170,9 +163,10 @@ class OtpPage extends BaseView<OtpController> {
           ),
         ),
       ),
-    ),
-  ],
+    ],
+  ),
 ),
+
 
 
                   const SizedBox(height: 48),

@@ -41,95 +41,100 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       titleSpacing: 0,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          /// آیکون خروج
-          buildIconWithText(
-            icon: SvgPicture.asset(
-              'assets/svg/logout.svg',
-              color: Colors.white,
-            ),
-            label: 'خروج',
-            onTap: () => _handleLogout(context),
-          ),
-
-          const SizedBox(width: 16),
-
-          /// آیکون پروفایل
-          FutureBuilder<String?>(
-            future: UserStoreService.to.getToken(),
-            builder: (context, snapshot) {
-              final token = snapshot.data ?? '';
-              return buildIconWithText(
-                icon: SvgPicture.asset(
-                  'assets/svg/profile.svg',
-                  color: Colors.white,
-                ),
-                label: 'پروفایل',
-                onTap: () {
-                  if (token.isNotEmpty) {
-                    ProfilePage.showProfileDialog(token);
-                  }
-                },
-              );
-            },
-          ),
-
-          const SizedBox(width: 16),
-
-          /// آیکون اعلان‌ها
-          buildIconWithText(
-            icon: SvgPicture.asset(
-              'assets/svg/bell.svg',
-              color: Colors.white,
-            ),
-            label: 'اعلان‌ها',
-            onTap: () => _handleNotifications(context),
-          ),
-
-          const SizedBox(width: 16),
-
-          /// اگر حالت بروزرسانی فعال بود
-          Obx(() {
-            return Row(
-              children: [
-                if (isRefreshing.value)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue, width: 1),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'بروزرسانی',
-                          style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            );
-          }),
-        ],
+title: Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 12), // فاصله از چپ و راست
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.start,
+    children: [
+      /// آیکون خروج
+      buildIconWithText(
+        icon: SvgPicture.asset(
+          'assets/svg/logout.svg',
+          color: Colors.white,
+        ),
+        label: 'خروج',
+        onTap: () => _handleLogout(context),
       ),
+
+      const SizedBox(width: 20), // فاصله بین دکمه‌ها کمی بیشتر شد
+
+      /// آیکون پروفایل
+      FutureBuilder<String?>(
+        future: UserStoreService.to.getToken(),
+        builder: (context, snapshot) {
+          final token = snapshot.data ?? '';
+          return buildIconWithText(
+            icon: SvgPicture.asset(
+              'assets/svg/profile.svg',
+              color: Colors.white,
+            ),
+            label: 'پروفایل',
+            onTap: () {
+              if (token.isNotEmpty) {
+                ProfilePage.showProfileDialog(token);
+              }
+            },
+          );
+        },
+      ),
+
+      const SizedBox(width: 20),
+
+      /// آیکون اعلان‌ها
+      buildIconWithText(
+        icon: SvgPicture.asset(
+          'assets/svg/bell.svg',
+          color: Colors.white,
+        ),
+        label: 'اعلان‌ها',
+        onTap: () => _handleNotifications(context),
+      ),
+
+      const SizedBox(width: 20),
+
+/// اگر حالت بروزرسانی فعال بود
+Obx(() {
+  return Row(
+    children: [
+      if (isRefreshing.value)
+        Container(
+          margin: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue, width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
+              ),
+              SizedBox(width: 4),
+              // Text(
+              //   'بروزرسانی',
+              //   style: TextStyle(
+              //       fontSize: 10,
+              //       color: Colors.blue,
+              //       fontWeight: FontWeight.bold),
+              // ),
+            ],
+          ),
+        ),
+    ],
+  );
+}),
+
+    ],
+  ),
+),
+
     );
   }
 

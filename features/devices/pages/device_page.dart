@@ -643,51 +643,46 @@ actions: [
 
   // ------------------- Smart Devices Grid (بهینه) -------------------
  Widget _buildSmartDevicesGrid() {
-    return Obx(() {
-      final devices = controller.deviceList;
-      final ssssss = devices.map((d) => d.deviceId).toList();
+  return Obx(() {
+    final devices = controller.deviceList;
 
-      if (devices.isEmpty) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: Text(
-              'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
-              style: TextStyle(color: Colors.grey),
-            ),
+    if (devices.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Text(
+            'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
+            style: TextStyle(color: Colors.grey),
           ),
-        );
-      }
-
-      // تنها یکبار کنترلر را ایجاد کن اگر موجود نباشد
-      final reliableController =
-          Get.isRegistered<ReliableSocketController>(
-            tag: 'smartDevicesController',
-          )
-          ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
-          : Get.put(
-              ReliableSocketController(
-                controller.token,
-                devices.map((d) => d.deviceId).toList(),
-              ),
-              tag: 'smartDevicesController',
-              permanent: true,
-            );
-
-      // بعد از این خط:
-      reliableController.updateDeviceList(
-        devices.map((d) => d.deviceId).toList(),
+        ),
       );
+    }
 
-      return SingleChildScrollView(
+    final reliableController = Get.isRegistered<ReliableSocketController>(
+      tag: 'smartDevicesController',
+    )
+        ? Get.find<ReliableSocketController>(tag: 'smartDevicesController')
+        : Get.put(
+            ReliableSocketController(
+              controller.token,
+              devices.map((d) => d.deviceId).toList(),
+            ),
+            tag: 'smartDevicesController',
+            permanent: true,
+          );
+
+    reliableController.updateDeviceList(
+      devices.map((d) => d.deviceId).toList(),
+    );
+
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16), // فاصله از لبه
         child: Column(
           children: devices.map((device) {
             return Obx(() {
               final deviceData =
                   reliableController.latestDeviceDataById[device.deviceId];
-
-
-              print(deviceData);
 
               bool switch1On = false;
               bool switch2On = false;
@@ -695,15 +690,12 @@ actions: [
               Color iconColor2 = Colors.grey;
 
               if (deviceData != null) {
-                // وضعیت سوئیچ‌ها
                 final key1Entries = [
                   if (deviceData['TW1'] is List) ...deviceData['TW1'],
                   if (deviceData['TD1'] is List) ...deviceData['TD1'],
                 ];
                 if (key1Entries.isNotEmpty) {
-                  key1Entries.sort(
-                    (a, b) => (b[0] as int).compareTo(a[0] as int),
-                  );
+                  key1Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
                   switch1On = key1Entries.first[1].toString().contains('On');
                 }
 
@@ -712,15 +704,11 @@ actions: [
                   if (deviceData['TD2'] is List) ...deviceData['TD2'],
                 ];
                 if (key2Entries.isNotEmpty) {
-                  key2Entries.sort(
-                    (a, b) => (b[0] as int).compareTo(a[0] as int),
-                  );
+                  key2Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
                   switch2On = key2Entries.first[1].toString().contains('On');
                 }
 
-                // رنگ‌ها
-                if (deviceData['ledColor'] is List &&
-                    deviceData['ledColor'].isNotEmpty) {
+                if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
                   final ledEntry = deviceData['ledColor'][0][1];
                   Map<String, dynamic> ledMap;
                   if (ledEntry is String) {
@@ -791,9 +779,10 @@ actions: [
             });
           }).toList(),
         ),
-      );
-    });
-  }
+      ),
+    );
+  });
+}
 
 
   // ------------------- Smart Device Card -------------------
@@ -1049,100 +1038,131 @@ Widget _buildSmartDeviceCard({
                             colorText: Colors.white,
                           );
                         } else if (value == 5) {
-                          // بازنشانی / پیکربندی
-                          Get.dialog(
-                            Dialog(
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text(
-                                      "بازنشانی / پیکربندی",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      "می‌خواهید چه کاری انجام دهید؟",
-                                      style: TextStyle(
-                                          fontSize: 14, color: Colors.black54),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    Card(
-                                      color: Colors.white,
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                      child: ListTile(
-                                        leading: const Icon(Icons.settings,
-                                            color: Colors.blue),
-                                        title:
-                                            const Text("رفتن به پیکربندی"),
-                                        onTap: () {
-                                          Get.back();
-                                          Get.to(() =>
-                                              DeviceConfigPage(sn: device.sn));
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Card(
-                                      color: Colors.white,
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                      child: ListTile(
-                                        leading: const Icon(Icons.refresh,
-                                            color: Colors.redAccent),
-                                        title: const Text(
-                                          "ریست دستگاه",
-                                          style: TextStyle(color: Colors.redAccent),
-                                        ),
-                                        onTap: () async {
-                                          Get.back();
-                                          await homeController
-                                              .resetDevice(device.deviceId);
-                                          Get.snackbar(
-                                            'موفقیت',
-                                            'دستگاه ریست شد',
-                                            backgroundColor: Colors.green,
-                                            colorText: Colors.white,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Card(
-                                      color: Colors.white,
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                      child: ListTile(
-                                        leading:
-                                            const Icon(Icons.cancel, color: Colors.amber),
-                                        title: const Text(
-                                          "انصراف",
-                                          style: TextStyle(color: Colors.amber),
-                                        ),
-                                        onTap: () => Get.back(),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }
+  Get.dialog(
+    Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "بازنشانی / پیکربندی",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "می‌خواهید چه کاری انجام دهید؟",
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+
+            // --- گزینه پیکربندی ---
+            Card(
+              color: const Color(0xFFF8F9FA),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  Get.back();
+                  Get.to(() => DeviceConfigPage(sn: device.sn));
+                },
+                child: ListTile(
+                  trailing: const Icon(Icons.settings, color: Colors.blueAccent),
+                  title: const Text(
+                    textDirection: TextDirection.rtl,
+                    "رفتن به پیکربندی",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // --- گزینه ریست ---
+            Card(
+              color: const Color(0xFFF8F9FA),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  Get.back();
+                  await homeController.resetDevice(device.deviceId);
+                  Get.snackbar(
+                    'موفقیت',
+                    'دستگاه ریست شد',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                },
+                child: ListTile(
+                  trailing: const Icon(Icons.refresh, color: Colors.redAccent),
+                  title: const Text(
+                    textDirection: TextDirection.rtl,
+                    "ریست دستگاه",
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // --- گزینه انصراف ---
+            Card(
+              color: const Color(0xFFF8F9FA),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => Get.back(),
+                child: ListTile(
+                  trailing: const Icon(Icons.cancel, color: Colors.amber),
+                  title: const Text(
+                    textDirection: TextDirection.rtl,
+                    "انصراف",
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
                       },
                       itemBuilder: (context) => [
                         PopupMenuItem<int>(
@@ -1162,22 +1182,22 @@ Widget _buildSmartDeviceCard({
                             ],
                           ),
                         ),
-                        PopupMenuItem<int>(
-                          value: 0,
-                          child: Row(
-                            textDirection: TextDirection.rtl,
-                            children: [
-                              SvgPicture.asset(
-                                'assets/svg/settings.svg',
-                                width: 20,
-                                height: 20,
-                              ),
-                              const SizedBox(width: 2),
-                              const Text('تنظیمات پیشرفته',
-                                  style: TextStyle(color: Colors.black)),
-                            ],
-                          ),
-                        ),
+                        // PopupMenuItem<int>(
+                        //   value: 0,
+                        //   child: Row(
+                        //     textDirection: TextDirection.rtl,
+                        //     children: [
+                        //       SvgPicture.asset(
+                        //         'assets/svg/settings.svg',
+                        //         width: 20,
+                        //         height: 20,
+                        //       ),
+                        //       const SizedBox(width: 2),
+                        //       const Text('تنظیمات پیشرفته',
+                        //           style: TextStyle(color: Colors.black)),
+                        //     ],
+                        //   ),
+                        // ),
                         if (!homeController.dashboardDevices.any(
                           (d) => d.deviceId == device.deviceId,
                         ))

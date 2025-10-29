@@ -132,92 +132,85 @@ class AddDevicePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             // لیست مکان‌ها افقی + دکمه افزودن
-            Obx(() {
-              final locations = homeController.userLocations;
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    // دکمه افزودن مکان
-                    GestureDetector(
-                      onTap: () => _showAddLocationDialog(homeController),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border:
-                              Border.all(color: Colors.grey.shade300, width: 1),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.add, size: 18, color: Colors.black87),
-                            SizedBox(width: 6),
-                            Text(
-                              'افزودن',
-                              style:
-                                  TextStyle(color: Colors.black87, fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // مکان‌ها
-                    ...locations.map((loc) {
-                      final isSelected = selectedDashboardId.value == loc.id;
-                      return GestureDetector(
-                        onTap: () => selectedDashboardId.value = loc.id,
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.yellow.shade700
-                                  : Colors.grey.shade300,
-                              width: isSelected ? 2 : 1,
-                            ),
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              loc.title,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.yellow.shade700
-                                    : Colors.grey.shade700,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ],
+// جایگزین بخش Obx و SingleChildScrollView فعلی
+SizedBox(
+  height: 60, // ارتفاع مناسب برای کارت‌ها
+  child: Obx(() {
+    final locations = homeController.userLocations;
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      children: [
+        // دکمه افزودن مکان
+        GestureDetector(
+          onTap: () => _showAddLocationDialog(homeController),
+          child: Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-              );
-            }),
+              ],
+            ),
+            child: Row(
+              children: const [
+                Icon(Icons.add, size: 18, color: Colors.black87),
+                SizedBox(width: 6),
+                Text(
+                  'افزودن',
+                  style: TextStyle(color: Colors.black87, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // لیست مکان‌ها
+        ...locations.map((loc) {
+          final isSelected = selectedDashboardId.value == loc.id;
+          return GestureDetector(
+            onTap: () => selectedDashboardId.value = loc.id,
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: isSelected ? Colors.yellow.shade700 : Colors.grey.shade300,
+                  width: isSelected ? 2 : 1,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  loc.title,
+                  style: TextStyle(
+                    color: isSelected ? Colors.yellow.shade700 : Colors.grey.shade700,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }),
+)
+,
             const Spacer(),
             // دکمه‌ها
             Column(
