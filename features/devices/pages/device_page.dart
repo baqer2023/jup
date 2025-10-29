@@ -10,30 +10,33 @@ import 'package:my_app32/features/devices/pages/edit_device_page.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/pages/home/Add_device_page.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
+import 'package:my_app32/features/main/repository/home_repository.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class DevicesPage extends BaseView<HomeController> {
-  const DevicesPage({super.key});
+  DevicesPage({super.key}) {
+    // ✅ کنترلر را مستقیم داخل صفحه بساز
+    Get.put<HomeController>(HomeController(Get.find<HomeRepository>()), permanent: true);
+  }
 
-@override
-Widget body() {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    controller.selectedLocationId.value = '';
-    controller.deviceList.clear();
-  });
+  @override
+  Widget body() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.selectedLocationId.value = '';
+      controller.deviceList.clear();
+      controller.initData(); // ✅ مطمئن شو initData صدا زده شود
+    });
 
-  return Scaffold(
-    endDrawer: const Sidebar(),
-    appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
-    // ✅ Builder اضافه شد تا context معتبر در اختیار داشته باشیم
-    body: Builder(
-      builder: (context) => _buildDevicesContent(context),
-    ),
-  );
-}
-
+    return Scaffold(
+      endDrawer: const Sidebar(),
+      appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
+      body: Builder(
+        builder: (context) => _buildDevicesContent(context),
+      ),
+    );
+  }
 
   Widget _buildDevicesContent(BuildContext context) {
     return Obx(() {

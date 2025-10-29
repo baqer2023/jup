@@ -252,7 +252,7 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
             _blueButton(
               text: "شروع استفاده از برنامه",
               onPressed: () {
-                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) =>  HomePage()));
               },
             ),
           ],

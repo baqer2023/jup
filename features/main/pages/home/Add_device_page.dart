@@ -67,7 +67,7 @@ class AddDevicePage extends StatelessWidget {
           );
 
           await homeController.refreshAllData();
-          Get.offAll(() => const HomePage());
+          Get.offAll(() =>  HomePage());
         } else {
           Get.snackbar(
             'خطا',

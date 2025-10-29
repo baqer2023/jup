@@ -46,14 +46,27 @@ class HomeController extends GetxController with AppUtilsMixin {
   @override
   void onInit() {
     super.onInit();
-    _initializeToken();
-    fetchHomeDevices();
-    selectedLocationId.value = '';
+    // می‌توانیم فقط initData را صدا بزنیم
+    initData();
+  }
 
+  Future<void> initData() async {
+    print("🔹 initData called");
+    token = await UserStoreService.to.getToken() ?? '';
+    print("Token: $token");
+
+    if (token.isNotEmpty) {
+      await fetchUserLocations();
+      await fetchHomeDevices();
+    }
+
+    selectedLocationId.value = '';
     // مقدار اولیه آب‌وهوا
     weatherFuture = WeatherApiService(
       apiKey: 'e6f7286f932ef4636fdfb82a45266d17',
     ).getWeather(lat: 35.7219, lon: 51.3347);
+
+    print("✅ initData finished");
   }
 
   @override

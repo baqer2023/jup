@@ -81,11 +81,11 @@ class Sidebar extends StatelessWidget {
                 children: [
                   _buildSidebarItemWithDivider(context, 'داشبورد', () {
                     Navigator.pop(context);
-                    Get.to(() => const HomePage());
+                    Get.to(() =>  HomePage());
                   }),
                   _buildSidebarItemWithDivider(context, 'دستگاه‌ها', () {
                     Navigator.pop(context);
-                    Get.to(() => const DevicesPage());
+                    Get.to(() =>  DevicesPage());
                   }),
                   _buildSidebarItemWithDivider(context, 'سناریوها', () {}),
                   _buildSidebarItemWithDivider(context, 'گروه‌ها', () {

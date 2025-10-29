@@ -52,7 +52,7 @@ class EditDevicePage extends StatelessWidget {
       );
 
       await homeController.refreshAllData();
-      Get.offAll(() => const HomePage());
+      Get.offAll(() =>  HomePage());
     }
 
     return Scaffold(

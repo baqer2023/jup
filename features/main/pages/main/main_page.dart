@@ -22,7 +22,7 @@ class MainPage extends StatelessWidget {
             child: PageView(
               controller: controller.pageController,
               physics: const NeverScrollableScrollPhysics(),
-              children: const [
+              children:  [
                 HomePage(),
                 AlarmsPage(),
                 MorePage(),

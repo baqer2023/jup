@@ -12,6 +12,7 @@ import 'package:my_app32/features/devices/pages/edit_device_page.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'package:my_app32/features/main/pages/home/Add_device_page.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
+import 'package:my_app32/features/main/repository/home_repository.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
 import 'package:my_app32/features/widgets/weather.dart';
@@ -25,34 +26,30 @@ import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'dart:ui' as ui;
 
 class HomePage extends BaseView<HomeController> {
-  const HomePage({super.key});
+  HomePage({super.key}) {
+    // ⚡ ساخت HomeController مستقیم داخل صفحه
+    Get.put<HomeController>(
+      HomeController(Get.find<HomeRepository>()),
+      permanent: true,
+    );
+  }
 
   @override
   Widget body() {
     final controller = Get.find<HomeController>();
-    // وقتی صفحه ساخته میشه بلافاصله داده‌ها رو تازه می‌کنه
+
+    // ⚡ بعد از ساخته شدن صفحه داده‌ها را تازه کن
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.refreshAllData();
+      controller.selectedLocationId.value = '';
+      controller.deviceList.clear();
+      controller.initData(); // اگر میخوای initData هم صدا زده بشه
     });
 
-    return DefaultTabController(
-      length: 3,
-      child: Builder(
-        builder: (context) {
-          final tabController = DefaultTabController.of(context);
-          return Scaffold(
-            endDrawer: const Sidebar(),
-            appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
-
-            body: TabBarView(
-              children: [
-                _buildMainContent(controller),
-                // const Center(child: Text('To be Built Soon')),
-                // const Center(child: Text('Under Construction')),
-              ],
-            ),
-          );
-        },
+    return Scaffold(
+      endDrawer: const Sidebar(),
+      appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
+      body: Builder(
+        builder: (context) => _buildMainContent(controller),
       ),
     );
   }
