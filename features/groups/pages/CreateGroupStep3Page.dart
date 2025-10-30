@@ -137,9 +137,7 @@ Row(
     ),
     );
   }
-
-void _showAddCustomerDialog(
-    BuildContext context, HomeControllerGroup controller) {
+void _showAddCustomerDialog(BuildContext context, HomeControllerGroup controller) {
   final firstNameCtrl = TextEditingController();
   final lastNameCtrl = TextEditingController();
   final phoneCtrl = TextEditingController(text: "98");
@@ -147,158 +145,231 @@ void _showAddCustomerDialog(
 
   showDialog(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: Colors.white, // رنگ بک‌گراند فرم‌ها سفید
-      titlePadding: EdgeInsets.zero, // حذف padding پیش‌فرض برای سفارشی‌سازی هدر
-      title: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        color: Colors.blue, // هدر آبی
-        child: const Text(
-          "افزودن مشتری جدید",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    builder: (ctx) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          children: [
-            TextField(
-              controller: firstNameCtrl,
-              decoration: const InputDecoration(
-                labelText: "نام",
-                filled: true,
-                fillColor: Colors.white,
-              ),
+        elevation: 10,
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: const BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const Text(
+            "افزودن مشتری جدید",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
             ),
-            TextField(
-              controller: lastNameCtrl,
-              decoration: const InputDecoration(
-                labelText: "نام خانوادگی",
-                filled: true,
-                fillColor: Colors.white,
-              ),
-            ),
-            TextField(
-              controller: phoneCtrl,
-              decoration: const InputDecoration(
-                labelText: "شماره موبایل (با 98 یا 0)",
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 8),
-            Row(
+            textAlign: TextAlign.center,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: codeCtrl,
-                    decoration: const InputDecoration(
-                      labelText: "کد تایید",
-                      filled: true,
-                      fillColor: Colors.white,
+                TextField(
+                  controller: firstNameCtrl,
+                  textAlign: TextAlign.right,
+                  decoration: InputDecoration(
+                    label: Align(
+                      alignment: Alignment.centerRight,
+                      child: const Text('نام'),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue, width: 2),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
+                const SizedBox(height: 12),
+                TextField(
+                  controller: lastNameCtrl,
+                  textAlign: TextAlign.right,
+                  decoration: InputDecoration(
+                    label: Align(
+                      alignment: Alignment.centerRight,
+                      child: const Text('نام خانوادگی'),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue, width: 2),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneCtrl,
+                  textAlign: TextAlign.right,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    label: Align(
+                      alignment: Alignment.centerRight,
+                      child: const Text('شماره موبایل (با 98 یا 0)'),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue, width: 2),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: codeCtrl,
+                        textAlign: TextAlign.right,
+                        decoration: InputDecoration(
+                          label: Align(
+                            alignment: Alignment.centerRight,
+                            child: const Text('کد تایید'),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue, width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final phone = phoneCtrl.text.trim();
+                        if (phone.isNotEmpty) {
+                          await controller.sendVerificationCode(phone);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text("ارسال کد"),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFFF39530),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: Color(0xFFF39530),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'انصراف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
                   onPressed: () async {
-                    final phone = phoneCtrl.text.trim();
-                    if (phone.isNotEmpty) {
-                      await controller.sendVerificationCode(phone);
+                    final success = await controller.addNewCustomer(
+                      customerId: widget.groupId,
+                      firstName: firstNameCtrl.text.trim(),
+                      lastName: lastNameCtrl.text.trim(),
+                      phoneNumber: phoneCtrl.text.trim(),
+                      verificationCode: codeCtrl.text.trim(),
+                    );
+                    if (success) {
+                      Get.back();
+                      Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
+                      controller.fetchGroupUsers(widget.groupId);
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // پس‌زمینه آبی
-                    foregroundColor: Colors.white, // متن سفید
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text("ارسال کد"),
+                  child: const Text(
+                    'ثبت',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      actionsAlignment: MainAxisAlignment.center, // وسط چین کردن دکمه‌ها
-actions: [
-  Row(
-    mainAxisSize: MainAxisSize.min, // فقط به اندازه محتوا جا می‌گیرد
-    children: [
-      // 🔸 دکمه انصراف
-      SizedBox(
-        width: 100, // عرض ثابت
-        height: 44,
-        child: ElevatedButton(
-          onPressed: () => Get.back(),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFFF39530),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: const BorderSide(
-                color: Color(0xFFF39530),
-                width: 2,
               ),
-            ),
-            elevation: 0,
+            ],
           ),
-          child: const Text(
-            "انصراف",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-
-      const SizedBox(width: 4), // فاصله خیلی کم بین دکمه‌ها
-
-      // 🔹 دکمه ثبت
-      SizedBox(
-        width: 100, // همان عرض
-        height: 44,
-        child: ElevatedButton(
-          onPressed: () async {
-            final success = await controller.addNewCustomer(
-              customerId: widget.groupId,
-              firstName: firstNameCtrl.text.trim(),
-              lastName: lastNameCtrl.text.trim(),
-              phoneNumber: phoneCtrl.text.trim(),
-              verificationCode: codeCtrl.text.trim(),
-            );
-
-            if (success) {
-              Get.back();
-              Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
-              controller.fetchGroupUsers(widget.groupId);
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text(
-            "ثبت",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-    ],
-  ),
-],
-
-    ),
+        ],
+      );
+    },
   );
 }
+
 
 }

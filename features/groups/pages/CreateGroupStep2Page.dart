@@ -73,56 +73,68 @@ class _CreateGroupStep2PageState extends State<CreateGroupStep2Page> {
             const SizedBox(height: 16),
 
             /// فیلتر لوکیشن‌ها
-            Obx(() {
-              final locations = controller.userLocationsGroup;
-              final selectedId = controller.selectedLocationIdGroup.value;
+            /// فیلتر لوکیشن‌ها با سبک جدید
+Obx(() {
+  final locations = controller.userLocationsGroup
+      .where((loc) => loc.title != "میانبر")
+      .toList();
+  final selectedId = controller.selectedLocationIdGroup.value;
 
-              return SizedBox(
-                height: 45,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: locations.length + 1,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final id = index == 0 ? 'all' : locations[index - 1].id ?? 'unknown';
-                    final title = index == 0 ? 'همه' : locations[index - 1].title;
-                    final isSelected = selectedId == id;
+  return SizedBox(
+    height: 50,
+    child: ListView.separated(
+      scrollDirection: Axis.horizontal,
+      separatorBuilder: (_, __) => const SizedBox(width: 8),
+      itemCount: locations.length,
+      itemBuilder: (context, index) {
+        final loc = locations[index];
+        final isSelected = selectedId.isNotEmpty && selectedId == loc.id;
 
-                    return GestureDetector(
-                      onTap: () async {
-                        controller.selectedLocationIdGroup.value = id;
-                        if (id == 'all') {
-                          await controller.fetchAllDevicesGroup();
-                        } else {
-                          await controller.fetchDevicesByLocationGroup(id);
-                        }
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            color: isSelected ? Colors.yellow : Colors.grey.shade300,
-                            width: isSelected ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              color: isSelected ? Colors.yellow.shade700 : Colors.grey,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+        return GestureDetector(
+          onTap: () async {
+            // ریست و انتخاب دوباره برای انیمیشن
+            controller.selectedLocationIdGroup.value = '';
+            await Future.delayed(const Duration(milliseconds: 10));
+            controller.selectedLocationIdGroup.value = loc.id;
+
+            // fetch دستگاه‌ها بر اساس لوکیشن
+            await controller.fetchDevicesByLocationGroup(loc.id);
+          },
+          child: Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: isSelected ? Colors.yellow : Colors.grey.shade300,
+                width: isSelected ? 2 : 1,
+              ),
+              borderRadius: BorderRadius.circular(30), // کامل گرد
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-              );
-            }),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                loc.title,
+                style: TextStyle(
+                  color: isSelected ? Colors.yellow.shade700 : Colors.grey,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+})
+,
 
             const SizedBox(height: 16),
 

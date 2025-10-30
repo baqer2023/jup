@@ -503,7 +503,6 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
                 "allocatedDevices": e['allocatedDevices'],
                 "allocatedUsers": e['allocatedUsers'],
                 "description": e['description'],
-
               },
             )
             .toList();
@@ -544,10 +543,11 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
 
       if (response.statusCode == 200) {
         final users = response.data['data'] as List;
+        print(users);
         groupUsers.value = users
             .map(
               (e) => {
-                "id": e['id'],
+                "id": e['userId'],
                 "firstName": e['firstName'],
                 "lastName": e['lastName'],
                 "phoneNumber": e['phoneNumber'],
@@ -697,6 +697,75 @@ class HomeControllerGroup extends GetxController with AppUtilsMixin {
       print("❌ Exception in deleteGroup: $e");
       print(st);
       Get.snackbar("خطا", e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> unassignDeviceFromCustomer({
+    required String customerId,
+    required String deviceId,
+  }) async {
+    final dio = Dio();
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json',
+    };
+
+    final data = json.encode({"customerId": customerId, "deviceId": deviceId});
+
+    print(tokenGroup);
+    print(data);
+
+    try {
+      final response = await dio.request(
+        'http://45.149.76.245:8080/api/device/unassignFromCustomer',
+        options: Options(method: 'POST', headers: headers),
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('❌ Unassign failed: ${response.statusMessage}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Dio error: $e');
+      return false;
+    }
+  }
+
+  // تابع حذف مشتری از گروه
+  Future<bool> removeCustomerFromGroup(
+    String customerId,
+    String groupId,
+  ) async {
+    final dio = Dio();
+    final headers = {
+      'Authorization': 'Bearer $tokenGroup',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await dio.request(
+        'http://45.149.76.245:8080/api/user/$customerId',
+        options: Options(method: 'DELETE', headers: headers),
+      );
+
+      print(customerId);
+      print(groupId);
+
+      if (response.statusCode == 200) {
+        print('✅ حذف موفق: ${json.encode(response.data)}');
+        // بعد از حذف، لیست کاربران گروه را به‌روزرسانی کن
+        await fetchGroupUsers(groupId);
+        return true;
+      } else {
+        print('❌ خطا در حذف: ${response.statusMessage}');
+        return false;
+      }
+    } catch (e) {
+      print('⚠️ Dio error: $e');
       return false;
     }
   }
