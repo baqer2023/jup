@@ -34,9 +34,11 @@ class _CreateGroupStep3PageState extends State<CreateGroupStep3Page> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("ایجاد گروه - مرحله ۳")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      body: SafeArea(
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
+    child: Column(
+
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text("لیست مشتریان گروه", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -132,6 +134,7 @@ Row(
           ],
         ),
       ),
+    ),
     );
   }
 

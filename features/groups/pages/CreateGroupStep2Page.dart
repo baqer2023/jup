@@ -64,9 +64,10 @@ class _CreateGroupStep2PageState extends State<CreateGroupStep2Page> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("ایجاد گروه - مرحله ۲")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      body: SafeArea(
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
+    child: Column(
           children: [
             const Text("دستگاه‌هایی که می‌خواهید اضافه کنید را انتخاب کنید:"),
             const SizedBox(height: 16),
@@ -145,9 +146,10 @@ class _CreateGroupStep2PageState extends State<CreateGroupStep2Page> {
                 }
 
                 return SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Column(
+  child: Padding(
+    padding: const EdgeInsets.only(right: 16, top: 12), // 🔹 فاصله از بالا اضافه شد
+    child: Column(
+
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: devicesNotInGroup.map((device) {
                         final locationTitle = device.dashboardTitle.isNotEmpty
@@ -262,6 +264,7 @@ Row(
           ],
         ),
       ),
+    ),
     );
   }
 }

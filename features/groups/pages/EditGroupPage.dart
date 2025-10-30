@@ -62,8 +62,9 @@ class _EditGroupPageState extends State<EditGroupPage> {
     
 return Scaffold(
   appBar: AppBar(title: const Text("ویرایش گروه")),
-  body: Padding(
-    padding: const EdgeInsets.all(16),
+  body: SafeArea(
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
     child: Column(
       children: [
         TextField(
@@ -157,6 +158,7 @@ return Scaffold(
       ],
     ),
   ),
+),
 );
 
   }

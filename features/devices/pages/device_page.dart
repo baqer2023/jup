@@ -21,22 +21,35 @@ class DevicesPage extends BaseView<HomeController> {
     Get.put<HomeController>(HomeController(Get.find<HomeRepository>()), permanent: true);
   }
 
-  @override
-  Widget body() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.selectedLocationId.value = '';
-      controller.deviceList.clear();
-      controller.initData(); // ✅ مطمئن شو initData صدا زده شود
-    });
-
-    return Scaffold(
-      endDrawer: const Sidebar(),
-      appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
-      body: Builder(
-        builder: (context) => _buildDevicesContent(context),
-      ),
-    );
+@override
+Widget body() {
+WidgetsBinding.instance.addPostFrameCallback((_) {
+  // فقط برای بار اول داده‌ها از صفر لود می‌شوند
+  if (controller.isFirstLoad.value) {
+    controller.selectedLocationId.value = '';
+    controller.deviceList.clear();
+    controller.initData();
+    controller.isFirstLoad.value = false;
+  } else {
+    // اگر کاربر از صفحه‌ی دیگر برگشت
+    if (controller.selectedLocationId.value.isNotEmpty) {
+      final lastLocationId = controller.selectedLocationId.value;
+      controller.selectedLocationId.refresh(); // 🔹 باعث به‌روزرسانی ظاهر دکمه می‌شود
+      controller.fetchDevicesByLocation(lastLocationId);
+    }
   }
+});
+
+
+  return Scaffold(
+    endDrawer: const Sidebar(),
+    appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
+    body: Builder(
+      builder: (context) => _buildDevicesContent(context),
+    ),
+  );
+}
+
 
   Widget _buildDevicesContent(BuildContext context) {
     return Obx(() {
@@ -180,10 +193,13 @@ GestureDetector(
                                         loc.id;
 
                             return GestureDetector(
-                              onTap: () {
-                                controller.selectedLocationId.value = loc.id;
-                                controller.fetchDevicesByLocation(loc.id);
-                              },
+                              onTap: () async {
+  controller.selectedLocationId.value = '';
+  await Future.delayed(Duration(milliseconds: 10));
+  controller.selectedLocationId.value = loc.id;
+  controller.fetchDevicesByLocation(loc.id);
+}
+,
                               child: Container(
   margin: const EdgeInsets.only(right: 8),
   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

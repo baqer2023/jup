@@ -33,7 +33,7 @@ class HomeController extends GetxController with AppUtilsMixin {
 
   RxList<LocationItem> userLocations = <LocationItem>[].obs;
   // RxList<Map<String, dynamic>> deviceList = <Map<String, dynamic>>[].obs;
-
+  final isFirstLoad = true.obs;
   RxBool isLoading = false.obs;
   RxBool isRefreshing = false.obs;
   String token = '';

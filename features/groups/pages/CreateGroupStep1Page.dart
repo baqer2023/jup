@@ -43,8 +43,9 @@ class _CreateGroupStep1PageState extends State<CreateGroupStep1Page> {
 return Scaffold(
   endDrawer: const Sidebar(),
   appBar: CustomAppBar(isRefreshing: controller.isRefreshing),
-  body: Padding(
-    padding: const EdgeInsets.all(16.0),
+  body: SafeArea(
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
     child: Column(
       children: [
         TextField(
@@ -180,6 +181,7 @@ TextField(
       ],
     ),
   ),
+),
 );
 
   }

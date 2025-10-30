@@ -58,9 +58,10 @@ class EditDevicePage extends StatelessWidget {
     return Scaffold(
       endDrawer: const Sidebar(),
       appBar: CustomAppBar(isRefreshing: false.obs),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      body: SafeArea(
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
+    child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
@@ -228,6 +229,7 @@ SizedBox(
             ),
           ],
         ),
+      ),
       ),
     );
   }
