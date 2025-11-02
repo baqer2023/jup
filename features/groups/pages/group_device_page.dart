@@ -101,51 +101,66 @@ Obx(() {
       scrollDirection: Axis.horizontal,
       separatorBuilder: (_, __) => const SizedBox(width: 8),
       itemCount: locations.length + 1, // +1 برای "همه"
-      itemBuilder: (context, index) {
-        final id = index == 0 ? "all" : locations[index - 1].id ?? 'unknown';
-        final title = index == 0 ? "همه" : locations[index - 1].title;
-        final isSelected = selectedId == id; // بررسی دقیق
+itemBuilder: (context, index) {
+  final isAll = index == 0;
+  final location = isAll ? null : locations[index - 1];
+  final id = isAll ? "all" : location?.id ?? 'unknown';
+  final title = isAll ? "همه" : location?.title ?? '';
+  final iconIndex = isAll ? null : location?.iconIndex;
+  final isSelected = selectedId == id;
 
-        return GestureDetector(
-          onTap: () async {
-            // ریست کوتاه برای انیمیشن
-            selectedLocationId.value = '';
-            await Future.delayed(const Duration(milliseconds: 10));
-            selectedLocationId.value = id;
-
-            await fetchFilteredDevices();
-          },
-          child: Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                color: isSelected ? Colors.yellow.shade700 : Colors.grey.shade300,
-                width: isSelected ? 2 : 1,
-              ),
-              borderRadius: BorderRadius.circular(30), // کاملاً گرد
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: isSelected ? Colors.yellow.shade700 : Colors.grey,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 14,
-                ),
-              ),
+  return GestureDetector(
+    onTap: () async {
+      selectedLocationId.value = '';
+      await Future.delayed(const Duration(milliseconds: 10));
+      selectedLocationId.value = id;
+      await fetchFilteredDevices();
+    },
+    child: Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(
+          color: isSelected ? Colors.yellow.shade700 : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(30), // کاملاً گرد
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: isSelected ? Colors.yellow.shade700 : Colors.grey,
+              fontWeight:
+                  isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 14,
             ),
           ),
-        );
-      },
+          if (iconIndex != null) ...[
+            const SizedBox(width: 4), // فاصله کم بین متن و آیکن
+            SvgPicture.asset(
+              'assets/svg/$iconIndex.svg',
+              width: 28,
+              height: 28,
+              fit: BoxFit.contain,
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+},
+
     ),
   );
 })

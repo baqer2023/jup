@@ -23,8 +23,11 @@ import 'package:my_app32/features/main/repository/home_repository.dart';
 // import 'package:my_app32/features/main/pages/home/home_devices_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/widgets.dart'; // 👈 حتما باید باشه
+import 'package:get/get.dart';
+// بقیه importهای خودت
 
-class HomeController extends GetxController with AppUtilsMixin {
+class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingObserver {
   HomeController(this._repo);
 
   final HomeRepository _repo;
@@ -43,11 +46,25 @@ class HomeController extends GetxController with AppUtilsMixin {
   late Future<WeatherData> weatherFuture;
   String serverUrl = 'http://45.149.76.245:8080';
 
-  @override
+    @override
   void onInit() {
     super.onInit();
-    // می‌توانیم فقط initData را صدا بزنیم
+    WidgetsBinding.instance.addObserver(this); // ✅ حالا بدون خطا
     initData();
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      print("🔁 App resumed — refreshing data...");
+      refreshAllData(); // یا initData() بسته به نیاز
+    }
   }
 
   Future<void> initData() async {
@@ -254,119 +271,84 @@ class HomeController extends GetxController with AppUtilsMixin {
   //   }
   // }
 
-  Future<void> addLocation(String title) async {
-    if (title.trim().isEmpty) {
-      Get.snackbar(
-        'خطا',
-        'لطفاً نام مکان را وارد کنید',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    try {
-      final url = Uri.parse(
-        'http://45.149.76.245:8080/api/dashboard/addOrUpdate',
-      );
-      final headers = {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      };
-      final data = json.encode({"title": title.trim()});
-
-      final response = await http.post(url, headers: headers, body: data);
-
-      if (response.statusCode == 200) {
-        Get.snackbar(
-          'موفقیت',
-          'مکان با موفقیت اضافه شد',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-        await fetchUserLocations(); // بازخوانی لیست مکان‌ها
-      } else {
-        Get.snackbar(
-          'خطا',
-          'ثبت مکان موفقیت‌آمیز نبود: ${response.statusCode}',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'خطا',
-        'خطا در افزودن مکان: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
+Future<void> addLocation(String title, {int? iconIndex}) async {
+  if (title.trim().isEmpty) {
+    Get.snackbar('خطا', 'لطفاً نام مکان را وارد کنید',
+      backgroundColor: Colors.red, colorText: Colors.white);
+    return;
   }
 
-  Future<void> updateLocation({
-    required String title,
-    String? dashboardId,
-  }) async {
-    if (title.trim().isEmpty) {
-      Get.snackbar(
-        'خطا',
-        'لطفاً نام مکان را وارد کنید',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
+  try {
+    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/addOrUpdate');
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
+    final data = json.encode({
+      "title": title.trim(),
+      if (iconIndex != null) "iconIndex": iconIndex,
+    });
+
+    final response = await http.post(url, headers: headers, body: data);
+
+    if (response.statusCode == 200) {
+      Get.snackbar('موفقیت', 'مکان با موفقیت اضافه شد',
+          backgroundColor: Colors.green, colorText: Colors.white);
+      await fetchUserLocations();
+    } else {
+      Get.snackbar('خطا', 'ثبت مکان موفقیت‌آمیز نبود: ${response.statusCode}',
+          backgroundColor: Colors.red, colorText: Colors.white);
     }
-
-    print(dashboardId);
-    try {
-      final url = Uri.parse(
-        'http://45.149.76.245:8080/api/dashboard/addOrUpdate',
-      );
-
-      final headers = {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      };
-
-      // ✅ اگر dashboardId وجود داشت، همراه title بفرستیم
-      final body = {
-        "title": title.trim(),
-        if (dashboardId != null && dashboardId.isNotEmpty) "id": dashboardId,
-      };
-
-      final data = json.encode(body);
-
-      final response = await http.post(url, headers: headers, body: data);
-
-      if (response.statusCode == 200) {
-        Get.snackbar(
-          'موفقیت',
-          dashboardId != null
-              ? 'مکان با موفقیت ویرایش شد'
-              : 'مکان با موفقیت اضافه شد',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-
-        // بازخوانی لیست مکان‌ها پس از بروزرسانی
-        await fetchUserLocations();
-      } else {
-        Get.snackbar(
-          'خطا',
-          'عملیات ناموفق بود: ${response.statusCode}',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'خطا',
-        'خطا در برقراری ارتباط با سرور: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
+  } catch (e) {
+    Get.snackbar('خطا', 'خطا در افزودن مکان: $e',
+        backgroundColor: Colors.red, colorText: Colors.white);
   }
+}
+
+
+Future<void> updateLocation({
+  required String title,
+  String? dashboardId,
+  int? iconIndex,
+}) async {
+  if (title.trim().isEmpty) {
+    Get.snackbar('خطا', 'لطفاً نام مکان را وارد کنید',
+        backgroundColor: Colors.red, colorText: Colors.white);
+    return;
+  }
+
+  try {
+    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/addOrUpdate');
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
+    final body = {
+      "title": title.trim(),
+      if (dashboardId != null && dashboardId.isNotEmpty) "id": dashboardId,
+      if (iconIndex != null) "iconIndex": iconIndex,
+    };
+
+    final response = await http.post(url, headers: headers, body: json.encode(body));
+
+    if (response.statusCode == 200) {
+      Get.snackbar(
+        'موفقیت',
+        dashboardId != null ? 'مکان با موفقیت ویرایش شد' : 'مکان با موفقیت اضافه شد',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+      await fetchUserLocations();
+    } else {
+      Get.snackbar('خطا', 'عملیات ناموفق بود: ${response.statusCode}',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  } catch (e) {
+    Get.snackbar('خطا', 'خطا در برقراری ارتباط با سرور: $e',
+        backgroundColor: Colors.red, colorText: Colors.white);
+  }
+}
+
 
   // ------------------- Remove From Dashboard (Temporary) -------------------
   Future<void> removeFromAllDashboard(String deviceId) async {

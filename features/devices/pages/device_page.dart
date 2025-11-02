@@ -18,7 +18,9 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 class DevicesPage extends BaseView<HomeController> {
   DevicesPage({super.key}) {
     // ✅ کنترلر را مستقیم داخل صفحه بساز
-    Get.put<HomeController>(HomeController(Get.find<HomeRepository>()), permanent: true);
+    Get.put<HomeController>(HomeController(Get.find<HomeRepository>()),
+     permanent: true
+     );
   }
 
 @override
@@ -218,8 +220,10 @@ GestureDetector(
       ),
     ],
   ),
-  child: Center(
-    child: Text(
+child: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    Text(
       loc.title,
       style: TextStyle(
         color: isSelected ? Colors.yellow.shade700 : Colors.grey,
@@ -227,7 +231,31 @@ GestureDetector(
         fontSize: 14,
       ),
     ),
-  ),
+    if (loc.iconIndex != null) ...[
+      const SizedBox(width: 4), // فاصله خیلی کم بین متن و آیکن
+      SvgPicture.asset(
+        'assets/svg/${loc.iconIndex}.svg', // مسیر درست
+        width: 28, // اندازه مناسب
+        height: 28,
+        fit: BoxFit.contain,
+      ),
+    ],
+  ],
+),
+
+
+
+
+  // child: Center(
+  //   child: Text(
+  //     loc.title,
+  //     style: TextStyle(
+  //       color: isSelected ? Colors.yellow.shade700 : Colors.grey,
+  //       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  //       fontSize: 14,
+  //     ),
+  //   ),
+  // ),
 ),
                             );
                           });
@@ -277,6 +305,62 @@ GestureDetector(
       );
     });
   }
+
+
+
+  int? selectedIconIndex; // متغیر انتخاب آیکن
+Widget _buildIconSelector(void Function(void Function()) setState, int? selectedIndex) {
+  return SizedBox(
+    height: 70, // ارتفاع کانتینر آیکن‌ها
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(18, (index) {
+          final iconNumber = index + 1;
+          final isSelected = selectedIndex == iconNumber;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedIconIndex = iconNumber;
+              });
+            },
+            child: Container(
+              width: 50,
+              height: 50,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle, // دایره کامل
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.yellow.shade700
+                      : Colors.grey.shade300,
+                  width: isSelected ? 2.5 : 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 3,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: SvgPicture.asset(
+                'assets/svg/$iconNumber.svg',
+                fit: BoxFit.contain,
+                // رنگ خود آیکن تغییر نکند، فقط دورش بردر زرد شود
+              ),
+            ),
+          );
+        }),
+      ),
+    ),
+  );
+}
+
+
 
   /// مدال ویرایش مکان‌ها
 /// مدال ویرایش مکان‌ها با دکمه‌های ثبت و انصراف و استایل جدید
@@ -517,58 +601,52 @@ void _showSingleLocationEditDialog(BuildContext context, dynamic loc) {
           ),
           textAlign: TextAlign.center,
         ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-TextField(
-  controller: nameController,
-  textAlign: TextAlign.right, // متن راست‌چین
-  decoration: InputDecoration(
-    label: Align(
-      alignment: Alignment.centerRight, // لیبل راست‌چین
-      child: const Text('نام مکان'),
-    ),
-    hintText: 'نام مکان را وارد کنید',
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    contentPadding: const EdgeInsets.symmetric(
-      horizontal: 12,
-      vertical: 10,
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: Colors.blue, width: 2), // حاشیه آبی هنگام فوکوس
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: Colors.grey.shade400, width: 1), // حاشیه حالت معمولی
-    ),
-  ),
+        content: StatefulBuilder(
+  builder: (context, setState) {
+    return SizedBox(
+      width: double.maxFinite,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            textAlign: TextAlign.right,
+            decoration: InputDecoration(
+              label: const Align(
+                alignment: Alignment.centerRight,
+                child: Text('نام مکان'),
+              ),
+              hintText: 'نام مکان را وارد کنید',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.blue, width: 2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              'انتخاب آیکن مکان:',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildIconSelector(setState, selectedIconIndex),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  },
 ),
 
-              const SizedBox(height: 12),
-              // Row(
-              //   children: [
-              //     const Text(
-              //       'شناسه مکان (id): ',
-              //       style: TextStyle(fontSize: 12, color: Colors.grey),
-              //     ),
-              //     Expanded(
-              //       child: Text(
-              //         loc.id?.toString() ?? '-',
-              //         style: const TextStyle(fontSize: 13),
-              //         overflow: TextOverflow.ellipsis,
-              //       ),
-              //     ),
-              //   ],
-              // ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
         actionsPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 8,
@@ -624,6 +702,7 @@ actions: [
             await controller.updateLocation(
               title: newName,
               dashboardId: loc.id,
+              iconIndex: selectedIconIndex,
             );
 
             Navigator.of(context).pop();
@@ -1452,148 +1531,236 @@ Widget _buildSmartDeviceCard({
     });
   }
 
-  void _showAddLocationDialog() {
-    final TextEditingController nameController = TextEditingController();
+void _showAddLocationDialog() {
+  final TextEditingController nameController = TextEditingController();
+  int? selectedIconIndex; // 👈 برای ذخیره انتخاب کاربر
 
   showDialog(
-  context: Get.context!,
-  builder: (context) {
-    return AlertDialog(
-      backgroundColor: Colors.white, // پس‌زمینه مدال
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      elevation: 10, // سایه ملایم
-      titlePadding: EdgeInsets.zero, // حذف padding پیش‌فرض
-      title: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: const BoxDecoration(
-          color: Colors.blue, // پس‌زمینه آبی برای هدر
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: const Text(
-          'افزودن مکان',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white, // متن سفید
-            fontSize: 18,
+    context: Get.context!,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 10,
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: const BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: const Text(
+                'افزودن مکان',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      textAlign: TextAlign.right,
+                      decoration: InputDecoration(
+                        label: const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text('نام مکان'),
+                        ),
+                        hintText: 'نام مکان را وارد کنید',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              const BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: Colors.grey.shade400, width: 1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    /// عنوان بخش آیکن‌ها
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'انتخاب آیکن مکان:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    /// لیست آیکن‌ها
+/// لیست آیکن‌ها - اسکرول افقی و دایره کامل
+SizedBox(
+  height: 70, // ارتفاع کانتینر آیکن‌ها
+  child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: List.generate(18, (index) {
+        final iconNumber = index + 1;
+        final isSelected = selectedIconIndex == iconNumber;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              selectedIconIndex = iconNumber;
+            });
+          },
+          child: Container(
+            width: 50,
+            height: 50,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle, // 🔹 دایره کامل
+              border: Border.all(
+                color: isSelected
+                    ? Colors.yellow.shade700
+                    : Colors.grey.shade300,
+                width: isSelected ? 2.5 : 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 3,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(6),
+            child: SvgPicture.asset(
+              'assets/svg/$iconNumber.svg',
+              fit: BoxFit.contain,
+            ),
           ),
-          textAlign: TextAlign.center,
-        ),
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              textAlign: TextAlign.right, // متن راست‌چین
-              decoration: InputDecoration(
-                label: Align(
-                  alignment: Alignment.centerRight, // لیبل راست‌چین
-                  child: const Text('نام مکان'),
-                ),
-                hintText: 'نام مکان را وارد کنید',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+        );
+      }),
+    ),
+  ),
+),
+
+
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-      actionsPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
-      actionsAlignment: MainAxisAlignment.spaceBetween,
-      actions: [
-        Row(
-          mainAxisSize: MainAxisSize.min, // فقط به اندازه محتوا
-          children: [
-            SizedBox(
-              width: 100,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFFF39530),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(
-                      color: Color(0xFFF39530),
-                      width: 2,
+            actionsPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFFF39530),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(
+                            color: Color(0xFFF39530),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        'انصراف',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                child: const Text(
-                  'انصراف',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 100,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) {
-                    Get.snackbar(
-                      'خطا',
-                      'لطفاً نام مکان را وارد کنید',
-                      backgroundColor: Colors.red,
-                      colorText: Colors.white,
-                    );
-                    return;
-                  }
-                  await controller.addLocation(name);
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'ثبت',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  },
-);
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) {
+                          Get.snackbar(
+                            'خطا',
+                            'لطفاً نام مکان را وارد کنید',
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
 
-  }
+                        // اگر آیکن انتخاب نشده بود، هشدار بده
+                        if (selectedIconIndex == null) {
+                          Get.snackbar(
+                            'خطا',
+                            'لطفاً یک آیکن انتخاب کنید',
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+
+                        await controller.addLocation(
+                          name,
+                          iconIndex: selectedIconIndex,
+                        );
+
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'ثبت',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
 
   Widget _buildLoadingDeviceCard({required String title}) {
     return Card(

@@ -46,9 +46,9 @@ class OtpPage extends BaseView<OtpController> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        SvgPicture.asset('assets/svg/1.svg', fit: BoxFit.fill),
-                        SvgPicture.asset('assets/svg/2.svg', fit: BoxFit.fill),
-                        SvgPicture.asset('assets/svg/3.svg', fit: BoxFit.fill),
+                        SvgPicture.asset('assets/svg/logo1.svg', fit: BoxFit.fill),
+                        SvgPicture.asset('assets/svg/logo2.svg', fit: BoxFit.fill),
+                        SvgPicture.asset('assets/svg/logo3.svg', fit: BoxFit.fill),
                       ],
                     ),
                   ),

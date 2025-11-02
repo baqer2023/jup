@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
@@ -163,19 +164,28 @@ SizedBox(
                   ),
                 ],
               ),
-              child: Center(
-                child: Text(
-                  loc.title,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.yellow.shade700
-                        : Colors.grey.shade700,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
+              child: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    Text(
+      loc.title,
+      style: TextStyle(
+        color: isSelected ? Colors.yellow.shade700 : Colors.grey,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 14,
+      ),
+    ),
+    if (loc.iconIndex != null) ...[
+      const SizedBox(width: 4), // فاصله خیلی کم بین متن و آیکن
+      SvgPicture.asset(
+        'assets/svg/${loc.iconIndex}.svg', // مسیر درست
+        width: 28, // اندازه مناسب
+        height: 28,
+        fit: BoxFit.contain,
+      ),
+    ],
+  ],
+),
             ),
           );
         }).toList(),

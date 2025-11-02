@@ -118,16 +118,28 @@ Obx(() {
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                loc.title,
-                style: TextStyle(
-                  color: isSelected ? Colors.yellow.shade700 : Colors.grey,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 14,
-                ),
-              ),
-            ),
+                          child: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    Text(
+      loc.title,
+      style: TextStyle(
+        color: isSelected ? Colors.yellow.shade700 : Colors.grey,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 14,
+      ),
+    ),
+    if (loc.iconIndex != null) ...[
+      const SizedBox(width: 4), // فاصله خیلی کم بین متن و آیکن
+      SvgPicture.asset(
+        'assets/svg/${loc.iconIndex}.svg', // مسیر درست
+        width: 28, // اندازه مناسب
+        height: 28,
+        fit: BoxFit.contain,
+      ),
+    ],
+  ],
+),
           ),
         );
       },
