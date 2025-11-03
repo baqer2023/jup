@@ -66,7 +66,7 @@ Widget _buildMainContent(HomeController controller) {
       required Widget child,
     }) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         child: Material(
           color: Colors.grey.shade200,
           borderRadius: BorderRadius.circular(16),
@@ -87,7 +87,7 @@ Widget _buildMainContent(HomeController controller) {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
                 child,
               ],
             ),
@@ -191,38 +191,41 @@ Widget _buildMainContent(HomeController controller) {
 
                 const SizedBox(height: 30),
 
-                // 🔸 بخش دستگاه‌ها
-                buildSection(
-                  title: 'دستگاه‌ها',
-                  child: devices.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-  SizedBox(
-    height: 200, // می‌تونی کم یا زیاد کنی
-    child: SvgPicture.asset(
-      'assets/svg/EmptyDashboard.svg',
-      fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
-      width: double.infinity, // عرض کل Container رو می‌گیره
-    ),
-  ),
-  const SizedBox(height: 20),
-  const Text(
-    'هیچ گروهی ایجاد نشده است',
-    style: TextStyle(
-      fontSize: 16,
-      color: Colors.grey,
-      fontWeight: FontWeight.w500,
-    ),
-    textAlign: TextAlign.center, // متن هم وسط چین بشه
-  ),
-],
-
-                          ),
-                        )
-                      : _buildSmartDevicesGrid(controller),
+// 🔸 بخش دستگاه‌ها
+buildSection(
+  title: 'دستگاه‌ها',
+  child: Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1), // فاصله کم از کناره‌ها و بالا/پایین
+    child: devices.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                SizedBox(
+                  height: 400, // کمی بلندتر تا بخش رو پر کنه
+                  width: double.infinity,
+                  child: SvgPicture.asset(
+                    'assets/svg/EmptyDashboard.svg',
+                    fit: BoxFit.contain, // تصویر خراب نشه
+                  ),
                 ),
+                const SizedBox(height: 16),
+                const Text(
+                  'هیچ دستگاهی به داشبورد اضافه نشده است',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
+        : _buildSmartDevicesGrid(controller), // GridView کارت‌ها
+  ),
+),
+
 
                 // 🔸 بخش گروه‌ها
                 buildSection(
@@ -553,7 +556,7 @@ return Column(
 // ),
     // 🔹 اسلایدر دستگاه‌ها
     SizedBox(
-      height: 340,
+      height: 250,
       child: Builder(
         builder: (context) {
           final pageController = PageController(viewportFraction: 0.85);
@@ -731,7 +734,7 @@ return Column(
               // 🔹 نقطه‌های نشانگر پایین
               Obx(() {
                 return Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 4),
+                  padding: const EdgeInsets.only(top: 4, bottom: 2),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -785,62 +788,58 @@ Widget _buildSmartDeviceCard({
   Color borderColor = anySwitchOn ? Colors.blue.shade400 : Colors.grey.shade400;
   final homeController = Get.find<HomeController>();
 
-  return ConstrainedBox(
-    constraints: const BoxConstraints(minHeight: 200, maxHeight: 250),
-    child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Card(
-          color: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: borderColor, width: 2),
-          ),
-          shadowColor: Colors.black12,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 32, 12, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // 🔹 ردیف بالایی (کلیدها + اطلاعات)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // کلیدها سمت چپ
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildSwitchRow(
-                            deviceId: deviceId,
-                            switchNumber: 1,
-                            // color: iconColor1,
-                            onToggle: onToggle,
-                          ),
-                          if (!isSingleKey)
-                            _buildSwitchRow(
-                              deviceId: deviceId,
-                              switchNumber: 2,
-                              // color: iconColor2 ?? Colors.grey,
-                              onToggle: onToggle,
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // اطلاعات سمت راست
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+return ConstrainedBox(
+  constraints: const BoxConstraints(minHeight: 310, maxHeight: 350), // فقط 10px اضافه شد
+  child: Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Card(
+        color: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: borderColor, width: 2),
+        ),
+        shadowColor: Colors.black12,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 38, 12, 14), // بالا +2px، پایین +2px
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // 🔹 ردیف بالایی (کلیدها + اطلاعات)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // وضعیت آنلاین / آفلاین و نوع کلید
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
+                        _buildSwitchRow(
+                          deviceId: deviceId,
+                          switchNumber: 1,
+                          onToggle: onToggle,
+                        ),
+                        if (!isSingleKey)
+                          _buildSwitchRow(
+                            deviceId: deviceId,
+                            switchNumber: 2,
+                            onToggle: onToggle,
+                          ),
+                        const SizedBox(height: 4), // اضافه شد برای کمی ارتفاع
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // وضعیت آنلاین/آفلاین و نوع کلید
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                             Obx(() {
                               final lastSeen =
                                   reliableController.lastDeviceActivity[deviceId];
@@ -918,6 +917,7 @@ Widget _buildSmartDeviceCard({
                     ),
                   ],
                 ),
+                const SizedBox(height: 2),
 
                 // 🔸 ردیف پایین کارت (SVG سمت راست + سه‌نقطه + آخرین همگام‌سازی)
                 Row(
