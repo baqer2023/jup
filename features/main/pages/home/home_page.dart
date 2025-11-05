@@ -556,7 +556,7 @@ return Column(
 // ),
     // 🔹 اسلایدر دستگاه‌ها
     SizedBox(
-      height: 250,
+      height: 280,
       child: Builder(
         builder: (context) {
           final pageController = PageController(viewportFraction: 0.85);
@@ -942,52 +942,47 @@ return ConstrainedBox(
                                 initialName: device.title ?? '',
                                 initialDashboardId: device.dashboardId ?? '',
                               ));
-                        } else if (value == 2) {
-                          // افزودن به داشبورد
-                          if (!homeController.dashboardDevices.any(
-                              (d) => d.deviceId == device.deviceId)) {
-                            final token = homeController.token;
-                            if (token == null) {
-                              Get.snackbar("خطا", "توکن معتبر پیدا نشد",
-                                  backgroundColor: Colors.red,
-                                  colorText: Colors.white);
-                              return;
-                            }
-                            final headers = {
-                              'Authorization': 'Bearer $token',
-                              'Content-Type': 'application/json',
-                            };
-                            final data = {"deviceId": device.deviceId};
-                            try {
-                              final dio = Dio();
-                              final response = await dio.post(
-                                'http://45.149.76.245:8080/api/shortcut/addDevice',
-                                data: data,
-                                options: Options(headers: headers),
-                              );
-                              if (response.statusCode == 200 ||
-                                  response.statusCode == 201) {
-                                Get.snackbar('موفقیت', 'دستگاه به داشبورد اضافه شد',
-                                    backgroundColor: Colors.green,
-                                    colorText: Colors.white);
-                                homeController.dashboardDevices.add(device);
-                              } else {
-                                Get.snackbar('خطا',
-                                    'افزودن دستگاه موفق نبود: ${response.statusCode}',
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white);
-                              }
-                            } catch (e) {
-                              Get.snackbar('خطا', 'مشکل در ارتباط با سرور: $e',
-                                  backgroundColor: Colors.red,
-                                  colorText: Colors.white);
-                            }
-                          } else {
-                            Get.snackbar('توجه', 'این دستگاه قبلاً اضافه شده است',
-                                backgroundColor: Colors.orange,
-                                colorText: Colors.white);
-                          }
-                        } else if (value == 3) {
+                        }else if (value == 2) {
+      // 🔹 حذف از داشبورد
+      final token = homeController.token;
+      if (token == null) {
+        Get.snackbar("خطا", "توکن معتبر پیدا نشد",
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      final data = {"deviceId": device.deviceId};
+
+      try {
+        final dio = Dio();
+        final response = await dio.post(
+          'http://45.149.76.245:8080/api/device/removeFromHome',
+          data: data,
+          options: Options(headers: headers),
+        );
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          Get.snackbar(
+            'موفقیت',
+            'دستگاه از داشبورد حذف شد',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+          await homeController.refreshAllData();
+        }
+      } catch (e) {
+        Get.snackbar(
+          'خطا',
+          'مشکل در حذف از داشبورد: $e',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } else if (value == 3) {
                           await homeController.removeFromAllDashboard(device.deviceId);
                           await homeController.refreshAllData();
                           Get.snackbar('موفقیت', 'کلید از همه مکان‌ها حذف موقت شد',
@@ -1139,21 +1134,6 @@ return ConstrainedBox(
                             ],
                           ),
                         ),
-                        if (!homeController.dashboardDevices
-                            .any((d) => d.deviceId == device.deviceId))
-                          PopupMenuItem<int>(
-                            value: 2,
-                            child: Row(
-                              textDirection: ui.TextDirection.rtl,
-                              children: [
-                                SvgPicture.asset('assets/svg/add_dashboard.svg',
-                                    width: 20, height: 20),
-                                const SizedBox(width: 2),
-                                const Text('افزودن به داشبورد',
-                                    style: TextStyle(color: Colors.black)),
-                              ],
-                            ),
-                          ),
                         PopupMenuItem<int>(
                           value: 5,
                           child: Row(
@@ -1168,6 +1148,19 @@ return ConstrainedBox(
                           ),
                         ),
                         const PopupMenuDivider(),
+                         PopupMenuItem<int>(
+      value: 2,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        textDirection: ui.TextDirection.rtl,
+        children: [
+          SvgPicture.asset('assets/svg/add_dashboard.svg',
+              width: 20, height: 20, color: Colors.red),
+          const SizedBox(width: 4),
+          const Text('حذف از داشبورد', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+    ),
                         PopupMenuItem<int>(
                           value: 3,
                           child: Row(
@@ -1214,34 +1207,50 @@ return ConstrainedBox(
                     const Spacer(),
 
                     // آخرین همگام‌سازی
-    Flexible(
-      child: Obx(() {
-        final lastSeen = reliableController.lastDeviceActivity[deviceId];
-        String lastActivityText;
+Flexible(
+  child: Obx(() {
+    final lastSeen = reliableController.lastDeviceActivity[deviceId];
 
-        if (lastSeen != null) {
-          final formattedDate =
-              "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
-          final formattedTime =
-              "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
-          lastActivityText = "آخرین همگام سازی: $formattedDate - $formattedTime";
-        } else {
-          lastActivityText = "آخرین همگام سازی: نامشخص";
-        }
+    String displayText;
+    if (lastSeen != null) {
+      final formattedDate =
+          "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+      final formattedTime =
+          "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+      displayText = "$formattedDate - $formattedTime";
+    } else {
+      displayText = "نامشخص";
+    }
 
-        return Text(
-          lastActivityText,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 10,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        
+        
+        Flexible(
+          child: Text(
+            displayText,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 10,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
+            textAlign: TextAlign.right,
           ),
-          textAlign: TextAlign.right,
-          maxLines: 2,          // اجازه می‌ده متن به 2 خط شکسته شود
-          overflow: TextOverflow.ellipsis, // اگر بیش از 2 خط بود، ... نشان بده
-          softWrap: true,
-        );
-      }),
-    ),
+        ),
+        SizedBox(width: 4),
+        Icon(
+          Icons.access_time,
+          color: Colors.grey[600],
+          size: 14,
+        ),
+      ],
+    );
+  }),
+),
+
                   ],
                 ),
               ],

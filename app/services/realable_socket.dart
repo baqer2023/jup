@@ -6,11 +6,13 @@ import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ReliableSocket extends GetxService {
-  String authToken;
-  List<String> deviceIds;
+  final String authToken;
+  final List<String> deviceIds;
+
   WebSocket? _ws;
   Timer? _heartbeatTimer;
   bool _running = false;
+  bool _connecting = false; // جلوگیری از اتصال همزمان
 
   ReliableSocket(this.authToken, this.deviceIds);
 
@@ -19,29 +21,29 @@ class ReliableSocket extends GetxService {
 
   final RxMap<String, bool> deviceConnectionStatus = <String, bool>{}.obs;
   final RxMap<String, DateTime> lastDeviceActivity = <String, DateTime>{}.obs;
-  final RxMap<int, Map<String, dynamic>> subscriptionData =
-      <int, Map<String, dynamic>>{}.obs;
+  final RxMap<int, Map<String, dynamic>> subscriptionData = <int, Map<String, dynamic>>{}.obs;
 
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
-  int _generateRandomCmdId() {
-    final rand = Random();
-    return 100000 + rand.nextInt(900000);
-  }
+  int _generateRandomCmdId() => 100000 + Random().nextInt(900000);
 
   @override
   void onInit() {
     super.onInit();
 
     // گوش دادن به تغییر شبکه
-    _connectivitySub = _connectivity.onConnectivityChanged.listen((
-      List<ConnectivityResult> resultList,
-    ) {
+    _connectivitySub = _connectivity.onConnectivityChanged.listen((resultList) {
       print('🔄 Network changed: $resultList');
-      
-      if (!_running) connect();
+
+      // اگر اینترنت قطع یا وصل شد، دوباره اتصال بزن
+      if (!_running && !_connecting) {
+        connect();
+      }
     });
+
+    // اتصال اولیه
+    connect();
   }
 
   @override
@@ -52,19 +54,23 @@ class ReliableSocket extends GetxService {
   }
 
   Future<void> connect() async {
-    final url =
-        'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
+    if (_connecting) return; // جلوگیری از اتصال همزمان
+    _connecting = true;
+
+    final url = 'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
 
     while (true) {
       try {
         print('🟢 Connecting to WebSocket...');
         _ws = await WebSocket.connect(url);
         print('✅ WebSocket connected');
-        
-
         _running = true;
+        _connecting = false;
+
+        // ارسال subscriptionها
         _sendSubscription();
 
+        // heartbeat
         _heartbeatTimer?.cancel();
         _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
           if (_ws != null && _running) {
@@ -72,33 +78,46 @@ class ReliableSocket extends GetxService {
           }
         });
 
+        // گوش دادن پیام‌ها
         _ws!.listen(
           (message) => _onMessage(message),
           onDone: () {
             print('⚠️ WebSocket closed');
             _running = false;
+            _ws = null;
+            reconnectWithDelay();
           },
           onError: (err) {
             print('❌ WebSocket error: $err');
             _running = false;
+            _ws = null;
+            reconnectWithDelay();
           },
           cancelOnError: true,
         );
 
-        // منتظر بمون تا WebSocket قطع بشه
-        while (_running) {
-          await Future.delayed(const Duration(seconds: 1));
-        }
+        break; // اتصال موفق، از حلقه خارج شو
       } catch (e) {
         print('❌ Connect error: $e');
+        _running = false;
+        _ws = null;
+        _connecting = false;
+        await Future.delayed(const Duration(seconds: 2));
       }
+    }
+  }
 
-      // تلاش مجدد بعد ۵ ثانیه
-      await Future.delayed(const Duration(seconds: 5));
+  void reconnectWithDelay() {
+    if (!_running && !_connecting) {
+      Future.delayed(const Duration(seconds: 2), () {
+        connect();
+      });
     }
   }
 
   void _sendSubscription() {
+    if (_ws == null) return;
+
     final List<Map<String, dynamic>> attrSubCmds = [];
 
     for (final deviceId in deviceIds) {
@@ -114,13 +133,11 @@ class ReliableSocket extends GetxService {
       }
     }
 
-    _ws?.add(
-      jsonEncode({
-        "tsSubCmds": [],
-        "historyCmds": [],
-        "attrSubCmds": attrSubCmds,
-      }),
-    );
+    _ws!.add(jsonEncode({
+      "tsSubCmds": [],
+      "historyCmds": [],
+      "attrSubCmds": attrSubCmds,
+    }));
   }
 
   void _onMessage(dynamic message) {
@@ -128,7 +145,6 @@ class ReliableSocket extends GetxService {
 
     try {
       final parsed = jsonDecode(message);
-      print(parsed);
       if (parsed is Map && parsed['errorCode'] == 0) {
         final subscriptionId = parsed['subscriptionId'] as int;
         final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
@@ -147,7 +163,6 @@ class ReliableSocket extends GetxService {
               final lastEntry = activeList.last;
               final statusValue = lastEntry[1].toString();
               final isActive = statusValue.toLowerCase() == 'true';
-
               deviceConnectionStatus[deviceId] = isActive;
               deviceConnectionStatus.refresh();
             }
@@ -157,24 +172,19 @@ class ReliableSocket extends GetxService {
           if (data.containsKey('lastActivityTime')) {
             final lastActivityList = data['lastActivityTime'];
             if (lastActivityList is List && lastActivityList.isNotEmpty) {
-              final lastEntry = lastActivityList.last;
-              timestamp = lastEntry[0] as int?;
+              timestamp = lastActivityList.last[0] as int?;
             }
           }
 
           if (timestamp == null && parsed.containsKey('latestValues')) {
-            final latestValues =
-                parsed['latestValues'] as Map<String, dynamic>?;
-            if (latestValues != null &&
-                latestValues['lastActivityTime'] != null) {
+            final latestValues = parsed['latestValues'] as Map<String, dynamic>?;
+            if (latestValues != null && latestValues['lastActivityTime'] != null) {
               timestamp = latestValues['lastActivityTime'] as int?;
             }
           }
 
           if (timestamp != null) {
-            lastDeviceActivity[deviceId] = DateTime.fromMillisecondsSinceEpoch(
-              timestamp,
-            );
+            lastDeviceActivity[deviceId] = DateTime.fromMillisecondsSinceEpoch(timestamp);
             lastDeviceActivity.refresh();
           }
         }
@@ -187,6 +197,7 @@ class ReliableSocket extends GetxService {
   Future<void> disconnect() async {
     _heartbeatTimer?.cancel();
     _running = false;
+    _connecting = false;
     await _ws?.close();
     _ws = null;
   }

@@ -225,21 +225,48 @@ class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingOb
   }
 
   // ------------------- Refresh All -------------------
+  // Future<void> refreshAllData() async {
+  //   try {
+  //     isRefreshing.value = true;
+  //     final tokenService = Get.find<TokenRefreshService>();
+  //     await tokenService.checkAndRefreshToken();
+  //     await fetchUserLocations();
+  //     deviceList.clear();
+  //     await refreshWeather();
+  //     await fetchHomeDevices();
+  //   } catch (e) {
+  //     print('Error refreshing data: $e');
+  //   } finally {
+  //     isRefreshing.value = false;
+  //   }
+  // }
+
+
   Future<void> refreshAllData() async {
-    try {
-      isRefreshing.value = true;
-      final tokenService = Get.find<TokenRefreshService>();
-      await tokenService.checkAndRefreshToken();
-      await fetchUserLocations();
-      deviceList.clear();
-      await refreshWeather();
-      await fetchHomeDevices();
-    } catch (e) {
-      print('Error refreshing data: $e');
-    } finally {
-      isRefreshing.value = false;
+  try {
+    isRefreshing.value = true;
+
+    // ۱. چک و رفرش توکن
+    final tokenService = Get.find<TokenRefreshService>();
+    await tokenService.checkAndRefreshToken();
+
+    // ۲. برو مکان‌ها رو دوباره بگیر
+    await fetchUserLocations();
+
+    // ۳. اگر کاربر الان مکانی انتخاب کرده، دستگاه‌هایش را هم بیا 👇
+    if (selectedLocationId.value.isNotEmpty) {
+      await fetchDevicesByLocation(selectedLocationId.value);
     }
+
+    // ۴. داده‌های آب‌وهوا و داشبورد کلی
+    await refreshWeather();
+    await fetchHomeDevices();
+  } catch (e) {
+    print('❌ Error refreshing data: $e');
+  } finally {
+    isRefreshing.value = false;
   }
+}
 
   // ------------------- Device Helpers -------------------
   String getDeviceTypeName(String code) {
