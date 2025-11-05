@@ -10,9 +10,11 @@ class ReliableSocket extends GetxService {
   final List<String> deviceIds;
 
   WebSocket? _ws;
+  StreamSubscription? _wsSub;
   Timer? _heartbeatTimer;
   bool _running = false;
-  bool _connecting = false; // جلوگیری از اتصال همزمان
+  bool _connecting = false;
+  bool _disposed = false;
 
   ReliableSocket(this.authToken, this.deviceIds);
 
@@ -25,6 +27,7 @@ class ReliableSocket extends GetxService {
 
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  Timer? _reconnectDebounce;
 
   int _generateRandomCmdId() => 100000 + Random().nextInt(900000);
 
@@ -32,34 +35,39 @@ class ReliableSocket extends GetxService {
   void onInit() {
     super.onInit();
 
-    // گوش دادن به تغییر شبکه
-    _connectivitySub = _connectivity.onConnectivityChanged.listen((resultList) {
-      print('🔄 Network changed: $resultList');
+    // مانیتور شبکه با debounce
+_connectivitySub = _connectivity.onConnectivityChanged.listen((_) {
+  _reconnectDebounce?.cancel();
+  _reconnectDebounce = Timer(const Duration(seconds: 2), () async {
+    if (!_disposed) {
+      print('🌐 Network changed, reconnecting...');
+      await reconnectClean();
+    }
+  });
+});
 
-      // اگر اینترنت قطع یا وصل شد، دوباره اتصال بزن
-      if (!_running && !_connecting) {
-        connect();
-      }
-    });
 
-    // اتصال اولیه
     connect();
   }
 
   @override
   void onClose() {
+    _disposed = true;
+    _reconnectDebounce?.cancel();
     _connectivitySub?.cancel();
     disconnect();
     super.onClose();
   }
 
   Future<void> connect() async {
-    if (_connecting) return; // جلوگیری از اتصال همزمان
+    if (_connecting || _disposed) return;
     _connecting = true;
 
     final url = 'ws://45.149.76.245:8080/api/ws/plugins/telemetry?token=$authToken';
 
-    while (true) {
+    await disconnect(); // اطمینان از پاک شدن قبلی
+
+    while (!_disposed) {
       try {
         print('🟢 Connecting to WebSocket...');
         _ws = await WebSocket.connect(url);
@@ -67,56 +75,56 @@ class ReliableSocket extends GetxService {
         _running = true;
         _connecting = false;
 
-        // ارسال subscriptionها
         _sendSubscription();
 
-        // heartbeat
         _heartbeatTimer?.cancel();
         _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) {
           if (_ws != null && _running) {
-            _ws!.add(jsonEncode({"type": "heartbeat"}));
+            try {
+              _ws!.add(jsonEncode({"type": "heartbeat"}));
+            } catch (e) {
+              print('⚠️ Heartbeat send error: $e');
+            }
           }
         });
 
-        // گوش دادن پیام‌ها
-        _ws!.listen(
+        _wsSub?.cancel();
+        _wsSub = _ws!.listen(
           (message) => _onMessage(message),
           onDone: () {
             print('⚠️ WebSocket closed');
-            _running = false;
-            _ws = null;
-            reconnectWithDelay();
+            if (!_disposed) reconnectClean();
           },
           onError: (err) {
             print('❌ WebSocket error: $err');
-            _running = false;
-            _ws = null;
-            reconnectWithDelay();
+            if (!_disposed) reconnectClean();
           },
           cancelOnError: true,
         );
 
-        break; // اتصال موفق، از حلقه خارج شو
+        break;
       } catch (e) {
         print('❌ Connect error: $e');
         _running = false;
-        _ws = null;
         _connecting = false;
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 3));
       }
     }
   }
 
-  void reconnectWithDelay() {
-    if (!_running && !_connecting) {
-      Future.delayed(const Duration(seconds: 2), () {
-        connect();
-      });
-    }
-  }
+Future<void> reconnectClean() async {
+  if (_connecting || _disposed) return;
+  print('♻️ Reconnecting cleanly...');
+  await disconnect();
+  await Future.delayed(const Duration(milliseconds: 300));
+  if (!_disposed) await connect();
+}
 
   void _sendSubscription() {
     if (_ws == null) return;
+
+    _subscriptionToDeviceMap.clear();
+    subscriptionData.clear();
 
     final List<Map<String, dynamic>> attrSubCmds = [];
 
@@ -133,72 +141,93 @@ class ReliableSocket extends GetxService {
       }
     }
 
-    _ws!.add(jsonEncode({
+    final payload = {
       "tsSubCmds": [],
       "historyCmds": [],
       "attrSubCmds": attrSubCmds,
-    }));
+    };
+
+    try {
+      _ws!.add(jsonEncode(payload));
+      print('📨 Subscribed to ${deviceIds.length} devices.');
+    } catch (e) {
+      print('⚠️ Subscription send error: $e');
+    }
   }
 
   void _onMessage(dynamic message) {
     if (message is! String) return;
-
     try {
       final parsed = jsonDecode(message);
-      if (parsed is Map && parsed['errorCode'] == 0) {
-        final subscriptionId = parsed['subscriptionId'] as int;
-        final deviceId = _subscriptionToDeviceMap[subscriptionId] ?? 'unknown';
+      if (parsed is! Map) return;
 
-        subscriptionData[subscriptionId] = {
-          ...?subscriptionData[subscriptionId],
-          ...parsed,
-        };
+      final subId = parsed['subscriptionId'];
+      if (subId == null) return;
 
-        final data = parsed['data'] as Map<String, dynamic>?;
+      final subIdInt = subId is int ? subId : int.tryParse(subId.toString());
+      if (subIdInt == null) return;
 
-        if (data != null) {
-          if (data.containsKey('active')) {
-            final activeList = data['active'];
-            if (activeList is List && activeList.isNotEmpty) {
-              final lastEntry = activeList.last;
-              final statusValue = lastEntry[1].toString();
-              final isActive = statusValue.toLowerCase() == 'true';
-              deviceConnectionStatus[deviceId] = isActive;
-              deviceConnectionStatus.refresh();
+      final deviceId = _subscriptionToDeviceMap[subIdInt] ?? 'unknown';
+      final data = parsed['data'] as Map<String, dynamic>?;
+
+      if (data == null) return;
+
+      final Map<String, dynamic> parsedMap = Map<String, dynamic>.from(parsed);
+subscriptionData[subIdInt] = parsedMap;
+
+
+      if (data.containsKey('active')) {
+        final activeList = data['active'];
+        if (activeList is List && activeList.isNotEmpty) {
+          final last = activeList.last;
+          final status = last is List && last.length > 1 ? last[1].toString() : last.toString();
+          final isActive = status.toLowerCase() == 'true';
+          deviceConnectionStatus[deviceId] = isActive;
+          deviceConnectionStatus.refresh();
+        }
+      }
+
+      if (data.containsKey('lastActivityTime')) {
+        final lastActivity = data['lastActivityTime'];
+        if (lastActivity is List && lastActivity.isNotEmpty) {
+          final last = lastActivity.last;
+          if (last is List && last.isNotEmpty) {
+            final ts = last[0] is int ? last[0] : int.tryParse(last[0].toString());
+            if (ts != null) {
+              lastDeviceActivity[deviceId] = DateTime.fromMillisecondsSinceEpoch(ts);
+              lastDeviceActivity.refresh();
             }
-          }
-
-          int? timestamp;
-          if (data.containsKey('lastActivityTime')) {
-            final lastActivityList = data['lastActivityTime'];
-            if (lastActivityList is List && lastActivityList.isNotEmpty) {
-              timestamp = lastActivityList.last[0] as int?;
-            }
-          }
-
-          if (timestamp == null && parsed.containsKey('latestValues')) {
-            final latestValues = parsed['latestValues'] as Map<String, dynamic>?;
-            if (latestValues != null && latestValues['lastActivityTime'] != null) {
-              timestamp = latestValues['lastActivityTime'] as int?;
-            }
-          }
-
-          if (timestamp != null) {
-            lastDeviceActivity[deviceId] = DateTime.fromMillisecondsSinceEpoch(timestamp);
-            lastDeviceActivity.refresh();
           }
         }
       }
-    } catch (e, stack) {
-      print('⚠️ Could not parse JSON: $message\nError: $e\nStack: $stack');
+    } catch (e) {
+      print('⚠️ Parse error: $e');
     }
   }
 
-  Future<void> disconnect() async {
-    _heartbeatTimer?.cancel();
-    _running = false;
-    _connecting = false;
+
+Future<void> disconnect() async {
+  print('🛑 Disconnecting...');
+  _heartbeatTimer?.cancel();
+  _heartbeatTimer = null;
+
+  _running = false;
+  _connecting = false;
+
+  // قطع کامل listener WebSocket
+  try {
+    await _wsSub?.cancel();
+  } catch (_) {}
+  _wsSub = null;
+
+  // قطع کامل WebSocket
+  try {
     await _ws?.close();
-    _ws = null;
-  }
+  } catch (_) {}
+  _ws = null;
+
+  // پاک کردن subscription ها
+  _subscriptionToDeviceMap.clear();
+  subscriptionData.clear();
+}
 }

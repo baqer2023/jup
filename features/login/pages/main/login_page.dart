@@ -134,44 +134,152 @@ class LoginPage extends BaseView<LoginController> {
           ),
         ),
 
-        // 🔹 دکمه ورود ثابت پایین صفحه
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: Obx(
-            () => ElevatedButton(
-              onPressed: controller.isEnableConfirmButton.value &&
-                      !controller.isLoading.value
-                  ? () => controller.onTapLogin()
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-                disabledBackgroundColor:
-                    AppColors.primaryColor.withOpacity(0.3),
-                minimumSize: Size(Get.width, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: controller.isLoading.value
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      'login_button'.tr,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'IranYekan',
-                      ),
-                    ),
+        
+
+        // 🔹 دکمه ورود و سه بخش پایین با آیکون + متن
+    bottomNavigationBar: SafeArea(
+  minimum: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // دکمه ورود
+      Obx(
+        () => ElevatedButton(
+          onPressed: controller.isEnableConfirmButton.value &&
+                  !controller.isLoading.value
+              ? () => controller.onTapLogin()
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryColor,
+            disabledBackgroundColor:
+                AppColors.primaryColor.withOpacity(0.3),
+            minimumSize: Size(Get.width, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
+          child: controller.isLoading.value
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Text(
+                  'login_button'.tr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'IranYekan',
+                  ),
+                ),
         ),
+      ),
+
+      const SizedBox(height: 16), // فاصله بین دکمه و سه بخش
+
+      // سه بخش پایین با آیکون و متن
+      // سه بخش پایین با آیکون سمت راست و دو خط عمودی بینشون
+Container(
+  padding: const EdgeInsets.symmetric(vertical: 12),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
+      // بخش اول
+      Expanded(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/Social Media-Icon.svg',
+              width: 18,
+              height: 18,
+            ),
+            const SizedBox(width: 4),
+            const Text(
+              '۰۹۰۲ ۲۱۱ ۸۱ ۰۷',
+              style: TextStyle(
+                fontFamily: 'IranYekan',
+                fontSize: 10,
+              ),
+            ),
+            
+            
+          ],
+        ),
+      ),
+
+      // خط عمودی بین بخش‌ها
+      const Text(
+        '|',
+        style: TextStyle(fontSize: 14, color: Colors.grey),
+      ),
+      const SizedBox(width: 8),
+
+      // بخش دوم
+      Expanded(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/Social Media-Icon(1).svg',
+              width: 18,
+              height: 18,
+            ),
+            const SizedBox(width: 4),
+            const Text(
+              'jupinshop.ir',
+              style: TextStyle(
+                fontFamily: 'IranYekan',
+                fontSize: 10,
+              ),
+            ),
+            
+            
+          ],
+        ),
+      ),
+
+      // خط عمودی بین بخش‌ها
+      const Text(
+        '|',
+        style: TextStyle(fontSize: 14, color: Colors.grey),
+      ),
+      const SizedBox(width: 8),
+
+      // بخش سوم
+      Expanded(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/Social Media-Icon(2).svg',
+              width: 18,
+              height: 18,
+            ),
+            const SizedBox(width: 4),
+            const Text(
+              '۰۲۱  ۸۲ ۸۰ ۴۲ ۵۹',
+              style: TextStyle(
+                fontFamily: 'IranYekan',
+                fontSize: 10,
+              ),
+            ),
+            
+            
+          ],
+        ),
+      ),
+    ],
+  ),
+),
+
+    ],
+  ),
+),
+
       ),
     );
   }
