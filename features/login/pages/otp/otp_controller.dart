@@ -128,49 +128,71 @@ class OtpController extends GetxController with AppUtilsMixin {
   }
 
   /// بررسی و ارسال کد OTP به سرور
-  void onTapVerifyCodeButton() {
-    if (!isVerifyOtp.value) return;
+void onTapVerifyCodeButton() {
+  if (!isVerifyOtp.value) return;
 
-    isLoadingConfirmCode.value = true;
+  isLoadingConfirmCode.value = true;
 
-    OtpRequestModel requestModel = OtpRequestModel(
-      phoneNumber: phoneNumber,
-      verifyCode: verifyCodeTEC.text,
-    );
+  OtpRequestModel requestModel = OtpRequestModel(
+    phoneNumber: phoneNumber,
+    verifyCode: verifyCodeTEC.text,
+  );
 
-    _repo.sendOtp(requestModel: requestModel).then((OtpResponseModel response) {
-      isLoadingConfirmCode.value = false;
-      responseHandler(
-        statusCode: response.statusCode!,
-        message: response.message ?? '',
-        onSuccess: () {
-          if (response.data?.token != null &&
-              response.data?.refreshToken != null) {
-            UserStoreService.to.saveToken(response.data!.token!);
-            UserStoreService.to.saveRefreshToken(response.data!.refreshToken!);
-            Get.offAllNamed(AppRoutes.HOME);
-          } else {
-            Get.snackbar(
-              'خطا',
-              'کد تأیید درست است اما توکن دریافت نشد.',
-              snackPosition: SnackPosition.TOP,
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-            );
-          }
-        },
-        onFailure: () {
-          Get.snackbar(
-            'خطا',
-            response.message ?? 'کد وارد شده اشتباه است.',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-        },
+  _repo.sendOtp(requestModel: requestModel).then((OtpResponseModel response) {
+    isLoadingConfirmCode.value = false;
+
+    // بررسی پیام خطای خاص
+    String serverMessage = response.message ?? '';
+    if (serverMessage.contains('RangeError (length): Invalid value')) {
+      serverMessage = 'کد وارد شده اشتباه است.';
+    }
+
+    if (response.statusCode != 200) {
+      Get.snackbar(
+        'خطا',
+        serverMessage,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
       );
-    });
-  }
+      return;
+    }
+
+    // در صورت موفقیت
+    if (response.data?.token != null && response.data?.refreshToken != null) {
+      UserStoreService.to.saveToken(response.data!.token!);
+      UserStoreService.to.saveRefreshToken(response.data!.refreshToken!);
+      Get.offAllNamed(AppRoutes.HOME);
+    } else {
+      Get.snackbar(
+        'خطا',
+        'کد تأیید درست است اما توکن دریافت نشد.',
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }).catchError((error) {
+    isLoadingConfirmCode.value = false;
+    Get.snackbar(
+      'خطا',
+      'مشکلی پیش آمد. لطفاً دوباره تلاش کنید.',
+      backgroundColor: Colors.red.shade600,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 8,
+      duration: const Duration(seconds: 3),
+    );
+  });
+}
+
 
   @override
   void onClose() {

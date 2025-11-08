@@ -4,7 +4,7 @@ const Map<String, String> enUS = {
   //region Login
   'login_title': 'ورود به حساب کاربری',
   //'login_title': 'Login',
-  'login_description': 'لطفا شماره همراه خود را وارد نمایید(بدون صفر)',
+  'login_description': 'لطفا شماره همراه خود را وارد نمایید',
   //'login_description': 'Please Enter Your Phone Number',
   //'login_phone_number_textField_label': 'Phone Number',
   'login_phone_number_textField_label': 'شماره همراه ',
