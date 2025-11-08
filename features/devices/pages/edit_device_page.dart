@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
@@ -81,24 +82,32 @@ class EditDevicePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              textAlign: TextAlign.right,
-              decoration: InputDecoration(
-                label: Align(
-                  alignment: Alignment.centerRight,
-                  child: const Text('نام دستگاه'),
-                ),
-                border: const OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.grey.shade400, width: 1),
-                ),
-              ),
-            ),
+
+
+TextField(
+  controller: nameController,
+  textAlign: TextAlign.right,
+  maxLength: 8, // حداکثر 8 کاراکتر
+  inputFormatters: [
+    LengthLimitingTextInputFormatter(8), // جلوگیری از وارد کردن بیشتر از 8 کاراکتر
+  ],
+  decoration: InputDecoration(
+    counterText: '', // مخفی کردن شمارنده پیش‌فرض
+    label: Align(
+      alignment: Alignment.centerRight,
+      child: const Text('نام دستگاه'),
+    ),
+    border: const OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide:
+          BorderSide(color: Colors.grey.shade400, width: 1),
+    ),
+  ),
+),
+
             const SizedBox(height: 16),
 // جایگزین بخش Obx و SingleChildScrollView فعلی
 SizedBox(
@@ -139,8 +148,10 @@ SizedBox(
         //   ),
         // ),
         // لیست مکان‌ها
-        ...locations.map((loc) {
-          final isSelected = selectedDashboardId.value == loc.id;
+...locations
+    .where((loc) => loc.title != "میانبر") // 🔹 فیلتر کردن میانبر
+    .map((loc) {
+      final isSelected = selectedDashboardId.value == loc.id;
           return GestureDetector(
             onTap: () => selectedDashboardId.value = loc.id,
             child: Container(

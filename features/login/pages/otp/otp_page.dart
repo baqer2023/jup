@@ -6,10 +6,18 @@ import 'package:my_app32/app/core/base/base_view.dart';
 import 'package:my_app32/features/login/pages/otp/otp_controller.dart';
 import 'package:my_app32/features/widgets/outline_button_widget.dart';
 import 'package:my_app32/features/widgets/text_form_field_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OtpPage extends BaseView<OtpController> {
   const OtpPage({super.key});
 
+  // تابعی برای باز کردن لینک
+  Future<void> _launchURL() async {
+    final Uri url = Uri.parse('https://jupiniot.ir/home');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
+  }
   @override
   Widget body() {
     return Directionality(
@@ -269,6 +277,7 @@ class OtpPage extends BaseView<OtpController> {
                           ),
                           const SizedBox(width: 4),
                           const Text(
+                            textDirection: TextDirection.ltr,
                             '۰۹۰۲ ۲۱۱ ۸۱ ۰۷',
                             style: TextStyle(
                               fontFamily: 'IranYekan',
@@ -285,25 +294,30 @@ class OtpPage extends BaseView<OtpController> {
 
                     // بخش دوم
                     Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/svg/Social Media-Icon(1).svg',
-                            width: 18,
-                            height: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'jupinshop.ir',
-                            style: TextStyle(
-                              fontFamily: 'IranYekan',
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset(
+            'assets/svg/Social Media-Icon(1).svg',
+            width: 18,
+            height: 18,
+          ),
+          const SizedBox(width: 4),
+          InkWell(
+            onTap: _launchURL,
+            child: const Text(
+              'jupinshop.ir',
+              style: TextStyle(
+                fontFamily: 'IranYekan',
+                fontSize: 10,
+                color: Colors.blue, // رنگ آبی برای حالت لینک
+                decoration: TextDecoration.underline, // خط زیر برای شبیه لینک
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
 
                     const Text('|',
                         style: TextStyle(fontSize: 14, color: Colors.grey)),
@@ -321,6 +335,7 @@ class OtpPage extends BaseView<OtpController> {
                           ),
                           const SizedBox(width: 4),
                           const Text(
+                            textDirection: TextDirection.ltr,
                             '۰۲۱  ۸۲ ۸۰ ۴۲ ۵۹',
                             style: TextStyle(
                               fontFamily: 'IranYekan',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
@@ -115,23 +116,28 @@ class AddDevicePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: deviceNameController,
-              textAlign: TextAlign.right,
-              decoration: InputDecoration(
-                label: Align(
-                  alignment: Alignment.centerRight,
-                  child: const Text('نام دستگاه'),
-                ),
-                border: const OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-                ),
-              ),
-            ),
+
+TextField(
+  controller: deviceNameController,
+  textAlign: TextAlign.right,
+  inputFormatters: [
+    LengthLimitingTextInputFormatter(8), // محدودیت ۸ کاراکتر
+  ],
+  decoration: InputDecoration(
+    counterText: '', // مخفی کردن شمارنده
+    label: Align(
+      alignment: Alignment.centerRight,
+      child: const Text('نام دستگاه'),
+    ),
+    border: const OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+    ),
+  ),
+),
             const SizedBox(height: 16),
             // لیست مکان‌ها افقی + دکمه افزودن
 // جایگزین بخش Obx و SingleChildScrollView فعلی
@@ -173,8 +179,10 @@ SizedBox(
           ),
         ),
         // لیست مکان‌ها
-        ...locations.map((loc) {
-          final isSelected = selectedDashboardId.value == loc.id;
+...locations
+    .where((loc) => loc.title != "میانبر") // 🔹 فیلتر کردن میانبر
+    .map((loc) {
+      final isSelected = selectedDashboardId.value == loc.id;
           return GestureDetector(
             onTap: () => selectedDashboardId.value = loc.id,
             child: Container(

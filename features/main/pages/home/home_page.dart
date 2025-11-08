@@ -262,77 +262,77 @@ buildSection(
                         ),
                 ),
 
-                // 🔸 بخش سناریوها
-                buildSection(
-                  title: 'سناریو ها',
-                  child: scenarios.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-  SizedBox(
-    height: 200, // می‌تونی کم یا زیاد کنی
-    child: SvgPicture.asset(
-      'assets/svg/EmptySenario.svg',
-      fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
-      width: double.infinity, // عرض کل Container رو می‌گیره
-    ),
-  ),
-  const SizedBox(height: 20),
-  const Text(
-    'هیچ سناریویی ایجاد نشده است',
-    style: TextStyle(
-      fontSize: 16,
-      color: Colors.grey,
-      fontWeight: FontWeight.w500,
-    ),
-    textAlign: TextAlign.center, // متن هم وسط چین بشه
-  ),
-],
+//                 // 🔸 بخش سناریوها
+//                 buildSection(
+//                   title: 'سناریو ها',
+//                   child: scenarios.isEmpty
+//                       ? Center(
+//                           child: Column(
+//                             mainAxisSize: MainAxisSize.min,
+//                             children: [
+//   SizedBox(
+//     height: 200, // می‌تونی کم یا زیاد کنی
+//     child: SvgPicture.asset(
+//       'assets/svg/EmptySenario.svg',
+//       fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
+//       width: double.infinity, // عرض کل Container رو می‌گیره
+//     ),
+//   ),
+//   const SizedBox(height: 20),
+//   const Text(
+//     'هیچ سناریویی ایجاد نشده است',
+//     style: TextStyle(
+//       fontSize: 16,
+//       color: Colors.grey,
+//       fontWeight: FontWeight.w500,
+//     ),
+//     textAlign: TextAlign.center, // متن هم وسط چین بشه
+//   ),
+// ],
 
-                          ),
-                        )
-                      : Column(
-                          children: scenarios.map((s) => _buildScenarioCard(s)).toList(),
-                        ),
-                ),
+//                           ),
+//                         )
+//                       : Column(
+//                           children: scenarios.map((s) => _buildScenarioCard(s)).toList(),
+//                         ),
+//                 ),
 
-                // 🔸 بخش مصرف انرژی
-                buildSection(
-                  title: 'مصرف انرژی',
-                  child: energyConsumption.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-  SizedBox(
-    height: 200, // می‌تونی کم یا زیاد کنی
-    child: SvgPicture.asset(
-      'assets/svg/EmptyEnergy.svg',
-      fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
-      width: double.infinity, // عرض کل Container رو می‌گیره
-    ),
-  ),
-  const SizedBox(height: 20),
-  const Text(
-    'هیچ مصرف انرژیی ایجاد نشده است',
-    style: TextStyle(
-      fontSize: 16,
-      color: Colors.grey,
-      fontWeight: FontWeight.w500,
-    ),
-    textAlign: TextAlign.center, // متن هم وسط چین بشه
-  ),
-],
+//                 // 🔸 بخش مصرف انرژی
+//                 buildSection(
+//                   title: 'مصرف انرژی',
+//                   child: energyConsumption.isEmpty
+//                       ? Center(
+//                           child: Column(
+//                             mainAxisSize: MainAxisSize.min,
+//                             children: [
+//   SizedBox(
+//     height: 200, // می‌تونی کم یا زیاد کنی
+//     child: SvgPicture.asset(
+//       'assets/svg/EmptyEnergy.svg',
+//       fit: BoxFit.contain, // این مهمه: تصویر اصلی رو خراب نمی‌کنه
+//       width: double.infinity, // عرض کل Container رو می‌گیره
+//     ),
+//   ),
+//   const SizedBox(height: 20),
+//   const Text(
+//     'هیچ مصرف انرژیی ایجاد نشده است',
+//     style: TextStyle(
+//       fontSize: 16,
+//       color: Colors.grey,
+//       fontWeight: FontWeight.w500,
+//     ),
+//     textAlign: TextAlign.center, // متن هم وسط چین بشه
+//   ),
+// ],
 
-                          ),
-                        )
-                      : Column(
-                          children: energyConsumption
-                              .map((e) => _buildEnergyCard(e))
-                              .toList(),
-                        ),
-                ),
+//                           ),
+//                         )
+//                       : Column(
+//                           children: energyConsumption
+//                               .map((e) => _buildEnergyCard(e))
+//                               .toList(),
+//                         ),
+//                 ),
 
                 const SizedBox(height: 32),
               ],
@@ -875,7 +875,7 @@ return ConstrainedBox(
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 16),
                         // عنوان دستگاه
                         Text(
                           title,
@@ -887,7 +887,7 @@ return ConstrainedBox(
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 16),
                         // مکان دستگاه با آیکن
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -927,7 +927,9 @@ return ConstrainedBox(
                     
 
                     // منوی سه‌نقطه
-                    PopupMenuButton<int>(
+                    
+                    Builder(
+  builder: (context) => PopupMenuButton<int>(
                       color: Colors.white,
                       icon: const Icon(
                         Icons.more_vert,
@@ -982,19 +984,137 @@ return ConstrainedBox(
           colorText: Colors.white,
         );
       }
-    } else if (value == 3) {
-                          await homeController.removeFromAllDashboard(device.deviceId);
-                          await homeController.refreshAllData();
-                          Get.snackbar('موفقیت', 'کلید از همه مکان‌ها حذف موقت شد',
-                              backgroundColor: Colors.green,
-                              colorText: Colors.white);
-                        } else if (value == 4) {
+    } else if (value == 3 || value == 4) {
+        // حذف موقت یا حذف کامل
+        final isPermanent = value == 4;
+        final actionText = isPermanent ? "حذف کامل" : "حذف موقت";
+
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 8,
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: const BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Text(
+                actionText,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    'آیا از $actionText دستگاه "${device.title}" مطمئن هستید؟',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.blue,
+                    size: 50,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+            actionsPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFFF39530),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(
+                            color: Color(0xFFF39530),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        'انصراف',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop(); // بستن دیالوگ
+                        if (isPermanent) {
                           await homeController.completeRemoveDevice(device.deviceId);
-                          await homeController.refreshAllData();
-                          Get.snackbar('موفقیت', 'دستگاه با موفقیت حذف شد',
-                              backgroundColor: Colors.green,
-                              colorText: Colors.white);
-                        } else if (value == 5) {
+                        } else {
+                          await homeController.removeFromAllDashboard(device.deviceId);
+                        }
+                        await homeController.refreshAllData();
+                        Get.snackbar(
+                          'موفقیت',
+                          isPermanent
+                              ? 'دستگاه با موفقیت حذف شد'
+                              : 'کلید از همه مکان‌ها حذف موقت شد',
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'تأیید',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+    } else if (value == 5) {
   Get.dialog(
     Dialog(
       backgroundColor: Colors.white,
@@ -1189,6 +1309,7 @@ return ConstrainedBox(
                         ),
                       ],
                     ),
+                    ),
                     // const SizedBox(width:2),
                     // آیکن تنظیمات LED (سمت راست)
                     GestureDetector(
@@ -1222,34 +1343,36 @@ Flexible(
       displayText = "نامشخص";
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        
-        
-        Flexible(
-          child: Text(
-            displayText,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 10,
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0), // کمی فاصله از لبه سمت راست
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Text(
+              displayText,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+              textAlign: TextAlign.right,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            softWrap: true,
-            textAlign: TextAlign.right,
           ),
-        ),
-        SizedBox(width: 4),
-        Icon(
-          Icons.access_time,
-          color: Colors.grey[600],
-          size: 14,
-        ),
-      ],
+          const SizedBox(width: 4),
+          Icon(
+            Icons.access_time,
+            color: Colors.grey[600],
+            size: 14,
+          ),
+        ],
+      ),
     );
   }),
 ),
+
 
                   ],
                 ),
@@ -1296,6 +1419,8 @@ Flexible(
     ),
   );
 }
+
+
 
 
   // ------------------- ستون کلید (Switch Row) اصلاح شده -------------------
@@ -1427,6 +1552,156 @@ Widget _buildSwitchRow({
   });
 }
 
+
+Future<void> showDeleteDeviceConfirmDialog(
+    BuildContext context,
+    String title,
+    Future<String?> Function() onDelete // تابع حذف برمی‌گرداند String? برای پیام خطا
+  ) async {
+
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 8,
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: const BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const Text(
+            'حذف دستگاه',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                'آیا از حذف "$title" مطمئن هستید؟',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.blue,
+                size: 50,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+        actionsPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🔸 دکمه انصراف
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFFF39530),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: Color(0xFFF39530),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'انصراف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+
+              // 🔹 دکمه حذف
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // بستن دیالوگ
+
+                    String? error = await onDelete();
+
+                    if (error == null) {
+                      await controller.refreshAllData();
+
+                      Get.snackbar(
+                        'موفقیت',
+                        'عملیات حذف با موفقیت انجام شد.',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
+                    } else {
+                      // ترجمه پیام خطا به فارسی
+                      String errorMessage = error;
+                      if (error.contains('Cannot delete dashboard: contains device configuration.')) {
+                        errorMessage = 'امکان حذف وجود ندارد؛ دستگاه‌هایی به این مکان متصل هستند.';
+                      }
+
+                      Get.snackbar(
+                        'خطا',
+                        errorMessage,
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'حذف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
 
 
   Widget _buildLoadingDeviceCard({required String title}) {

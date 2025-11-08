@@ -553,4 +553,61 @@ Future<void> updateLocation({
       );
     }
   }
+/// برمی‌گرداند null اگر حذف موفق بود، و متن خطا اگر حذف نشد
+Future<String?> deleteDashboardItem({
+  required String id,
+  required String title,
+  required int displayOrder,
+  required int iconIndex,
+}) async {
+  final headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+
+  var data = json.encode({
+    "title": title,
+    "displayOrder": displayOrder,
+    "iconIndex": iconIndex,
+  });
+
+  try {
+    final dio = Dio();
+    var response = await dio.request(
+      '$serverUrl/api/dashboard/remove/$id',
+      options: Options(
+        method: 'DELETE',
+        headers: headers,
+      ),
+      data: data,
+    );
+
+    if (response.statusCode == 200) {
+      print('✅ حذف موفق: ${response.data}');
+      return null; // موفقیت
+    } else {
+      print('❌ خطای سرور: ${response.data}');
+      // اگر سرور JSON با فیلد message داده، برگردان
+      if (response.data is Map && response.data['message'] != null) {
+        return response.data['message'];
+      }
+      return 'خطای نامشخص سرور';
+    }
+  } on DioException catch (e) {
+    if (e.response != null) {
+      print('🚨 خطای سرور (status code ${e.response?.statusCode}): ${e.response?.data}');
+      if (e.response?.data is Map && e.response?.data['message'] != null) {
+        return e.response?.data['message'];
+      }
+      return 'خطای نامشخص سرور';
+    } else {
+      print('🚨 خطای شبکه یا timeout: ${e.message}');
+      return 'خطای شبکه یا timeout';
+    }
+  } catch (e) {
+    print('🚨 خطای دیگر: $e');
+    return 'خطای داخلی برنامه';
+  }
+}
+
 }

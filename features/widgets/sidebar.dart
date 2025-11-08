@@ -87,7 +87,7 @@ class Sidebar extends StatelessWidget {
                     Navigator.pop(context);
                     Get.to(() =>  DevicesPage());
                   }),
-                  _buildSidebarItemWithDivider(context, 'سناریوها', () {}),
+                  // _buildSidebarItemWithDivider(context, 'سناریوها', () {}),
                   _buildSidebarItemWithDivider(context, 'گروه‌ها', () {
                     Navigator.pop(context);
                     Get.to(() => GroupsPage());

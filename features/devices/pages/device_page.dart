@@ -437,18 +437,178 @@ Flexible(
           ),
           leading: PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onSelected: (value) {
-              if (value == 'edit') {
-                Navigator.pop(context);
-                _showSingleLocationEditDialog(context, loc);
-              } else if (value == 'up') {
-                Navigator.pop(context);
-              } else if (value == 'down') {
-                Navigator.pop(context);
-              } else if (value == 'delete') {
-                Navigator.pop(context);
-              }
-            },
+onSelected: (value) async { // 👈 اینجا async اضافه کن
+  if (value == 'edit') {
+    Navigator.pop(context);
+    _showSingleLocationEditDialog(context, loc);
+  } else if (value == 'up') {
+    Navigator.pop(context);
+  } else if (value == 'down') {
+    Navigator.pop(context);
+} else if (value == 'delete') {
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 8,
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: const BoxDecoration(
+            color: Colors.blue, // رنگ قرمز برای هشدار حذف
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const Text(
+            'حذف مکان',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                'آیا از حذف "${loc.title}" مطمئن هستید؟',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.blue,
+                size: 50,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+        actionsPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🔸 دکمه انصراف
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFFF39530),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: Color(0xFFF39530),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'انصراف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+
+              // 🔹 دکمه حذف
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // بستن دیالوگ
+String? error = await controller.deleteDashboardItem(
+  id: loc.id,
+  title: loc.title,
+  displayOrder: 1,
+  iconIndex: loc.iconIndex,
+);
+
+if (error == null) {
+  await controller.refreshAllData();
+  controller.selectedLocationId.value = '';
+
+  Get.snackbar(
+    'حذف موفق',
+    'مکان "${loc.title}" با موفقیت حذف شد.',
+    snackPosition: SnackPosition.BOTTOM,
+    backgroundColor: Colors.green.shade600,
+    colorText: Colors.white,
+    duration: const Duration(seconds: 2),
+    margin: const EdgeInsets.all(12),
+    borderRadius: 10,
+  );
+
+  Get.offAll(() => DevicesPage());
+} else {
+  // 🔹 ترجمه پیام سرور به فارسی
+  String errorMessage = error;
+  if (error.contains('Cannot delete dashboard: contains device configuration.')) {
+    errorMessage = 'امکان حذف مکان وجود ندارد؛ دستگاه‌هایی به این مکان متصل هستند.';
+  }
+
+  Get.snackbar(
+    'خطا',
+    errorMessage,
+    snackPosition: SnackPosition.BOTTOM,
+    backgroundColor: Colors.red.shade600,
+    colorText: Colors.white,
+    duration: const Duration(seconds: 4),
+    margin: const EdgeInsets.all(12),
+    borderRadius: 10,
+  );
+}
+
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'حذف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+},
+
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'edit',
@@ -461,28 +621,28 @@ Flexible(
                   ],
                 ),
               ),
-              PopupMenuItem(
-                value: 'up',
-                child: Row(
-                  textDirection: TextDirection.rtl,
-                  children: [
-                    SvgPicture.asset('assets/svg/arrow_up.svg', width: 20, height: 20, color: Colors.black87),
-                    const SizedBox(width: 8),
-                    const Text('بالا بردن', style: TextStyle(color: Colors.black)),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'down',
-                child: Row(
-                  textDirection: TextDirection.rtl,
-                  children: [
-                    SvgPicture.asset('assets/svg/arrow_down.svg', width: 20, height: 20, color: Colors.black87),
-                    const SizedBox(width: 8),
-                    const Text('پایین آوردن', style: TextStyle(color: Colors.black)),
-                  ],
-                ),
-              ),
+              // PopupMenuItem(
+              //   value: 'up',
+              //   child: Row(
+              //     textDirection: TextDirection.rtl,
+              //     children: [
+              //       SvgPicture.asset('assets/svg/arrow_up.svg', width: 20, height: 20, color: Colors.black87),
+              //       const SizedBox(width: 8),
+              //       const Text('بالا بردن', style: TextStyle(color: Colors.black)),
+              //     ],
+              //   ),
+              // ),
+              // PopupMenuItem(
+              //   value: 'down',
+              //   child: Row(
+              //     textDirection: TextDirection.rtl,
+              //     children: [
+              //       SvgPicture.asset('assets/svg/arrow_down.svg', width: 20, height: 20, color: Colors.black87),
+              //       const SizedBox(width: 8),
+              //       const Text('پایین آوردن', style: TextStyle(color: Colors.black)),
+              //     ],
+              //   ),
+              // ),
               const PopupMenuDivider(),
               PopupMenuItem(
                 value: 'delete',
@@ -1042,100 +1202,218 @@ Widget _buildSmartDeviceCard({
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // PopupMenuButton (سه نقطه)
-                    PopupMenuButton<int>(
-                      color: Colors.white,
-                      icon: const Icon(
-                        Icons.more_vert,
-                        size: 20,
-                        color: Colors.black87,
+Builder(
+  builder: (context) => PopupMenuButton<int>(
+    color: Colors.white,
+    icon: const Icon(
+      Icons.more_vert,
+      size: 20,
+      color: Colors.black87,
+    ),
+    onSelected: (value) async {
+      if (value == 1) {
+        Get.to(() => EditDevicePage(
+              deviceId: device.deviceId,
+              serialNumber: device.sn,
+              initialName: device.title ?? '',
+              initialDashboardId: device.dashboardId ?? '',
+            ));
+      } else if (value == 0) {
+        // showLedColorDialog(device);
+      } else if (value == 2) {
+        // افزودن به داشبورد
+        if (!homeController.dashboardDevices.any(
+            (d) => d.deviceId == device.deviceId)) {
+          final token = homeController.token;
+          if (token == null) {
+            Get.snackbar("خطا", "توکن معتبر پیدا نشد",
+                backgroundColor: Colors.red, colorText: Colors.white);
+            return;
+          }
+          final headers = {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          };
+          final data = {"deviceId": device.deviceId};
+          try {
+            final dio = Dio();
+            final response = await dio.post(
+              'http://45.149.76.245:8080/api/shortcut/addDevice',
+              data: data,
+              options: Options(headers: headers),
+            );
+            if (response.statusCode == 200 || response.statusCode == 201) {
+              Get.snackbar(
+                  'موفقیت', 'دستگاه به داشبورد اضافه شد',
+                  backgroundColor: Colors.green, colorText: Colors.white);
+              homeController.dashboardDevices.add(device);
+            } else {
+              Get.snackbar(
+                'خطا',
+                'افزودن دستگاه موفق نبود: ${response.statusCode}',
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+              );
+            }
+          } catch (e) {
+            Get.snackbar(
+              'خطا',
+              'مشکل در ارتباط با سرور: $e',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        } else {
+          Get.snackbar(
+            'توجه',
+            'این دستگاه قبلاً به داشبورد اضافه شده است',
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+          );
+        }
+      } else if (value == 3 || value == 4) {
+        // حذف موقت یا حذف کامل
+        final isPermanent = value == 4;
+        final actionText = isPermanent ? "حذف کامل" : "حذف موقت";
+
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 8,
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: const BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Text(
+                actionText,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    'آیا از $actionText دستگاه "${device.title}" مطمئن هستید؟',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.blue,
+                    size: 50,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+            actionsPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFFF39530),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(
+                            color: Color(0xFFF39530),
+                            width: 2,
+                          ),
+                        ),
                       ),
-                      onSelected: (value) async {
-                        if (value == 1) {
-                          Get.to(() => EditDevicePage(
-                                deviceId: device.deviceId,
-                                serialNumber: device.sn,
-                                initialName: device.title ?? '',
-                                initialDashboardId: device.dashboardId ?? '',
-                              ));
-                        } else if (value == 0) {
-                          showLedColorDialog(device: device);
-                        } else if (value == 2) {
-                          // افزودن به داشبورد
-                          if (!homeController.dashboardDevices.any(
-                              (d) => d.deviceId == device.deviceId)) {
-                            final token = homeController.token;
-                            if (token == null) {
-                              Get.snackbar(
-                                  "خطا", "توکن معتبر پیدا نشد",
-                                  backgroundColor: Colors.red,
-                                  colorText: Colors.white);
-                              return;
-                            }
-                            final headers = {
-                              'Authorization': 'Bearer $token',
-                              'Content-Type': 'application/json',
-                            };
-                            final data = {"deviceId": device.deviceId};
-                            try {
-                              final dio = Dio();
-                              final response = await dio.post(
-                                'http://45.149.76.245:8080/api/shortcut/addDevice',
-                                data: data,
-                                options: Options(headers: headers),
-                              );
-                              if (response.statusCode == 200 ||
-                                  response.statusCode == 201) {
-                                Get.snackbar(
-                                    'موفقیت',
-                                    'دستگاه به داشبورد اضافه شد',
-                                    backgroundColor: Colors.green,
-                                    colorText: Colors.white);
-                                homeController.dashboardDevices.add(device);
-                              } else {
-                                Get.snackbar(
-                                  'خطا',
-                                  'افزودن دستگاه موفق نبود: ${response.statusCode}',
-                                  backgroundColor: Colors.red,
-                                  colorText: Colors.white,
-                                );
-                              }
-                            } catch (e) {
-                              Get.snackbar(
-                                'خطا',
-                                'مشکل در ارتباط با سرور: $e',
-                                backgroundColor: Colors.red,
-                                colorText: Colors.white,
-                              );
-                            }
-                          } else {
-                            Get.snackbar(
-                              'توجه',
-                              'این دستگاه قبلاً به داشبورد اضافه شده است',
-                              backgroundColor: Colors.orange,
-                              colorText: Colors.white,
-                            );
-                          }
-                        } else if (value == 3) {
-                          // حذف موقت
-                          await homeController.removeFromAllDashboard(device.deviceId);
-                          await homeController.refreshAllData();
-                          Get.snackbar(
-                            'موفقیت',
-                            'کلید از همه مکان‌ها حذف موقت شد',
-                            backgroundColor: Colors.green,
-                            colorText: Colors.white,
-                          );
-                        } else if (value == 4) {
-                          // حذف کامل
+                      child: const Text(
+                        'انصراف',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop(); // بستن دیالوگ
+                        if (isPermanent) {
                           await homeController.completeRemoveDevice(device.deviceId);
-                          await homeController.refreshAllData();
-                          Get.snackbar(
-                            'موفقیت',
-                            'دستگاه با موفقیت حذف شد',
-                            backgroundColor: Colors.green,
-                            colorText: Colors.white,
-                          );
-                        } else if (value == 5) {
+                        } else {
+                          await homeController.removeFromAllDashboard(device.deviceId);
+                        }
+                        await homeController.refreshAllData();
+                        Get.snackbar(
+                          'موفقیت',
+                          isPermanent
+                              ? 'دستگاه با موفقیت حذف شد'
+                              : 'کلید از همه مکان‌ها حذف موقت شد',
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'تأیید',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+    } 
+    // else if (value == 4) {
+    //   // حذف کامل
+    //   await showDeleteDeviceConfirmDialog(
+    //     context,
+    //     device.title,
+    //     () async {
+    //       await homeController.completeRemoveDevice(device.deviceId);
+    //       await homeController.refreshAllData();
+    //     },
+    //   );
+    // } 
+    else if (value == 5) {
   Get.dialog(
     Dialog(
       backgroundColor: Colors.white,
@@ -1355,7 +1633,8 @@ Widget _buildSmartDeviceCard({
                           ),
                         ),
                       ],
-                    ),
+                      ),
+),
                     const SizedBox(width: 6),
                     // SVG تنظیمات/LED
                     GestureDetector(
@@ -1530,6 +1809,155 @@ Widget _buildSmartDeviceCard({
       );
     });
   }
+Future<void> showDeleteDeviceConfirmDialog(
+    BuildContext context,
+    String title,
+    Future<String?> Function() onDelete // تابع حذف برمی‌گرداند String? برای پیام خطا
+  ) async {
+
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 8,
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: const BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: const Text(
+            'حذف دستگاه',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                'آیا از حذف "$title" مطمئن هستید؟',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.blue,
+                size: 50,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+        actionsPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🔸 دکمه انصراف
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFFF39530),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(
+                        color: Color(0xFFF39530),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'انصراف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+
+              // 🔹 دکمه حذف
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop(); // بستن دیالوگ
+
+                    String? error = await onDelete();
+
+                    if (error == null) {
+                      await controller.refreshAllData();
+
+                      Get.snackbar(
+                        'موفقیت',
+                        'عملیات حذف با موفقیت انجام شد.',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
+                    } else {
+                      // ترجمه پیام خطا به فارسی
+                      String errorMessage = error;
+                      if (error.contains('Cannot delete dashboard: contains device configuration.')) {
+                        errorMessage = 'امکان حذف وجود ندارد؛ دستگاه‌هایی به این مکان متصل هستند.';
+                      }
+
+                      Get.snackbar(
+                        'خطا',
+                        errorMessage,
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'حذف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
 
 void _showAddLocationDialog() {
   final TextEditingController nameController = TextEditingController();
