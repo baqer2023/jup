@@ -30,7 +30,7 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
   if (controller.isFirstLoad.value) {
     controller.selectedLocationId.value = '';
     controller.deviceList.clear();
-    controller.initData();
+    controller.initController();
     controller.isFirstLoad.value = false;
   } else {
     // اگر کاربر از صفحه‌ی دیگر برگشت

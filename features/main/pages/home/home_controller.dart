@@ -25,10 +25,16 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/widgets.dart'; // 👈 حتما باید باشه
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 // بقیه importهای خودت
 
 class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingObserver {
   HomeController(this._repo);
+
+  late Box box;
+
 
   final HomeRepository _repo;
   final TextEditingController titleController = TextEditingController();
@@ -46,12 +52,14 @@ class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingOb
   late Future<WeatherData> weatherFuture;
   String serverUrl = 'http://45.149.76.245:8080';
 
-    @override
-  void onInit() {
-    super.onInit();
-    WidgetsBinding.instance.addObserver(this); // ✅ حالا بدون خطا
-    initData();
-  }
+@override
+void onInit() {
+  super.onInit();
+  WidgetsBinding.instance.addObserver(this);
+
+  initController();   // ✔ فقط این باید اجرا شود
+}
+
 
   @override
   void onClose() {
@@ -86,11 +94,11 @@ class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingOb
     print("✅ initData finished");
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-    refreshAllData(); // هر بار صفحه باز بشه اجرا میشه
-  }
+@override
+void onReady() {
+  super.onReady();
+  // دیگر اینجا refresh یا initData لازم نیست
+}
 
   Future<void> _initializeToken() async {
     token = await UserStoreService.to.getToken() ?? '';
@@ -98,6 +106,77 @@ class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingOb
       await fetchUserLocations();
     }
   }
+
+
+Future<void> initController() async {
+  try {
+    print("🔹 HomeController initializing...");
+
+
+        if (token.isNotEmpty) {
+      await fetchUserLocations();
+      await fetchHomeDevices();
+    }
+
+    // 🔹 1) باز کردن باکس کش
+    box = await Hive.openBox('cache');
+    print("📦 Hive box opened");
+
+    // 🔹 2) گرفتن توکن
+    token = await UserStoreService.to.getToken() ?? '';
+    print("🔑 Token loaded: $token");
+
+    // 🔹 3) لود اولیه از کش (برای نمایش سریع و آفلاین)
+    _loadCachedDataOnStartup();
+
+    // 🔹 4) سپس گرفتن دیتا از اینترنت (غیرمسدود کننده)
+    Future.microtask(() async {
+      await refreshAllData();
+    });
+
+  } catch (e) {
+    print("❌ Error in initController: $e");
+  }
+}
+
+
+
+
+
+void _loadCachedDataOnStartup() {
+  print("📍 Loading cached data...");
+
+  // مکان‌ها
+  final cachedLocations = box.get('user_locations');
+  if (cachedLocations != null) {
+    userLocations.value = (cachedLocations as List)
+        .map((e) => LocationItem.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  // دستگاه‌های Home
+  final cachedHome = box.get('home_devices');
+  if (cachedHome != null) {
+    dashboardDevices.value = (cachedHome as List)
+        .map((e) => DeviceItem.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  // دستگاه‌های لوکیشن انتخاب‌شده
+  final locId = selectedLocationId.value;
+  if (locId.isNotEmpty) {
+    final cachedDevices = box.get('devices_$locId');
+    if (cachedDevices != null) {
+      deviceList.value = (cachedDevices as List)
+          .map((e) => DeviceItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
+  }
+
+  print("✅ Cached data loaded.");
+}
+
+
 
   // برای رفرش دستی
   Future<void> refreshWeather() async {
@@ -107,122 +186,265 @@ class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingOb
     update(); // باعث میشه ویجت‌هایی که به controller گوش میدن دوباره ساخته بشن
   }
 
+  // Future<void> fetchHomeDevices() async {
+  //   try {
+  //     final token = await UserStoreService.to.getToken();
+  //     if (token == null) return;
+
+  //     final headers = {'Authorization': 'Bearer $token'};
+
+  //     final dio = Dio();
+  //     final response = await dio.post(
+  //       'http://45.149.76.245:8080/api/dashboard/getHome',
+  //       options: Options(headers: headers),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       final data = response.data;
+
+  //       final devicesJson = data as List? ?? [];
+
+  //       dashboardDevices.value = devicesJson
+  //           .map((e) => DeviceItem.fromJson(e))
+  //           .toList();
+  //     } else {
+  //       Get.snackbar(
+  //         "خطا",
+  //         "دریافت دستگاه‌های داشبورد موفق نبود: ${response.statusCode}",
+  //       );
+  //     }
+  //   } catch (e) {
+  //     Get.snackbar("خطا", "اشکال در ارتباط با سرور: $e");
+  //   }
+  // }
+
   Future<void> fetchHomeDevices() async {
-    try {
-      final token = await UserStoreService.to.getToken();
-      if (token == null) return;
+  try {
+    final token = await UserStoreService.to.getToken();
+    if (token == null) return;
 
-      final headers = {'Authorization': 'Bearer $token'};
-
-      final dio = Dio();
-      final response = await dio.post(
-        'http://45.149.76.245:8080/api/dashboard/getHome',
-        options: Options(headers: headers),
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-
-        final devicesJson = data as List? ?? [];
-
-        dashboardDevices.value = devicesJson
-            .map((e) => DeviceItem.fromJson(e))
-            .toList();
-      } else {
-        Get.snackbar(
-          "خطا",
-          "دریافت دستگاه‌های داشبورد موفق نبود: ${response.statusCode}",
-        );
-      }
-    } catch (e) {
-      Get.snackbar("خطا", "اشکال در ارتباط با سرور: $e");
+    /// 1) کش را اول بخوان
+    final cached = box.get('home_devices');
+    if (cached != null) {
+      dashboardDevices.value = (cached as List)
+          .map((e) => DeviceItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+      print("📦 Loaded home devices from cache");
     }
+
+    /// 2) اینترنت
+    final dio = Dio();
+    final response = await dio.post(
+      'http://45.149.76.245:8080/api/dashboard/getHome',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    if (response.statusCode == 200) {
+      final devicesJson = response.data as List? ?? [];
+
+      dashboardDevices.value =
+          devicesJson.map((e) => DeviceItem.fromJson(e)).toList();
+
+      /// 3) ذخیره مجدد روی کش
+      box.put(
+        'home_devices',
+        dashboardDevices.map((e) => e.toJson()).toList(),
+      );
+      print("💾 Saved home devices to cache");
+    }
+  } catch (e) {
+    print("❌ fetchHomeDevices error: $e");
   }
+}
+
 
   // ------------------- User Locations -------------------
+  // Future<void> fetchUserLocations() async {
+  //   try {
+  //     if (token.isEmpty) return;
+
+  //     final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/list');
+  //     final data = json.encode({
+  //       "sortProperty": "createdTime",
+  //       "pageSize": 10,
+  //       "page": 0,
+  //       "sortOrder": "ASC",
+  //     });
+
+  //     final response = await http.post(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer $token',
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: data,
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       final model = UserLocationsResponseModel.fromJson(
+  //         json.decode(response.body),
+  //       );
+  //       userLocations.value = model.data;
+  //     } else {
+  //       print('Failed to fetch locations: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Error fetching user locations: $e');
+  //   }
+  // }
+
   Future<void> fetchUserLocations() async {
-    try {
-      if (token.isEmpty) return;
+  try {
+    /// 1) همیشه اول سعی کن از کش بخونی
+    final cached = box.get('user_locations');
+    if (cached != null) {
+      userLocations.value = (cached as List)
+          .map((e) => LocationItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+      print("📦 Loaded user locations from cache");
+    }
 
-      final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/list');
-      final data = json.encode({
-        "sortProperty": "createdTime",
-        "pageSize": 10,
-        "page": 0,
-        "sortOrder": "ASC",
-      });
+    if (token.isEmpty) return;
 
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: data,
+    /// 2) تلاش برای دریافت از سرور
+    final url = Uri.parse('http://45.149.76.245:8080/api/dashboard/list');
+    final data = json.encode({
+      "sortProperty": "createdTime",
+      "pageSize": 10,
+      "page": 0,
+      "sortOrder": "ASC",
+    });
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: data,
+    );
+
+    if (response.statusCode == 200) {
+      final model = UserLocationsResponseModel.fromJson(
+        json.decode(response.body),
       );
 
-      if (response.statusCode == 200) {
-        final model = UserLocationsResponseModel.fromJson(
-          json.decode(response.body),
-        );
-        userLocations.value = model.data;
-      } else {
-        print('Failed to fetch locations: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching user locations: $e');
+      userLocations.value = model.data;
+
+      /// 3) ذخیره در کش
+      final listToCache = model.data.map((e) => e.toJson()).toList();
+      box.put('user_locations', listToCache);
+      print("💾 Locations saved in cache");
     }
+  } catch (e) {
+    print("❌ fetchUserLocations error: $e");
   }
+}
+
 
   // ------------------- Devices by Location -------------------
+  // Future<void> fetchDevicesByLocation(String dashboardId) async {
+  //   try {
+  //     print('Fetching devices for dashboardId: $dashboardId');
+  //     if (token.isEmpty) return;
+
+  //     final url = Uri.parse(
+  //       'http://45.149.76.245:8080/api/dashboard/getDeviceList',
+  //     );
+  //     final body = json.encode({"dashboardId": dashboardId});
+
+  //     final response = await http.post(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer $token',
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: body,
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       final raw = json.decode(response.body);
+  //       print("Raw response: $raw");
+
+  //       if (raw is List) {
+  //         // فقط Map<String, dynamic> ها رو نگه می‌داره
+  //         final safeData = raw
+  //             .whereType<Map<String, dynamic>>()
+  //             .map((d) => DeviceItem.fromJson(d))
+  //             .toList();
+
+  //         deviceList.value = safeData;
+  //         deviceList.refresh();
+
+  //         print('✅ Devices parsed: ${deviceList.length}');
+  //       } else {
+  //         print("❌ Unexpected format: ${raw.runtimeType}");
+  //         deviceList.clear();
+  //       }
+  //     } else {
+  //       print('❌ Failed to fetch devices: ${response.statusCode}');
+  //       deviceList.clear();
+  //     }
+  //   } catch (e, st) {
+  //     print('❌ Error fetching devices: $e');
+  //     print(st);
+  //     deviceList.clear();
+  //   }
+  // }
+
   Future<void> fetchDevicesByLocation(String dashboardId) async {
-    try {
-      print('Fetching devices for dashboardId: $dashboardId');
-      if (token.isEmpty) return;
+  try {
+    /// 1) ابتدا کش را بخوان
+    final cached = box.get('devices_$dashboardId');
+    if (cached != null) {
+      deviceList.value = (cached as List)
+          .map((e) => DeviceItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
 
-      final url = Uri.parse(
-        'http://45.149.76.245:8080/api/dashboard/getDeviceList',
-      );
-      final body = json.encode({"dashboardId": dashboardId});
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        final raw = json.decode(response.body);
-        print("Raw response: $raw");
-
-        if (raw is List) {
-          // فقط Map<String, dynamic> ها رو نگه می‌داره
-          final safeData = raw
-              .whereType<Map<String, dynamic>>()
-              .map((d) => DeviceItem.fromJson(d))
-              .toList();
-
-          deviceList.value = safeData;
-          deviceList.refresh();
-
-          print('✅ Devices parsed: ${deviceList.length}');
-        } else {
-          print("❌ Unexpected format: ${raw.runtimeType}");
-          deviceList.clear();
-        }
-      } else {
-        print('❌ Failed to fetch devices: ${response.statusCode}');
-        deviceList.clear();
-      }
-    } catch (e, st) {
-      print('❌ Error fetching devices: $e');
-      print(st);
-      deviceList.clear();
+      print("📦 Loaded devices from cache for $dashboardId");
     }
+
+    if (token.isEmpty) return;
+
+    /// 2) درخواست سرور
+    final url = Uri.parse(
+      'http://45.149.76.245:8080/api/dashboard/getDeviceList',
+    );
+    final body = json.encode({"dashboardId": dashboardId});
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      final raw = json.decode(response.body);
+
+      if (raw is List) {
+        final safeData = raw
+            .whereType<Map<String, dynamic>>()
+            .map((d) => DeviceItem.fromJson(d))
+            .toList();
+
+        deviceList.value = safeData;
+
+        /// 3) ذخیره در کش برای این لوکیشن
+        box.put(
+          'devices_$dashboardId',
+          safeData.map((e) => e.toJson()).toList(),
+        );
+
+        print("💾 Saved devices in cache for $dashboardId");
+      }
+    }
+  } catch (e) {
+    print("❌ fetchDevicesByLocation error: $e");
   }
+}
+
 
   // ------------------- Refresh All -------------------
   // Future<void> refreshAllData() async {
@@ -242,31 +464,55 @@ class HomeController extends GetxController with AppUtilsMixin, WidgetsBindingOb
   // }
 
 
-  Future<void> refreshAllData() async {
+//   Future<void> refreshAllData() async {
+//   try {
+//     isRefreshing.value = true;
+
+//     // ۱. چک و رفرش توکن
+//     final tokenService = Get.find<TokenRefreshService>();
+//     await tokenService.checkAndRefreshToken();
+
+//     // ۲. برو مکان‌ها رو دوباره بگیر
+//     await fetchUserLocations();
+
+//     // ۳. اگر کاربر الان مکانی انتخاب کرده، دستگاه‌هایش را هم بیا 👇
+//     if (selectedLocationId.value.isNotEmpty) {
+//       await fetchDevicesByLocation(selectedLocationId.value);
+//     }
+
+//     // ۴. داده‌های آب‌وهوا و داشبورد کلی
+//     await refreshWeather();
+//     await fetchHomeDevices();
+//   } catch (e) {
+//     print('❌ Error refreshing data: $e');
+//   } finally {
+//     isRefreshing.value = false;
+//   }
+// }
+
+Future<void> refreshAllData() async {
   try {
     isRefreshing.value = true;
 
-    // ۱. چک و رفرش توکن
     final tokenService = Get.find<TokenRefreshService>();
     await tokenService.checkAndRefreshToken();
 
-    // ۲. برو مکان‌ها رو دوباره بگیر
     await fetchUserLocations();
 
-    // ۳. اگر کاربر الان مکانی انتخاب کرده، دستگاه‌هایش را هم بیا 👇
     if (selectedLocationId.value.isNotEmpty) {
       await fetchDevicesByLocation(selectedLocationId.value);
     }
 
-    // ۴. داده‌های آب‌وهوا و داشبورد کلی
     await refreshWeather();
     await fetchHomeDevices();
+
   } catch (e) {
-    print('❌ Error refreshing data: $e');
+    print("❌ Error in refreshAllData: $e");
   } finally {
     isRefreshing.value = false;
   }
 }
+
 
   // ------------------- Device Helpers -------------------
   String getDeviceTypeName(String code) {

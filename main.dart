@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:my_app32/app/bindings/main_binding.dart';
 import 'package:my_app32/app/core/languages/app_localization.dart';
 import 'package:my_app32/app/routes/app_pages.dart';
@@ -17,6 +19,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox('cache');
 
   await GetStorage.init();
 

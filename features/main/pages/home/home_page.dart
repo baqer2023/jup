@@ -42,7 +42,7 @@ class HomePage extends BaseView<HomeController> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.selectedLocationId.value = '';
       controller.deviceList.clear();
-      controller.initData(); // اگر میخوای initData هم صدا زده بشه
+      controller.initController(); // اگر میخوای initData هم صدا زده بشه
     });
 
     return Scaffold(
