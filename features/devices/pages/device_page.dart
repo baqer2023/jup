@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/app/core/base/base_view.dart';
 import 'package:my_app32/app/services/realable_controller.dart';
+import 'package:my_app32/core/lang/lang.dart';
 import 'package:my_app32/features/config/device_config_page.dart';
 import 'package:my_app32/features/devices/pages/edit_device_page.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
@@ -77,52 +78,64 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
                   children: [
                     Row(
                       children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Get.to(() => const AddDevicePage());
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.lightBlue.shade400,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                          child: const Text('ثبت دستگاه'),
-                        ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return ElevatedButton(
+    onPressed: () {
+      Get.to(() => const AddDevicePage());
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.lightBlue.shade400,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ),
+    ),
+    child: Text(Lang.t("register_device")),
+  );
+}),
+
                         const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: _showAddLocationDialog,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.yellow.shade700,
-                            side: BorderSide(
-                              color: Colors.yellow.shade700,
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                          child: const Text('افزودن مکان'),
-                        ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return ElevatedButton(
+    onPressed: _showAddLocationDialog,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.yellow.shade700,
+      side: BorderSide(
+        color: Colors.yellow.shade700,
+        width: 1.5,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ),
+    ),
+    child: Text(Lang.t("add_location")),
+  );
+}),
+
                       ],
                     ),
-                    const Text(
-                      'دستگاه‌ها',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t("devices"),
+    style: const TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    ),
+  );
+}),
+
                   ],
                 ),
               ),
@@ -171,13 +184,17 @@ GestureDetector(
           color: Colors.grey.shade600,
         ),
         const SizedBox(width: 6),
-        const Text(
-          'ویرایش',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
-        ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t("edit"),
+    style: const TextStyle(
+      color: Colors.grey,
+      fontSize: 14,
+    ),
+  );
+}),
+
       ],
     ),
   ),
@@ -284,15 +301,19 @@ child: Row(
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          "تا کنون دستگاهی ثبت نشده‌است،\nجهت ثبت دستگاه جدید روی دکمه ثبت دستگاه کلیک کنید",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                            height: 1.5,
-                          ),
-                        ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t("no_device_message"),
+    textAlign: TextAlign.center,
+    style: const TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+      height: 1.5,
+    ),
+  );
+}),
+
                       ],
                     ),
                   ),
@@ -380,23 +401,27 @@ void _showEditLocationsModal(BuildContext context, List locations) {
             mainAxisSize: MainAxisSize.min,
             children: [
               // هدر آبی با متن سفید
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'ویرایش مکان‌ها',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+    decoration: BoxDecoration(
+      color: Colors.blue,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Text(
+      Lang.t('edit_locations'), // کلید ترجمه
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
+      ),
+      textAlign: TextAlign.center,
+    ),
+  );
+}),
+
               const SizedBox(height: 12),
 
 // لیست مکان‌ها
@@ -456,37 +481,45 @@ onSelected: (value) async { // 👈 اینجا async اضافه کن
         ),
         elevation: 8,
         titlePadding: EdgeInsets.zero,
-        title: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: const BoxDecoration(
-            color: Colors.blue, // رنگ قرمز برای هشدار حذف
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: const Text(
-            'حذف مکان',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
+        title: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    decoration: const BoxDecoration(
+      color: Colors.blue, // رنگ هشدار یا رنگ دلخواه
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    child: Text(
+      Lang.t('delete_location'), // کلید ترجمه
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+        fontSize: 18,
+      ),
+      textAlign: TextAlign.center,
+    ),
+  );
+}),
+
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 8),
-              Text(
-                'آیا از حذف "${loc.title}" مطمئن هستید؟',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade800,
-                ),
-              ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('confirm_delete_location', params: {'title': loc.title}),
+    textAlign: TextAlign.center,
+    style: TextStyle(
+      fontSize: 15,
+      color: Colors.grey.shade800,
+    ),
+  );
+}),
+
               const SizedBox(height: 20),
               const Icon(
                 Icons.warning_amber_rounded,
@@ -507,96 +540,102 @@ onSelected: (value) async { // 👈 اینجا async اضافه کن
               // 🔸 دکمه انصراف
               SizedBox(
                 width: 100,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFFF39530),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(
-                        color: Color(0xFFF39530),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  child: const Text(
-                    'انصراف',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
+                child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return ElevatedButton(
+    onPressed: () => Navigator.of(context).pop(),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.white,
+      foregroundColor: const Color(0xFFF39530),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(
+          color: Color(0xFFF39530),
+          width: 2,
+        ),
+      ),
+    ),
+    child: Text(
+      Lang.t('cancel'), // ⚡ متن از فایل زبان گرفته می‌شود
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+    ),
+  );
+}),
+
               ),
               const SizedBox(width: 4),
 
               // 🔹 دکمه حذف
               SizedBox(
                 width: 100,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    Navigator.of(context).pop(); // بستن دیالوگ
-String? error = await controller.deleteDashboardItem(
-  id: loc.id,
-  title: loc.title,
-  displayOrder: 1,
-  iconIndex: loc.iconIndex,
-);
+                child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return ElevatedButton(
+    onPressed: () async {
+      Navigator.of(context).pop(); // بستن دیالوگ
+      String? error = await controller.deleteDashboardItem(
+        id: loc.id,
+        title: loc.title,
+        displayOrder: 1,
+        iconIndex: loc.iconIndex,
+      );
 
-if (error == null) {
-  await controller.refreshAllData();
-  controller.selectedLocationId.value = '';
+      if (error == null) {
+        await controller.refreshAllData();
+        controller.selectedLocationId.value = '';
 
-  Get.snackbar(
-    'حذف موفق',
-    'مکان "${loc.title}" با موفقیت حذف شد.',
-    snackPosition: SnackPosition.BOTTOM,
-    backgroundColor: Colors.green.shade600,
-    colorText: Colors.white,
-    duration: const Duration(seconds: 2),
-    margin: const EdgeInsets.all(12),
-    borderRadius: 10,
+        Get.snackbar(
+          Lang.t('delete_success_title'),
+          Lang.t('delete_success_message', params: {'location': loc.title}),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+          margin: const EdgeInsets.all(12),
+          borderRadius: 10,
+        );
+
+        Get.offAll(() => DevicesPage());
+      } else {
+        String errorMessage = error;
+        if (error.contains('Cannot delete dashboard: contains device configuration.')) {
+          errorMessage = Lang.t('delete_error_devices_attached');
+        }
+
+        Get.snackbar(
+          Lang.t('error'),
+          errorMessage,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+          margin: const EdgeInsets.all(12),
+          borderRadius: 10,
+        );
+      }
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.blue,
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    child: Text(
+      Lang.t('delete'),
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+    ),
   );
+}),
 
-  Get.offAll(() => DevicesPage());
-} else {
-  // 🔹 ترجمه پیام سرور به فارسی
-  String errorMessage = error;
-  if (error.contains('Cannot delete dashboard: contains device configuration.')) {
-    errorMessage = 'امکان حذف مکان وجود ندارد؛ دستگاه‌هایی به این مکان متصل هستند.';
-  }
-
-  Get.snackbar(
-    'خطا',
-    errorMessage,
-    snackPosition: SnackPosition.BOTTOM,
-    backgroundColor: Colors.red.shade600,
-    colorText: Colors.white,
-    duration: const Duration(seconds: 4),
-    margin: const EdgeInsets.all(12),
-    borderRadius: 10,
-  );
-}
-
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'حذف',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
@@ -617,7 +656,16 @@ if (error == null) {
                   children: [
                     SvgPicture.asset('assets/svg/edit.svg', width: 20, height: 20, color: Colors.black87),
                     const SizedBox(width: 8),
-                    const Text('ویرایش مکان', style: TextStyle(color: Colors.black)),
+                   Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('edit_locations'),
+    style: const TextStyle(
+      color: Colors.black,
+    ),
+  );
+}),
+
                   ],
                 ),
               ),
@@ -651,7 +699,16 @@ if (error == null) {
                   children: [
                     SvgPicture.asset('assets/svg/deleting.svg', width: 20, height: 20, color: Colors.red),
                     const SizedBox(width: 8),
-                    const Text('حذف مکان', style: TextStyle(color: Colors.red)),
+                    Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('delete_location'),
+    style: const TextStyle(
+      color: Colors.red,
+    ),
+  );
+}),
+
                   ],
                 ),
               ),
@@ -688,13 +745,17 @@ Row(
             ),
           ),
         ),
-        child: const Text(
-          'انصراف',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
+        child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('cancel'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
       ),
     ),
 
@@ -715,13 +776,17 @@ Row(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text(
-          'ثبت',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
+        child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('submit'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
       ),
     ),
   ],
@@ -752,15 +817,19 @@ void _showSingleLocationEditDialog(BuildContext context, dynamic loc) {
           borderRadius: BorderRadius.circular(20),
         ),
         elevation: 10,
-        title: const Text(
-          'ویرایش مکان',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 18,
-          ),
-          textAlign: TextAlign.center,
-        ),
+        title: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('edit_location'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Colors.black,
+      fontSize: 18,
+    ),
+    textAlign: TextAlign.center,
+  );
+}),
+
         content: StatefulBuilder(
   builder: (context, setState) {
     return SizedBox(
@@ -768,36 +837,66 @@ void _showSingleLocationEditDialog(BuildContext context, dynamic loc) {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-            controller: nameController,
-            textAlign: TextAlign.right,
-            decoration: InputDecoration(
-              label: const Align(
-                alignment: Alignment.centerRight,
-                child: Text('نام مکان'),
-              ),
-              hintText: 'نام مکان را وارد کنید',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.blue, width: 2),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-              ),
-            ),
+TextField(
+  controller: nameController,
+  textAlign: TextAlign.right,
+  decoration: InputDecoration(
+    label: Align(
+      alignment: Alignment.centerRight,
+      child: Obx(() {
+        final _ = Lang.current.value; // ⚡ reactive trigger
+        return Text(
+          Lang.t('location_name'),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
           ),
+        );
+      }),
+    ),
+    hintText: null, // hintText مستقیم نمی‌ذاریم، از suffix استفاده می‌کنیم
+    // استفاده از Obx برای hintText
+    hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
+    hintTextDirection: TextDirection.rtl,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.blue, width: 2),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+    ),
+  ),
+  buildCounter: (BuildContext context, {int? currentLength, int? maxLength, bool? isFocused}) {
+    // برای hintText داینامیک داخل Obx
+    return Obx(() {
+      final _ = Lang.current.value;
+      return Text(
+        Lang.t('enter_location_name'),
+        style: const TextStyle(fontSize: 14, color: Colors.grey),
+      );
+    });
+  },
+),
+
           const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'انتخاب آیکن مکان:',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade800),
-            ),
-          ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Align(
+    alignment: Alignment.centerRight,
+    child: Text(
+      Lang.t('select_location_icon'), // کلید ترجمه
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.grey.shade800,
+      ),
+    ),
+  );
+}),
+
           const SizedBox(height: 8),
           _buildIconSelector(setState, selectedIconIndex),
           const SizedBox(height: 12),
@@ -832,13 +931,17 @@ actions: [
               ),
             ),
           ),
-          child: const Text(
-            'انصراف',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
+          child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('cancel'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
         ),
       ),
 
@@ -875,13 +978,17 @@ actions: [
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text(
-            'ذخیره',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
+          child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('save'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
         ),
       ),
     ],
@@ -905,13 +1012,19 @@ actions: [
     final devices = controller.deviceList;
 
     if (devices.isEmpty) {
-      return const Center(
+      return  Center(
         child: Padding(
           padding: EdgeInsets.all(32),
-          child: Text(
-            'برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید',
-            style: TextStyle(color: Colors.grey),
-          ),
+          child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('select_location_to_view_devices'),
+    style: TextStyle(
+      color: Colors.grey,
+    ),
+  );
+}),
+
         ),
       );
     }
@@ -980,29 +1093,29 @@ actions: [
                   iconColor1 = switch1On
                       ? Color.fromARGB(
                           255,
-                          ledMap['t1']['on']['r'],
-                          ledMap['t1']['on']['g'],
-                          ledMap['t1']['on']['b'],
+                          ledMap['c']['t1']['on']['r'],
+                          ledMap['c']['t1']['on']['g'],
+                          ledMap['c']['t1']['on']['b'],
                         )
                       : Color.fromARGB(
                           255,
-                          ledMap['t1']['off']['r'],
-                          ledMap['t1']['off']['g'],
-                          ledMap['t1']['off']['b'],
+                          ledMap['c']['t1']['off']['r'],
+                          ledMap['c']['t1']['off']['g'],
+                          ledMap['c']['t1']['off']['b'],
                         );
 
                   iconColor2 = switch2On
                       ? Color.fromARGB(
                           255,
-                          ledMap['t2']['on']['r'],
-                          ledMap['t2']['on']['g'],
-                          ledMap['t2']['on']['b'],
+                          ledMap['c']['t2']['on']['r'],
+                          ledMap['c']['t2']['on']['g'],
+                          ledMap['c']['t2']['on']['b'],
                         )
                       : Color.fromARGB(
                           255,
-                          ledMap['t2']['off']['r'],
-                          ledMap['t2']['off']['g'],
-                          ledMap['t2']['off']['b'],
+                          ledMap['c']['t2']['off']['r'],
+                          ledMap['c']['t2']['off']['g'],
+                          ledMap['c']['t2']['off']['b'],
                         );
                 }
               }
@@ -1132,26 +1245,34 @@ Widget _buildSmartDeviceCard({
                                   color: isOnline ? Colors.blue : Colors.grey,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Text(
-                                  isOnline ? "آنلاین" : "آفلاین",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                                child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    isOnline ? Lang.t("online") : Lang.t("offline"),
+    style: const TextStyle(
+      color: Colors.white,
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+    ),
+  );
+}),
+
                               );
                             }),
                             const SizedBox(width: 6),
-                            Text(
-                              isSingleKey ? "کلید تک پل" : "کلید دو پل",
-                              textAlign: TextAlign.right,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                           Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    isSingleKey ? Lang.t("single_key") : Lang.t("double_key"),
+    textAlign: TextAlign.right,
+    style: const TextStyle(
+      fontSize: 12,
+      color: Colors.grey,
+      fontWeight: FontWeight.w500,
+    ),
+  );
+}),
+
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -1272,136 +1393,113 @@ Builder(
           );
         }
       } else if (value == 3 || value == 4) {
-        // حذف موقت یا حذف کامل
-        final isPermanent = value == 4;
-        final actionText = isPermanent ? "حذف کامل" : "حذف موقت";
+  final isPermanent = value == 4;
 
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 8,
-            titlePadding: EdgeInsets.zero,
-            title: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Text(
-                actionText,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 8),
-                  Text(
-                    'آیا از $actionText دستگاه "${device.title}" مطمئن هستید؟',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.blue,
-                    size: 50,
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-            actionsPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            actionsAlignment: MainAxisAlignment.spaceBetween,
-            actions: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 100,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFFF39530),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            color: Color(0xFFF39530),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      child: const Text(
-                        'انصراف',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  SizedBox(
-                    width: 100,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        Navigator.of(context).pop(); // بستن دیالوگ
-                        if (isPermanent) {
-                          await homeController.completeRemoveDevice(device.deviceId);
-                        } else {
-                          await homeController.removeFromAllDashboard(device.deviceId);
-                        }
-                        await homeController.refreshAllData();
-                        Get.snackbar(
-                          'موفقیت',
-                          isPermanent
-                              ? 'دستگاه با موفقیت حذف شد'
-                              : 'کلید از همه مکان‌ها حذف موقت شد',
-                          backgroundColor: Colors.green,
-                          colorText: Colors.white,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'تأیید',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+  await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 8,
+      titlePadding: EdgeInsets.zero,
+      title: Obx(() {
+        final _ = Lang.current.value; // reactive trigger
+        final actionText = isPermanent ? Lang.t("complete_delete") : Lang.t("temporary_delete");
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: const BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Text(
+            actionText,
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+            textAlign: TextAlign.center,
           ),
         );
-    } 
+      }),
+      content: Obx(() {
+        final _ = Lang.current.value;
+        final actionText = isPermanent ? Lang.t("complete_delete") : Lang.t("temporary_delete");
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Text(
+              '${Lang.t("confirm_delete")} "$actionText" ${device.title}؟',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: Colors.grey.shade800),
+            ),
+            const SizedBox(height: 20),
+            const Icon(Icons.warning_amber_rounded, color: Colors.blue, size: 50),
+            const SizedBox(height: 8),
+          ],
+        );
+      }),
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actions: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 100,
+              child: Obx(() {
+                final _ = Lang.current.value;
+                return ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFFF39530),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: Color(0xFFF39530), width: 2),
+                    ),
+                  ),
+                  child: Text(Lang.t("cancel"), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                );
+              }),
+            ),
+            const SizedBox(width: 4),
+            SizedBox(
+              width: 100,
+              child: Obx(() {
+                final _ = Lang.current.value;
+                return ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    if (isPermanent) {
+                      await homeController.completeRemoveDevice(device.deviceId);
+                    } else {
+                      await homeController.removeFromAllDashboard(device.deviceId);
+                    }
+                    await homeController.refreshAllData();
+                    Get.snackbar(
+                      Lang.t("success"),
+                      isPermanent ? Lang.t("device_deleted_success") : Lang.t("device_temp_removed"),
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(Lang.t("confirm"), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                );
+              }),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
     // else if (value == 4) {
     //   // حذف کامل
     //   await showDeleteDeviceConfirmDialog(
@@ -1425,21 +1523,29 @@ Builder(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "بازنشانی / پیکربندی",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.center,
-            ),
+           Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('reset_config'),
+    style: const TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: Colors.black87,
+    ),
+    textAlign: TextAlign.center,
+  );
+}),
+
             const SizedBox(height: 8),
-            const Text(
-              "می‌خواهید چه کاری انجام دهید؟",
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-              textAlign: TextAlign.center,
-            ),
+Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('choose_action'),
+    style: const TextStyle(fontSize: 14, color: Colors.black54),
+    textAlign: TextAlign.center,
+  );
+}),
+
             const SizedBox(height: 20),
 
             // --- گزینه پیکربندی ---
@@ -1457,14 +1563,18 @@ Builder(
                 },
                 child: ListTile(
                   trailing: const Icon(Icons.settings, color: Colors.blueAccent),
-                  title: const Text(
-                    textDirection: TextDirection.rtl,
-                    "رفتن به پیکربندی",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  title: Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('go_to_config'),
+    textDirection: TextDirection.rtl,
+    style: const TextStyle(
+      fontWeight: FontWeight.w600,
+      color: Colors.black87,
+    ),
+  );
+}),
+
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
@@ -1493,14 +1603,18 @@ Builder(
                 },
                 child: ListTile(
                   trailing: const Icon(Icons.refresh, color: Colors.redAccent),
-                  title: const Text(
-                    textDirection: TextDirection.rtl,
-                    "ریست دستگاه",
-                    style: TextStyle(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  title: Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('reset_device'),
+    textDirection: TextDirection.rtl,
+    style: const TextStyle(
+      color: Colors.redAccent,
+      fontWeight: FontWeight.w600,
+    ),
+  );
+}),
+
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
@@ -1520,14 +1634,18 @@ Builder(
                 onTap: () => Get.back(),
                 child: ListTile(
                   trailing: const Icon(Icons.cancel, color: Colors.amber),
-                  title: const Text(
-                    textDirection: TextDirection.rtl,
-                    "انصراف",
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  title: Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('cancel'),
+    textDirection: TextDirection.rtl,
+    style: const TextStyle(
+      color: Colors.amber,
+      fontWeight: FontWeight.w600,
+    ),
+  );
+}),
+
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
@@ -1553,8 +1671,14 @@ Builder(
                                 color: Colors.blueAccent,
                               ),
                               const SizedBox(width: 2),
-                              const Text('ویرایش کلید',
-                                  style: TextStyle(color: Colors.black)),
+                           Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('edit_key'),
+    style: const TextStyle(color: Colors.black),
+  );
+}),
+
                             ],
                           ),
                         ),
@@ -1587,8 +1711,14 @@ Builder(
                                     width: 20,
                                     height: 20),
                                 const SizedBox(width: 2),
-                                const Text('افزودن به داشبورد',
-                                    style: TextStyle(color: Colors.black)),
+                                 Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('add_to_dashboard'),
+    style: const TextStyle(color: Colors.black),
+  );
+}),
+
                               ],
                             ),
                           ),
@@ -1600,8 +1730,14 @@ Builder(
                               SvgPicture.asset('assets/svg/reset.svg',
                                   width: 20, height: 20),
                               const SizedBox(width: 2),
-                              const Text('بازنشانی / پیکربندی',
-                                  style: TextStyle(color: Colors.black)),
+                             Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('reset_config'),
+    style: const TextStyle(color: Colors.black),
+  );
+}),
+
                             ],
                           ),
                         ),
@@ -1614,8 +1750,14 @@ Builder(
                               SvgPicture.asset('assets/svg/delete_temp.svg',
                                   width: 20, height: 20, color: Colors.red),
                               const SizedBox(width: 2),
-                              const Text('حذف موقت',
-                                  style: TextStyle(color: Colors.red)),
+                               Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('temporary_delete'),
+    style: const TextStyle(color: Colors.red),
+  );
+}),
+
                             ],
                           ),
                         ),
@@ -1627,8 +1769,14 @@ Builder(
                               SvgPicture.asset('assets/svg/deleting.svg',
                                   width: 20, height: 20, color: Colors.red),
                               const SizedBox(width: 2),
-                              const Text('حذف کامل',
-                                  style: TextStyle(color: Colors.red)),
+                             Obx(() {
+  final _ = Lang.current.value; // reactive trigger
+  return Text(
+    Lang.t('complete_delete'),
+    style: const TextStyle(color: Colors.red),
+  );
+}),
+
                             ],
                           ),
                         ),
@@ -1650,31 +1798,33 @@ Builder(
                     ),
                     const Spacer(),
                     // آخرین همگام‌سازی
-                    Obx(() {
-                      final lastSeen =
-                          reliableController.lastDeviceActivity[deviceId];
-                      String lastActivityText;
+Obx(() {
+  final lastSeen = reliableController.lastDeviceActivity[deviceId];
+  String lastActivityText;
 
-                      if (lastSeen != null) {
-                        final formattedDate =
-                            "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
-                        final formattedTime =
-                            "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
-                        lastActivityText =
-                            "آخرین همگام سازی: $formattedDate - $formattedTime";
-                      } else {
-                        lastActivityText = "آخرین همگام سازی: نامشخص";
-                      }
+  if (lastSeen != null) {
+    final formattedDate =
+        "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+    final formattedTime =
+        "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+    lastActivityText = Lang.t('last_sync_date_time', params: {
+      'date': formattedDate,
+      'time': formattedTime,
+    });
+  } else {
+    lastActivityText = Lang.t('last_sync_unknown');
+  }
 
-                      return Text(
-                        lastActivityText,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 10,
-                        ),
-                        textAlign: TextAlign.right,
-                      );
-                    }),
+  return Text(
+    lastActivityText,
+    style: TextStyle(
+      color: Colors.grey[600],
+      fontSize: 10,
+    ),
+    textAlign: TextAlign.right,
+  );
+}),
+
                   ],
                 ),
               ],
@@ -1797,13 +1947,17 @@ Builder(
             const SizedBox(width: 10),
 
             // اسم کلید (فونت بزرگتر)
-            Text(
-              "کلید $switchNumber",
-              style: const TextStyle(
-                fontSize: 16, // فونت بزرگتر
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('switch_number', params: {'number': switchNumber.toString()}),
+    style: const TextStyle(
+      fontSize: 16, // فونت بزرگتر
+      fontWeight: FontWeight.w600,
+    ),
+  );
+}),
+
           ],
         ),
       );
@@ -1832,15 +1986,19 @@ Future<void> showDeleteDeviceConfirmDialog(
             color: Colors.blue,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: const Text(
-            'حذف دستگاه',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 18,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('delete_device'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+      fontSize: 18,
+    ),
+    textAlign: TextAlign.center,
+  );
+}),
+
         ),
         content: SizedBox(
           width: double.maxFinite,
@@ -1848,14 +2006,18 @@ Future<void> showDeleteDeviceConfirmDialog(
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 8),
-              Text(
-                'آیا از حذف "$title" مطمئن هستید؟',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade800,
-                ),
-              ),
+              Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('confirm_delete_item', params: {'title': title}),
+    textAlign: TextAlign.center,
+    style: TextStyle(
+      fontSize: 15,
+      color: Colors.grey.shade800,
+    ),
+  );
+}),
+
               const SizedBox(height: 20),
               const Icon(
                 Icons.warning_amber_rounded,
@@ -1890,13 +2052,17 @@ Future<void> showDeleteDeviceConfirmDialog(
                       ),
                     ),
                   ),
-                  child: const Text(
-                    'انصراف',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('cancel'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
                 ),
               ),
               const SizedBox(width: 4),
@@ -1942,13 +2108,17 @@ Future<void> showDeleteDeviceConfirmDialog(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'حذف',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('delete'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
                 ),
               ),
             ],
@@ -1982,15 +2152,19 @@ void _showAddLocationDialog() {
                 color: Colors.blue,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              child: const Text(
-                'افزودن مکان',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('add_location'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+      fontSize: 18,
+    ),
+    textAlign: TextAlign.center,
+  );
+}),
+
             ),
             content: SizedBox(
               width: double.maxFinite,
@@ -1998,47 +2172,59 @@ void _showAddLocationDialog() {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: nameController,
-                      textAlign: TextAlign.right,
-                      decoration: InputDecoration(
-                        label: const Align(
-                          alignment: Alignment.centerRight,
-                          child: Text('نام مکان'),
-                        ),
-                        hintText: 'نام مکان را وارد کنید',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: Colors.blue, width: 2),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade400, width: 1),
-                        ),
-                      ),
-                    ),
+Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return TextField(
+    controller: nameController,
+    textAlign: TextAlign.right,
+    decoration: InputDecoration(
+      label: Align(
+        alignment: Alignment.centerRight,
+        child: Text(
+          Lang.t('location_name'),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      ),
+      hintText: Lang.t('enter_location_name'),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 10,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.blue, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+      ),
+    ),
+  );
+}),
+
                     const SizedBox(height: 20),
 
                     /// عنوان بخش آیکن‌ها
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        'انتخاب آیکن مکان:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                    ),
+                Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Align(
+    alignment: Alignment.centerRight,
+    child: Text(
+      Lang.t('select_location_icon'), // کلید ترجمه در فایل JSON
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.grey.shade800,
+      ),
+    ),
+  );
+}),
+
                     const SizedBox(height: 10),
 
                     /// لیست آیکن‌ها
@@ -2120,13 +2306,17 @@ SizedBox(
                           ),
                         ),
                       ),
-                      child: const Text(
-                        'انصراف',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('cancel'), // کلید ترجمه در JSON
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -2171,13 +2361,17 @@ SizedBox(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'ثبت',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('submit'), // کلید ترجمه در JSON
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+}),
+
                     ),
                   ),
                 ],
@@ -2232,11 +2426,15 @@ SizedBox(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(
-                          'کلید ۱: در حال بارگذاری...',
-                          style: const TextStyle(fontSize: 12),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('key_loading', params: {'number': '۱'}), // کلید ترجمه با پارامتر شماره
+    style: const TextStyle(fontSize: 12),
+    overflow: TextOverflow.ellipsis,
+  );
+}),
+
                       ),
                       Switch(
                         value: false,
@@ -2249,11 +2447,15 @@ SizedBox(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(
-                          'کلید ۲: در حال بارگذاری...',
-                          style: const TextStyle(fontSize: 12),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('key_loading', params: {'number': '۲'}),
+    style: const TextStyle(fontSize: 12),
+    overflow: TextOverflow.ellipsis,
+  );
+}),
+
                       ),
                       Switch(
                         value: false,
@@ -2293,10 +2495,14 @@ SizedBox(
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
-                'هیچ دستگاهی یافت نشد',
-                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-              ),
+            Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('no_device_found'),
+    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+  );
+}),
+
             ],
           );
         },
@@ -2328,33 +2534,33 @@ void showLedColorDialog({required DeviceItem device}) {
           ? jsonDecode(ledEntry)
           : (ledEntry as Map<String, dynamic>);
 
-      if (ledMap['t1'] != null) {
+      if (ledMap['c']['t1'] != null) {
         touch1On.value = Color.fromARGB(
           255,
-          (ledMap['t1']['on']['r'] as int).clamp(0, 255),
-          (ledMap['t1']['on']['g'] as int).clamp(0, 255),
-          (ledMap['t1']['on']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['on']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['on']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['on']['b'] as int).clamp(0, 255),
         );
         touch1Off.value = Color.fromARGB(
           255,
-          (ledMap['t1']['off']['r'] as int).clamp(0, 255),
-          (ledMap['t1']['off']['g'] as int).clamp(0, 255),
-          (ledMap['t1']['off']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['off']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['off']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['off']['b'] as int).clamp(0, 255),
         );
       }
 
-      if (!isSingleKey && ledMap['t2'] != null) {
+      if (!isSingleKey && ledMap['c']['t2'] != null) {
         touch2On.value = Color.fromARGB(
           255,
-          (ledMap['t2']['on']['r'] as int).clamp(0, 255),
-          (ledMap['t2']['on']['g'] as int).clamp(0, 255),
-          (ledMap['t2']['on']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['on']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['on']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['on']['b'] as int).clamp(0, 255),
         );
         touch2Off.value = Color.fromARGB(
           255,
-          (ledMap['t2']['off']['r'] as int).clamp(0, 255),
-          (ledMap['t2']['off']['g'] as int).clamp(0, 255),
-          (ledMap['t2']['off']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['off']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['off']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['off']['b'] as int).clamp(0, 255),
         );
       }
     } catch (e) {
@@ -2383,44 +2589,49 @@ void showLedColorDialog({required DeviceItem device}) {
           ),
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          child: const Center(
-            child: Text(
-              'تنظیمات پیشرفته',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          child:  Center(
+            child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('advanced_settings'),
+    style: const TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+    ),
+  );
+}),
+
           ),
         ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Obx(() => _ColorPreviewPicker(
-                    label: 'کلید ۱ روشن',
-                    color: touch1On.value,
-                    onPick: (c) => touch1On.value = c,
-                  )),
-              Obx(() => _ColorPreviewPicker(
-                    label: 'کلید ۱ خاموش',
-                    color: touch1Off.value,
-                    onPick: (c) => touch1Off.value = c,
-                  )),
-              if (!isSingleKey) ...[
-                const SizedBox(height: 8),
-                Obx(() => _ColorPreviewPicker(
-                      label: 'کلید ۲ روشن',
-                      color: touch2On.value,
-                      onPick: (c) => touch2On.value = c,
-                    )),
-                Obx(() => _ColorPreviewPicker(
-                      label: 'کلید ۲ خاموش',
-                      color: touch2Off.value,
-                      onPick: (c) => touch2Off.value = c,
-                    )),
-              ],
-            ],
+children: [
+  Obx(() => _ColorPreviewPicker(
+        label: Lang.t('single_key_on'), // 🔹 ترجمه
+        color: touch1On.value,
+        onPick: (c) => touch1On.value = c,
+      )),
+  Obx(() => _ColorPreviewPicker(
+        label: Lang.t('single_key_off'),
+        color: touch1Off.value,
+        onPick: (c) => touch1Off.value = c,
+      )),
+  if (!isSingleKey) ...[
+    const SizedBox(height: 8),
+    Obx(() => _ColorPreviewPicker(
+          label: Lang.t('double_key_on'),
+          color: touch2On.value,
+          onPick: (c) => touch2On.value = c,
+        )),
+    Obx(() => _ColorPreviewPicker(
+          label: Lang.t('double_key_off'),
+          color: touch2Off.value,
+          onPick: (c) => touch2Off.value = c,
+        )),
+  ],
+],
+
           ),
         ),
         actions: [
@@ -2446,13 +2657,17 @@ void showLedColorDialog({required DeviceItem device}) {
                         ),
                       ),
                     ),
-                    child: const Text(
-                      "انصراف",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                    child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('cancel'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  );
+}),
+
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -2506,7 +2721,7 @@ void showLedColorDialog({required DeviceItem device}) {
                         print('🔹 Sending LED color payload: $data');
 
                         final response = await dio.post(
-                          'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
+                          'http://45.149.76.245:8080/api/plugins/telemetry/changeDeviceState',
                           options: Options(headers: headers),
                           data: data,
                         );
@@ -2551,13 +2766,17 @@ void showLedColorDialog({required DeviceItem device}) {
                       ),
                       elevation: 2,
                     ),
-                    child: const Text(
-                      'ثبت',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                    child:Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('submit'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  );
+}),
+
                   ),
                 ),
               ],
@@ -2609,15 +2828,19 @@ class _ColorPreviewPicker extends StatelessWidget {
                       ),
                       border: Border.all(color: Colors.blue, width: 2),
                     ),
-                    child: const Center(
-                      child: Text(
-                        'تغییر رنگ کلید',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                      ),
+                    child:  Center(
+                      child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('change_key_color'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 18,
+      color: Colors.white,
+    ),
+  );
+}),
+
                     ),
                   ),
                   content: SingleChildScrollView(
@@ -2684,13 +2907,17 @@ class _ColorPreviewPicker extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              child: const Text(
-                                "انصراف",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
+                              child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('cancel'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  );
+}),
+
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -2709,13 +2936,17 @@ class _ColorPreviewPicker extends StatelessWidget {
                                 ),
                                 elevation: 2,
                               ),
-                              child: const Text(
-                                'تایید',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
+                              child: Obx(() {
+  final _ = Lang.current.value; // ⚡ reactive trigger
+  return Text(
+    Lang.t('confirm'),
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    ),
+  );
+}),
+
                             ),
                           ),
                         ],

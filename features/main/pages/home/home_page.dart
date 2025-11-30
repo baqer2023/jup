@@ -519,6 +519,8 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
       return _buildNoDevicesFound();
     }
 
+    print(devices);
+
     final reliableController =
         Get.isRegistered<ReliableSocketController>(
           tag: 'smartDevicesController',
@@ -672,29 +674,29 @@ return Column(
                                         iconColor1 = switch1On
                                             ? Color.fromARGB(
                                                 255,
-                                                ledMap['t1']['on']['r'],
-                                                ledMap['t1']['on']['g'],
-                                                ledMap['t1']['on']['b'],
+                                                ledMap['c']['t1']['on']['r'],
+                                                ledMap['c']['t1']['on']['g'],
+                                                ledMap['c']['t1']['on']['b'],
                                               )
                                             : Color.fromARGB(
                                                 255,
-                                                ledMap['t1']['off']['r'],
-                                                ledMap['t1']['off']['g'],
-                                                ledMap['t1']['off']['b'],
+                                                ledMap['c']['t1']['off']['r'],
+                                                ledMap['c']['t1']['off']['g'],
+                                                ledMap['c']['t1']['off']['b'],
                                               );
 
                                         iconColor2 = switch2On
                                             ? Color.fromARGB(
                                                 255,
-                                                ledMap['t2']['on']['r'],
-                                                ledMap['t2']['on']['g'],
-                                                ledMap['t2']['on']['b'],
+                                                ledMap['c']['t2']['on']['r'],
+                                                ledMap['c']['t2']['on']['g'],
+                                                ledMap['c']['t2']['on']['b'],
                                               )
                                             : Color.fromARGB(
                                                 255,
-                                                ledMap['t2']['off']['r'],
-                                                ledMap['t2']['off']['g'],
-                                                ledMap['t2']['off']['b'],
+                                                ledMap['c']['t2']['off']['r'],
+                                                ledMap['c']['t2']['off']['g'],
+                                                ledMap['c']['t2']['off']['b'],
                                               );
                                       }
                                     }
@@ -1241,19 +1243,19 @@ return ConstrainedBox(
 }
                       },
                       itemBuilder: (context) => [
-                        PopupMenuItem<int>(
-                          value: 1,
-                          child: Row(
-                            textDirection: ui.TextDirection.rtl,
-                            children: [
-                              SvgPicture.asset('assets/svg/edit.svg',
-                                  width: 20, height: 20, color: Colors.blueAccent),
-                              const SizedBox(width: 2),
-                              const Text('ویرایش کلید',
-                                  style: TextStyle(color: Colors.black)),
-                            ],
-                          ),
-                        ),
+                        // PopupMenuItem<int>(
+                        //   value: 1,
+                        //   child: Row(
+                        //     textDirection: ui.TextDirection.rtl,
+                        //     children: [
+                        //       SvgPicture.asset('assets/svg/edit.svg',
+                        //           width: 20, height: 20, color: Colors.blueAccent),
+                        //       const SizedBox(width: 2),
+                        //       const Text('ویرایش کلید',
+                        //           style: TextStyle(color: Colors.black)),
+                        //     ],
+                        //   ),
+                        // ),
                         PopupMenuItem<int>(
                           value: 5,
                           child: Row(
@@ -1492,8 +1494,12 @@ Widget _buildSwitchRow({
       }
     }
 
-    final Color circleColor =
-        _safeColor(ledMap, isOn, switchNumber == 1 ? 't1' : 't2');
+  final Color circleColor = _safeColor(
+  ledMap?["c"],
+  isOn,
+  switchNumber == 1 ? 't1' : 't2',
+);
+
     final Color buttonColor = isOn ? Colors.lightBlueAccent : Colors.grey.shade400;
 
     return Padding(
@@ -1845,33 +1851,33 @@ Future<void> showDeleteDeviceConfirmDialog(
           ? jsonDecode(ledEntry)
           : (ledEntry as Map<String, dynamic>);
 
-      if (ledMap['t1'] != null) {
+      if (ledMap['c']['t1'] != null) {
         touch1On.value = Color.fromARGB(
           255,
-          (ledMap['t1']['on']['r'] as int).clamp(0, 255),
-          (ledMap['t1']['on']['g'] as int).clamp(0, 255),
-          (ledMap['t1']['on']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['on']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['on']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['on']['b'] as int).clamp(0, 255),
         );
         touch1Off.value = Color.fromARGB(
           255,
-          (ledMap['t1']['off']['r'] as int).clamp(0, 255),
-          (ledMap['t1']['off']['g'] as int).clamp(0, 255),
-          (ledMap['t1']['off']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['off']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['off']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t1']['off']['b'] as int).clamp(0, 255),
         );
       }
 
-      if (!isSingleKey && ledMap['t2'] != null) {
+      if (!isSingleKey && ledMap['c']['t2'] != null) {
         touch2On.value = Color.fromARGB(
           255,
-          (ledMap['t2']['on']['r'] as int).clamp(0, 255),
-          (ledMap['t2']['on']['g'] as int).clamp(0, 255),
-          (ledMap['t2']['on']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['on']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['on']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['on']['b'] as int).clamp(0, 255),
         );
         touch2Off.value = Color.fromARGB(
           255,
-          (ledMap['t2']['off']['r'] as int).clamp(0, 255),
-          (ledMap['t2']['off']['g'] as int).clamp(0, 255),
-          (ledMap['t2']['off']['b'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['off']['r'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['off']['g'] as int).clamp(0, 255),
+          (ledMap['c']['t2']['off']['b'] as int).clamp(0, 255),
         );
       }
     } catch (e) {
@@ -2023,7 +2029,7 @@ Future<void> showDeleteDeviceConfirmDialog(
                         print('🔹 Sending LED color payload: $data');
 
                         final response = await dio.post(
-                          'http://45.149.76.245:8080/api/plugins/telemetry/changeColor',
+                          'http://45.149.76.245:8080/api/plugins/telemetry/changeDeviceState',
                           options: Options(headers: headers),
                           data: data,
                         );

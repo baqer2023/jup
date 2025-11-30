@@ -6,6 +6,7 @@ import 'package:my_app32/features/groups/pages/group_page.dart';
 import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'package:my_app32/features/main/pages/main/main_controller.dart';
 import 'package:my_app32/features/main/repository/home_repository.dart';
+import 'package:my_app32/core/lang/lang.dart';
 
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
@@ -16,18 +17,17 @@ class Sidebar extends StatelessWidget {
     final controller = Get.put(MainController(Get.find<HomeRepository>()));
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr, // 🔹 برعکس کل UI
       child: Drawer(
         backgroundColor: Colors.white,
         child: Column(
           children: [
-            // 🔹 Header مشابه لاگین، بدون خط زیرش
+            // Header
             Container(
               width: double.infinity,
               color: Colors.white,
               child: Column(
                 children: [
-                  // گرادینت + لوگو
                   SizedBox(
                     width: double.infinity,
                     height: 120,
@@ -37,10 +37,7 @@ class Sidebar extends StatelessWidget {
                         Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [
-                                Color(0xFF007DC0),
-                                Color(0xFF00B8E7),
-                              ],
+                              colors: [Color(0xFF007DC0), Color(0xFF00B8E7)],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                             ),
@@ -57,8 +54,6 @@ class Sidebar extends StatelessWidget {
                       ],
                     ),
                   ),
-
-                  // سه SVG زیر لوگو
                   SizedBox(
                     height: 60,
                     child: Stack(
@@ -74,24 +69,82 @@ class Sidebar extends StatelessWidget {
               ),
             ),
 
-            // 🔹 لیست آیتم‌ها — بدون هیچ فاصله یا خط اضافی زیر هدر
+            // آیتم‌ها
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _buildSidebarItemWithDivider(context, 'داشبورد', () {
+                  _buildSidebarItemWithDivider(context, 'dashboard', () {
                     Navigator.pop(context);
-                    Get.to(() =>  HomePage());
+                    Get.to(() => HomePage());
                   }),
-                  _buildSidebarItemWithDivider(context, 'دستگاه‌ها', () {
+                  _buildSidebarItemWithDivider(context, 'devices', () {
                     Navigator.pop(context);
-                    Get.to(() =>  DevicesPage());
+                    Get.to(() => DevicesPage());
                   }),
-                  // _buildSidebarItemWithDivider(context, 'سناریوها', () {}),
-                  _buildSidebarItemWithDivider(context, 'گروه‌ها', () {
+                  _buildSidebarItemWithDivider(context, 'groups', () {
                     Navigator.pop(context);
                     Get.to(() => GroupsPage());
                   }, showDivider: false),
+
+                  // گزینه تغییر زبان
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Obx(() {
+                      final isFa = Lang.current.value == 'fa';
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () async => Lang.setLocale('fa'),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: isFa ? Colors.blue : Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'FA',
+                                    style: TextStyle(
+                                      color: isFa ? Colors.white : Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () async => Lang.setLocale('en'),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: !isFa ? Colors.blue : Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'EN',
+                                    style: TextStyle(
+                                      color: !isFa ? Colors.white : Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '',
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontFamily: 'IranYekan',
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
                 ],
               ),
             ),
@@ -101,24 +154,29 @@ class Sidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebarItemWithDivider(
-    BuildContext context,
-    String label,
-    VoidCallback onTap, {
-    bool showDivider = true,
-  }) {
+  // نسخه جدید با رنگ متن مثل زبان و فاصله مناسب
+Widget _buildSidebarItemWithDivider(
+  BuildContext context,
+  String key,
+  VoidCallback onTap, {
+  bool showDivider = true,
+}) {
+  return Obx(() {
+    final isFa = Lang.current.value == 'fa';
     return Column(
       children: [
         ListTile(
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          leading: const Icon(Icons.arrow_back_ios, size: 16),
+          minLeadingWidth: 160, // 🔹 فاصله بین آیکون و متن
           title: Text(
-            label,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontFamily: 'IranYekan',
+            textDirection: TextDirection.rtl,
+            Lang.t(key),
+            style: TextStyle(
+              color: Colors.black, // 🔹 رنگ متن مثل زبان
+              fontWeight: FontWeight.bold,
             ),
           ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20), // 🔹 فاصله متن تا کناره‌ها
           onTap: onTap,
         ),
         if (showDivider)
@@ -132,5 +190,7 @@ class Sidebar extends StatelessWidget {
           ),
       ],
     );
-  }
+  });
+}
+
 }

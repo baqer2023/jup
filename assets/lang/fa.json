@@ -1,0 +1,80 @@
+{
+  "login": "ورود",
+  "logout": "خروج",
+  "signup": "ثبت نام",
+
+  "welcome": "سلام {name}",
+  "email": "ایمیل",
+  "password": "رمز عبور",
+  "confirm": "تایید",
+  "cancel": "لغو",
+
+  "items_zero": "هیچ آیتمی وجود ندارد",
+  "items_one": "{count} آیتم",
+  "items_other": "{count} آیتم",
+
+  "error_general": "مشکلی پیش آمد، دوباره تلاش کنید",
+
+
+
+    "register_device": "ثبت دستگاه",
+    "dashboard": "داشبورد",
+      "devices": "دستگاه‌ها",
+      "groups": "گروه‌ها",
+      "add_location": "افزودن مکان",
+      "edit":"ویرایش",
+      "no_device_message":"تا کنون دستگاهی ثبت نشده‌است،\nجهت ثبت دستگاه جدید روی دکمه ثبت دستگاه کلیک کنید",
+      "edit_locations": "ویرایش مکان‌ها",
+      "delete_location": "حذف مکان",
+      "confirm_delete_location": "آیا از حذف \"{title}\" مطمئن هستید؟",
+       "cancel": "انصراف",
+        "delete": "حذف",
+  "delete_success_title": "حذف موفق",
+  "delete_success_message": "مکان \"{location}\" با موفقیت حذف شد.",
+  "delete_error_devices_attached": "امکان حذف مکان وجود ندارد؛ دستگاه‌هایی به این مکان متصل هستند.",
+  "error": "خطا",
+  "submit": "ثبت",
+   "location_name": "نام مکان",
+  "enter_location_name": "نام مکان را وارد کنید",
+  "select_location_icon": "انتخاب آیکن مکان:",
+   "save": "ذخیره",
+     "select_location_to_view_devices": "برای مشاهده دستگاه‌ها، ابتدا یک مکان را انتخاب کنید",
+      "online": "آنلاین",
+  "offline": "آفلاین",
+    "single_key": "کلید تک پل",
+  "double_key": "کلید دو پل",
+  
+   "complete_delete": "حذف کامل",
+  "temporary_delete": "حذف موقت",
+  "confirm_delete": "آیا از حذف",
+  "cancel": "انصراف",
+  "confirm": "تأیید",
+  "success": "موفقیت",
+  "device_deleted_success": "دستگاه با موفقیت حذف شد",
+  "device_temp_removed": "کلید از همه مکان‌ها حذف موقت شد",
+
+   "reset_config": "بازنشانی / پیکربندی",
+    "choose_action": "می‌خواهید چه کاری انجام دهید؟",
+    "go_to_config": "رفتن به پیکربندی",
+    "reset_device": "ریست دستگاه",
+    "edit_key": "ویرایش کلید",
+     "add_to_dashboard": "افزودن به داشبورد",
+      "last_sync_date_time": "آخرین همگام سازی: {{date}} - {{time}}",
+  "last_sync_unknown": "آخرین همگام سازی: نامشخص",
+  "switch_number": "کلید {{number}}",
+  "delete_device": "حذف دستگاه",
+   "confirm_delete_item": "آیا از حذف \"{title}\" مطمئن هستید؟",
+    "key_loading": "کلید {number}: در حال بارگذاری...",
+    "no_device_found": "هیچ دستگاهی یافت نشد",
+    "advanced_settings": "تنظیمات پیشرفته",
+
+     "single_key_on": "کلید ۱ روشن",
+  "single_key_off": "کلید ۱ خاموش",
+  "double_key_on": "کلید ۲ روشن",
+  "double_key_off": "کلید ۲ خاموش",
+
+  "change_key_color": "تغییر رنگ کلید"
+
+
+
+    }

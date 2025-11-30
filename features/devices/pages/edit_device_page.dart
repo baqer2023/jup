@@ -46,6 +46,7 @@ class EditDevicePage extends StatelessWidget {
         return;
       }
 
+      
       await homeController.renameDevice(
         deviceId: deviceId,
         label: name,

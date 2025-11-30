@@ -158,18 +158,18 @@ class WeatherErrorWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 32),
-          const SizedBox(height: 6.4),
+          const Icon(Icons.error_outline, color: Colors.red, size: 16),
+          const SizedBox(height: 2.4),
           const Text(
             'خطا در دریافت اطلاعات آب و هوا',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.8),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 8),
           ),
-          const SizedBox(height: 3.2),
-          Text(
-            error,
-            style: const TextStyle(color: Colors.red, fontSize: 11.2),
-            textAlign: TextAlign.center,
-          ),
+          // const SizedBox(height: 3.2),
+          // Text(
+          //   error,
+          //   style: const TextStyle(color: Colors.red, fontSize: 11.2),
+          //   textAlign: TextAlign.center,
+          // ),
         ],
       ),
     );
