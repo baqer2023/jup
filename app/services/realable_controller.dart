@@ -174,6 +174,49 @@ class ReliableSocketController extends GetxController {
     }
   }
 
+
+ Future<void> toggleSwitchS(
+  bool isOn,
+  String deviceId,
+) async {
+  final key = 'TWPower';
+  
+  // تبدیل bool به int
+  final intValue = isOn ? 1 : 0;
+
+  final payload = {
+    'deviceId': deviceId,
+    'request': {key: intValue},
+  };
+
+  
+  print(payload);
+
+    final dio = Dio();
+    final headers = {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json; charset=utf-8'};
+
+    try {
+      final response = await dio.post(
+        'http://45.149.76.245:8080/api/plugins/telemetry/changeDeviceState',
+        options: Options(headers: headers),
+        data: json.encode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        final deviceData = latestDeviceDataById[deviceId];
+        if (deviceData != null) {
+          deviceData[key] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
+          deviceData.refresh();
+          _saveLatestDeviceData();
+        }
+      } else {
+        print('⚠️ Error: ${response.statusMessage}');
+      }
+    } catch (e) {
+      print('⚠️ Dio error toggling switch: $e');
+    }
+  }
+
   void updateSwitchState(String deviceId, String key, String value) {
     if (!latestDeviceDataById.containsKey(deviceId)) {
       latestDeviceDataById[deviceId] = <String, dynamic>{}.obs;
