@@ -1216,62 +1216,62 @@ class DevicesPage extends BaseView<HomeController> {
                   // print("device.deviceId");
                   // print(deviceData["TDPower"][0][1]);
                   bool switch1On22 = false;
-bool readLatestPowerSwitchbool(Map deviceData, bool previousValue) {
-  final List<List<dynamic>> powerKeys = [];
+// bool readLatestPowerSwitchbool(Map deviceData, bool previousValue) {
+//   final List<List<dynamic>> powerKeys = [];
 
-  try {
-    if (deviceData["TDPower"] is List) {
-      powerKeys.addAll(List.from(deviceData["TDPower"]));
-    }
-    if (deviceData["TWPower"] is List) {
-      powerKeys.addAll(List.from(deviceData["TWPower"]));
-    }
+//   try {
+//     if (deviceData["TDPower"] is List) {
+//       powerKeys.addAll(List.from(deviceData["TDPower"]));
+//     }
+//     if (deviceData["TWPower"] is List) {
+//       powerKeys.addAll(List.from(deviceData["TWPower"]));
+//     }
 
-    if (powerKeys.isEmpty) return previousValue;
+//     if (powerKeys.isEmpty) return previousValue;
 
-    int getTimestamp(dynamic v) {
-      if (v is int) return v;
-      if (v is String) return int.tryParse(v) ?? 0;
-      return 0;
-    }
+//     int getTimestamp(dynamic v) {
+//       if (v is int) return v;
+//       if (v is String) return int.tryParse(v) ?? 0;
+//       return 0;
+//     }
 
-    powerKeys.sort(
-      (a, b) => getTimestamp(b[0]).compareTo(getTimestamp(a[0])),
-    );
+//     powerKeys.sort(
+//       (a, b) => getTimestamp(b[0]).compareTo(getTimestamp(a[0])),
+//     );
 
-    final latestItem = powerKeys.first;
+//     final latestItem = powerKeys.first;
 
-    if (latestItem.length < 2) return previousValue;
+//     if (latestItem.length < 2) return previousValue;
 
-    var value = latestItem[1];
+//     var value = latestItem[1];
 
-    if (value is String) {
-      value = jsonDecode(value);
-    }
+//     if (value is String) {
+//       value = jsonDecode(value);
+//     }
 
-    if (value is! Map) {
-      print(value);
-      return previousValue;
-    }
+//     if (value is! Map) {
+//       print(value);
+//       return previousValue;
+//     }
 
-    final cVal = value["c"];
-    if (cVal == null) return previousValue; // اگر کلید "c" نبود، از مقدار قبلی استفاده کن
+//     final cVal = value["c"];
+//     if (cVal == null) return previousValue; // اگر کلید "c" نبود، از مقدار قبلی استفاده کن
 
-    final cStr = cVal.toString().trim().toLowerCase();
-    return cStr == "1" || cStr.contains("on");
-  } catch (e, stackTrace) {
-    print("Error parsing power switch data: $e\n$stackTrace");
-    return previousValue; // در صورت هر خطا، مقدار قبلی برگردانده می‌شود
-  }
-}
+//     final cStr = cVal.toString().trim().toLowerCase();
+//     return cStr == "1" || cStr.contains("on");
+//   } catch (e, stackTrace) {
+//     print("Error parsing power switch data: $e\n$stackTrace");
+//     return previousValue; // در صورت هر خطا، مقدار قبلی برگردانده می‌شود
+//   }
+// }
 
 
-switch1On22 = readLatestPowerSwitchbool(
-  deviceData as Map,
-  switch1On22,  // اینجا مقدار قبلی رو میدیم
-);
-                  print("device.deviceId");
-                  print(switch1On22); // false
+// switch1On22 = readLatestPowerSwitchbool(
+//   deviceData as Map,
+//   switch1On22,  // اینجا مقدار قبلی رو میدیم
+// );
+//                   print("device.deviceId");
+//                   print(switch1On22); // false
 
                  Map<String, dynamic> readLatestDeviceValues(Map deviceData) {
   final Map<String, dynamic> result = {};
@@ -1353,14 +1353,14 @@ switch1On22 = readLatestPowerSwitchbool(
   }
 
   // نتیجه
-  print('کلید موجود: $powerKey');
-  print('حالت روشن/خاموش (true/false): $powerState');
+  // print('کلید موجود: $powerKey');
+  // print('حالت روشن/خاموش (true/false): $powerState');
                   
 
 
                   
                   print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
-                  print(switch1On222);
+                  // print(switch1On222);
 
 
                   
@@ -4470,135 +4470,157 @@ void showSettingsDialog({
                     return Column(
                       children: [
                         /// ✅ نوع دستگاه + حداکثر توان
-                        Row(
-                          children: [
-                            /// نوع دستگاه
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'نوع دستگاه',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blueGrey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    height: 48,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(
-                                          color: Colors.blue.shade200,
-                                          width: 1.5),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.devices,
-                                            color: Colors.blue),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: DropdownButtonHideUnderline(
-                                            child: Obx(
-                                              () => DropdownButton<String>(
-                                                value: deviceType.value,
-                                                isExpanded: true,
-                                                icon: const Icon(
-                                                    Icons.arrow_drop_down,
-                                                    color: Colors.blue),
-                                                items: [
-                                                  'نوع 1',
-                                                  'نوع 2',
-                                                  'نوع 3'
-                                                ]
-                                                    .map((e) => DropdownMenuItem(
-                                                          value: e,
-                                                          child: Text(
-                                                            e,
-                                                            style:
-                                                                const TextStyle(
-                                                              color:
-                                                                  Colors.blue,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                            ),
-                                                          ),
-                                                        ))
-                                                    .toList(),
-                                                onChanged: (val) {
-                                                  if (val != null)
-                                                    deviceType.value = val;
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+Row(
+  textDirection: TextDirection.rtl, // کل Row راست‌چین
+  children: [
+    /// حداکثر توان
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end, // راست‌چین متن‌ها
+        children: [
+          const Text(
+            'حداکثر توان (W)',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: Colors.blue.shade200,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              textDirection: TextDirection.rtl, // آیکن راست، متن چپ
+              children: [
+                const Icon(Icons.bolt, color: Colors.blue),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    textAlign: TextAlign.right, // متن داخل فیلد راست‌چین
+                    keyboardType: TextInputType.number,
+                    onChanged: (val) => maxPower.value = val,
+                    style: const TextStyle(color: Colors.black), // متن مشکی
+                    decoration: const InputDecoration(
+                      hintText: 'مثلاً 1000',
+                      suffixText: 'W',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(color: Colors.blueGrey),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
 
-                            const SizedBox(width: 12),
+    const SizedBox(width: 12),
 
-                            /// حداکثر توان
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'حداکثر توان (W)',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blueGrey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    height: 48,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(
-                                          color: Colors.blue.shade200,
-                                          width: 1.5),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.bolt, color: Colors.blue),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.number,
-                                            onChanged: (val) =>
-                                                maxPower.value = val,
-                                            style:
-                                                const TextStyle(color: Colors.blue),
-                                            decoration: const InputDecoration(
-                                              hintText: 'مثلاً 1000',
-                                              suffixText: 'W',
-                                              border: InputBorder.none,
-                                              hintStyle:
-                                                  TextStyle(color: Colors.blueGrey),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+    /// نوع دستگاه
+Expanded(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      const Text(
+        'نوع دستگاه',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blueGrey,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white, // بک‌گراند سفید
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: Colors.blue.shade200,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          textDirection: TextDirection.rtl,
+          children: [
+            const SizedBox(width: 8),
+Expanded(
+  child: DropdownButtonHideUnderline(
+    child: Obx(
+      () => DropdownButton<String>(
+        value: deviceType.value,
+        isExpanded: true,
+        dropdownColor: Colors.white, // بک‌گراند لیست سفید
+        icon: const SizedBox(), // آیکن پیش‌فرض حذف شد
+        items: ['نوع 1', 'نوع 2', 'نوع 3']
+            .map(
+              (e) => DropdownMenuItem<String>(
+                value: e,
+                alignment: Alignment.centerRight, // راست‌چین کردن آیتم‌ها
+                child: Text(
+                  e,
+                  textAlign: TextAlign.right, // متن داخل آیتم‌ها راست‌چین
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+        selectedItemBuilder: (context) {
+          return ['نوع 1', 'نوع 2', 'نوع 3'].map((e) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(Icons.arrow_drop_down, color: Colors.blue), // فلش سمت چپ
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight, // متن سمت راست
+                    child: Text(
+                      deviceType.value,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }).toList();
+        },
+        onChanged: (val) {
+          if (val != null) deviceType.value = val;
+        },
+      ),
+    ),
+  ),
+)
+
+,
+          ],
+        ),
+      ),
+    ],
+  ),
+)
+,
+
+  ],
+),
+
+
 
                         const SizedBox(height: 25),
 
@@ -4616,195 +4638,272 @@ void showSettingsDialog({
                         ),
                         const SizedBox(height: 12),
 
-                        Obx(
-                          () => SizedBox(
-                            height: 55,
-                            child: Row(
-                              children: [
-                                // 🔵 نرمال
-                                Expanded(
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(30),
-                                    onTap: () => selectedMode.value = 0,
-                                    child: Container(
-                                      height: 55,
-                                      decoration: BoxDecoration(
-                                        color: selectedMode.value == 0
-                                            ? Colors.blue
-                                            : Colors.blue.shade100,
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.flash_on,
-                                            color: selectedMode.value == 0
-                                                ? Colors.blue.shade900
-                                                : Colors.blue,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'نرمال',
-                                            style: TextStyle(
-                                              color: selectedMode.value == 0
-                                                  ? Colors.blue.shade900
-                                                  : Colors.blue,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
+Obx(
+  () => SizedBox(
+    height: 55,
+    child: Row(
+      children: [
+        // 🟣 هوشمند
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () => selectedMode.value = 2,
+            child: Container(
+              height: 55,
+              decoration: BoxDecoration(
+                color: selectedMode.value == 2
+                    ? Colors.purple.shade50
+                    : Colors.purple.shade50, // بک‌گراند ملایم
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: selectedMode.value == 2
+                      ? Colors.purple // فقط border پر رنگ
+                      : Colors.purple.shade100,
+                  width: 3,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'هوشمند',
+                    style: TextStyle(
+                      color: selectedMode.value == 2
+                          ? Colors.purple
+                          : Colors.purple.shade400,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                                    SvgPicture.asset(
+                    'assets/svg/fan.svg',
+                    width: 40,
+                    height: 40,
+                  )
+,
+                ],
+              ),
+            ),
+          ),
+        ),
 
-                                const SizedBox(width: 8),
+        const SizedBox(width: 8),
 
-                                // 🔴 پرقدرت
-                                Expanded(
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(30),
-                                    onTap: () => selectedMode.value = 1,
-                                    child: Container(
-                                      height: 55,
-                                      decoration: BoxDecoration(
-                                        color: selectedMode.value == 1
-                                            ? Colors.red
-                                            : Colors.red.shade100,
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.warning_amber_rounded,
-                                            color: selectedMode.value == 1
-                                                ? Colors.red.shade900
-                                                : Colors.red,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'پرقدرت',
-                                            style: TextStyle(
-                                              color: selectedMode.value == 1
-                                                  ? Colors.red.shade900
-                                                  : Colors.red,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
+        // 🔴 پرقدرت
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () => selectedMode.value = 1,
+            child: Container(
+              height: 55,
+              decoration: BoxDecoration(
+                color: selectedMode.value == 1
+                    ? Colors.red.shade50
+                    : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: selectedMode.value == 1
+                      ? Colors.red
+                      : Colors.red.shade100,
+                  width: 3,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'پرقدرت',
+                    style: TextStyle(
+                      color: selectedMode.value == 1
+                          ? Colors.red
+                          : Colors.red.shade400,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
 
-                                const SizedBox(width: 8),
+                                    SvgPicture.asset(
+                    'assets/svg/heat.svg',
+                    width: 40,
+                    height: 40,
+                  )
+,
+                ],
+              ),
+            ),
+          ),
+        ),
 
-                                // 🟣 هوشمند
-                                Expanded(
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(30),
-                                    onTap: () => selectedMode.value = 2,
-                                    child: Container(
-                                      height: 55,
-                                      decoration: BoxDecoration(
-                                        color: selectedMode.value == 2
-                                            ? Colors.purple
-                                            : Colors.purple.shade100,
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.auto_mode,
-                                            color: selectedMode.value == 2
-                                                ? Colors.purple.shade900
-                                                : Colors.purple,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'هوشمند',
-                                            style: TextStyle(
-                                              color: selectedMode.value == 2
-                                                  ? Colors.purple.shade900
-                                                  : Colors.purple,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+        const SizedBox(width: 8),
+
+        // 🔵 نرمال
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () => selectedMode.value = 0,
+            child: Container(
+              height: 55,
+              decoration: BoxDecoration(
+                color: selectedMode.value == 0
+                    ? Colors.blue.shade50
+                    : Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: selectedMode.value == 0
+                      ? Colors.blue
+                      : Colors.blue.shade100,
+                  width: 3,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'نرمال',
+                    style: TextStyle(
+                      color: selectedMode.value == 0
+                          ? Colors.blue
+                          : Colors.blue.shade400,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+,
+                  const SizedBox(width: 6),
+                  SvgPicture.asset(
+                    'assets/svg/cold.svg',
+                    width: 40,
+                    height: 40,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+)
+
+,
 
                         const SizedBox(height: 25),
 
                         /// 🔹 دمای مطلوب
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'دمای مطلوب',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blueGrey,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Obx(
-                              () => SizedBox(
-                                height: 200,
-                                width: 200,
-                                child: SleekCircularSlider(
-                                  min: minTemp,
-                                  max: maxTemp,
-                                  initialValue: currentTemp.value,
-                                  appearance: CircularSliderAppearance(
-                                    customWidths: CustomSliderWidths(
-                                      trackWidth: 10,
-                                      progressBarWidth: 12,
-                                      shadowWidth: 0,
-                                    ),
-                                    infoProperties: InfoProperties(
-                                      mainLabelStyle: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue,
-                                      ),
-                                      modifier: (value) => '${value.toInt()}°',
-                                    ),
-                                    size: 200,
-                                    startAngle: 270,
-                                    angleRange: 360,
-                                    customColors: CustomSliderColors(
-                                      trackColor: Colors.blue.shade100,
-                                      progressBarColor: Colors.blue,
-                                      dotColor: Colors.blueAccent,
-                                    ),
-                                  ),
-                                  onChange: (value) {
-                                    currentTemp.value = value;
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+Column(
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    const Text(
+      'دمای مطلوب',
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.blueGrey,
+      ),
+    ),
+    const SizedBox(height: 12),
+
+    SizedBox(
+      height: 250,
+      width: 250,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+
+          // عدد 16 سمت چپ
+          const Positioned(
+            left: -1,
+            top: 105,
+            child: Text(
+              '16°',
+              style: TextStyle(
+                color: Colors.blueGrey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          // عدد 40 سمت راست
+          const Positioned(
+            right: -1,
+            top: 105,
+            child: Text(
+              '40°',
+              style: TextStyle(
+                color: Colors.blueGrey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          // 👇 نیم دایره (پایین تر از قبل)
+          Obx(
+            () => SleekCircularSlider(
+              min: minTemp,
+              max: maxTemp,
+              initialValue: currentTemp.value,
+              appearance: CircularSliderAppearance(
+                size: 200,
+                startAngle: 180,
+                angleRange: 180, // نیم دایره بالا
+                customWidths: CustomSliderWidths(
+                  trackWidth: 12,
+                  progressBarWidth: 14,
+                  shadowWidth: 20,
+                ),
+                customColors: CustomSliderColors(
+                  trackColor: Colors.blue.shade100,
+                  progressBarColors: [
+                    Colors.blue, // دنباله
+                    Colors.white, // نوک سفید
+                  ],
+                  shadowColor: Colors.blue.withOpacity(0.2),
+                  dotColor: Colors.white, // سر سفید
+                ),
+                infoProperties: InfoProperties(
+                  mainLabelStyle: const TextStyle(color: Colors.transparent),
+                ),
+              ),
+              onChange: (value) => currentTemp.value = value,
+            ),
+          ),
+
+          // ⭕ دایره وسط (سفید + عدد آبی)
+          Obx(
+            () => Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.35),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  "${currentTemp.value.toInt()}°",
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
 
                         const SizedBox(height: 25),
 
                         
-
 
 Column(
   crossAxisAlignment: CrossAxisAlignment.center,
@@ -4823,79 +4922,129 @@ Column(
     const SizedBox(height: 12),
     SizedBox(
       height: 60,
-      width: MediaQuery.of(Get.context!).size.width * 0.8,
-      child: Stack(
+      width: MediaQuery.of(context).size.width * 0.8,
+      child: Row(
         children: [
-          // پس‌زمینه پرگرس
-          Container(
-            height: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.orange.shade100,
-                  Colors.orange.shade400,
-                ],
-              ),
-            ),
-          ),
-          // آیکن روی وضعیت فعلی
+          // دکمه اتوماتیک با رنگ واکنشی
           Obx(() {
-            final trackWidth = MediaQuery.of(Get.context!).size.width * 0.8;
-            final iconSize = 36.0;
-            double leftPos;
-
-            switch (fanSpeed.value.toInt()) {
-              case 1:
-                leftPos = 8;
-                break;
-              case 2:
-                leftPos = (trackWidth - iconSize) / 2;
-                break;
-              case 3:
-                leftPos = trackWidth - iconSize - 8;
-                break;
-              default:
-                leftPos = 8;
-            }
-
-            return Positioned(
-              left: leftPos,
-              top: (60 - iconSize) / 2,
-              child: IgnorePointer(
-                child: Icon(Icons.air, color: Colors.black, size: iconSize),
+            final isAuto = fanSpeed.value == 4;
+            return GestureDetector(
+              onTap: () {
+                fanSpeed.value = 4; // فعال کردن اتوماتیک
+              },
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: isAuto ? Colors.deepOrange : Colors.orange,
+                  shape: BoxShape.circle,
+                  boxShadow: isAuto
+                      ? [
+                          BoxShadow(
+                            color: Colors.deepOrange.withOpacity(0.5),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'A',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                  ),
+                ),
               ),
             );
           }),
-          // Slider
-          Obx(() => SliderTheme(
-                data: SliderTheme.of(Get.context!).copyWith(
-                  trackHeight: 60,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 18),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 25),
-                  thumbColor: Colors.orange,
-                  activeTrackColor: Colors.transparent,
-                  inactiveTrackColor: Colors.transparent,
-                ),
-                child: Slider(
-                  value: fanSpeed.value,
-                  min: 1,
-                  max: 3,
-                  divisions: 2,
-                  onChanged: (value) => fanSpeed.value = value,
-                  label: fanSpeed.value == 1
-                      ? 'کم'
-                      : fanSpeed.value == 2
-                          ? 'متوسط'
-                          : 'زیاد',
-                ),
-              )),
+          const SizedBox(width: 12), // فاصله بین دکمه و اسلایدر
+          // اسلایدر
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+
+                const double min = 1;
+                const double max = 3;
+                const double thumbRadius = 18;
+                const double iconSize = 36;
+
+                return Stack(
+                  children: [
+                    // پس زمینه
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.orange.shade100,
+                            Colors.orange.shade400,
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // محتوای داخلی با پدینگ دقیق
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: thumbRadius),
+                      child: Stack(
+                        children: [
+                          // Slider
+                          Obx(() => SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 60,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: thumbRadius),
+                                  overlayShape:
+                                      const RoundSliderOverlayShape(overlayRadius: 0),
+                                  thumbColor: Colors.orange,
+                                  activeTrackColor: Colors.transparent,
+                                  inactiveTrackColor: Colors.transparent,
+                                ),
+                                child: Slider(
+                                  value: fanSpeed.value > 3 ? 3 : fanSpeed.value,
+                                  min: min,
+                                  max: max,
+                                  divisions: 2,
+                                  onChanged: (value) => fanSpeed.value = value,
+                                ),
+                              )),
+
+                          // آیکن قفل شده روی مرکز thumb
+                          Obx(() {
+                            final displayValue = fanSpeed.value > 3 ? 3 : fanSpeed.value;
+                            final percent = (displayValue - min) / (max - min);
+                            final usableWidth = width - (thumbRadius * 2);
+                            final left = percent * (usableWidth - iconSize);
+
+                            return AnimatedPositioned(
+                              duration: const Duration(milliseconds: 200),
+                              left: left,
+                              top: (60 - iconSize) / 2,
+                              child: const Icon(
+                                Icons.air,
+                                size: iconSize,
+                                color: Colors.black,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ],
       ),
     ),
     const SizedBox(height: 8),
     Obx(() => Text(
-          'سرعت: ${fanSpeed.value == 1 ? 'کم' : fanSpeed.value == 2 ? 'متوسط' : 'زیاد'}',
+          'سرعت: ${fanSpeed.value == 1 ? 'کم' : fanSpeed.value == 2 ? 'متوسط' : fanSpeed.value == 3 ? 'زیاد' : 'اتوماتیک'}',
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -4903,7 +5052,9 @@ Column(
           ),
         )),
   ],
-),
+)
+
+,
 
                         const SizedBox(height: 20),
 
@@ -4920,19 +5071,238 @@ Column(
                       ],
                     );
                   }
+if (selectedTab.value == 1) {
+  final RxDouble displayTemp = 22.0.obs;
+  final RxDouble hysteresis = 2.0.obs;
+  final RxDouble pumpDelay = 5.0.obs;
+  final RxInt targetReaction = 0.obs; // برای دراپ‌داون
 
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'این متن مربوط به تنظیمات پیشرفته است.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
+  Widget buildNumericField({
+    required String label,
+    required RxDouble value,
+    required String helpText,
+    double step = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.blueGrey,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: () => value.value -= step,
+              icon: const Icon(Icons.remove_circle_outline, color: Colors.blue),
+            ),
+            Container(
+              width: 80,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Obx(() => Text(
+                    value.value.toStringAsFixed(0),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                  );
+                  )),
+            ),
+            IconButton(
+              onPressed: () => value.value += step,
+              icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
+            ),
+          ],
+        ),
+        GestureDetector(
+          onTap: () {
+            Get.defaultDialog(
+              title: label,
+              middleText: helpText,
+              confirmTextColor: Colors.white,
+              onConfirm: () => Get.back(),
+              backgroundColor: Colors.white,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.info_outline, size: 18, color: Colors.blueGrey),
+                SizedBox(width: 4),
+                Text(
+                  'راهنمای تنظیم',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+Widget buildDropdownField({
+  required String label,
+  required RxInt value,
+  required String helpText,
+}) {
+  const options = [
+    {'label': 'خاموش کردن موتور', 'value': 0},
+    {'label': 'کند کردن موتور', 'value': 1},
+  ];
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blueGrey,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Obx(() => GestureDetector(
+            onTap: () {
+              // نمایش دیالوگ انتخاب گزینه‌ها با بک‌گراند سفید و RTL
+              Get.defaultDialog(
+                backgroundColor: Colors.white,
+                title: label,
+                content: Column(
+                  children: options
+                      .map((opt) => ListTile(
+                            title: Text(
+                              opt['label'] as String,
+                              textAlign: TextAlign.right, // متن راست‌چین
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                            trailing: (value.value ==
+                                    (opt['value'] as int)) // نمایش تیک در سمت چپ
+                                ? const Icon(Icons.check, color: Colors.blue)
+                                : null,
+                            onTap: () {
+                              value.value = opt['value'] as int;
+                              Get.back();
+                            },
+                          ))
+                      .toList(),
+                ),
+                confirm: Container(),
+              );
+            },
+            child: Container(
+              width: 180,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                textDirection: TextDirection.rtl, // راست‌چین کردن Row
+                children: [
+                  Expanded(
+                    child: Text(
+                      options
+                          .firstWhere((opt) => opt['value'] == value.value)['label']
+                          .toString(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right, // متن راست‌چین
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                ],
+              ),
+            ),
+          )),
+      GestureDetector(
+        onTap: () {
+          Get.defaultDialog(
+            title: label,
+            middleText: helpText,
+            confirmTextColor: Colors.white,
+            onConfirm: () => Get.back(),
+            backgroundColor: Colors.white,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.info_outline, size: 18, color: Colors.blueGrey),
+              SizedBox(width: 4),
+              Text(
+                'راهنمای تنظیم',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+    ],
+  );
+}
+
+
+  return Column(
+    children: [
+      buildNumericField(
+        label: 'دمای نمایشگر',
+        value: displayTemp,
+        helpText: 'در صورت وجود اختلاف بین دمای نمایش داده شده و دمای واقعی محیط، می‌توانید مقدار اختلاف را در این بخش وارد کنید. دستگاه با استفاده از این عدد، دمای خوانده شده را برای عملکرد دقیق‌تر، تصحیح می‌کند.',
+      ),
+      buildNumericField(
+        label: 'هیسترزیس',
+        value: hysteresis,
+        helpText: 'مدت زمانی است که پمپ آب قبل از روشن شدن فن، جهت خیس شدن کامل پدهای سرمایشی کار می‌کند و مقدار آن بر اساس نوع پدها تنظیم می‌شود ',
+      ),
+      buildNumericField(
+        label: 'تاخیر پمپ',
+        value: pumpDelay,
+        helpText: 'این تنظیم، حداکثر افزایش دمای مجاز برای موتور دستگاه است و در صورت تجاوز دمای موتور از این حد، سیستم به طور خودکار موتور را خاموش می‌کند تا از آسیب‌های احتمالی و سوختن آن جلوگیری شود. این یک ویژگی ایمنی حیاتی است ',
+      ),
+      buildDropdownField(
+        label: 'واکنش پس از رسیدن به دمای هدف',
+        value: targetReaction,
+        helpText: 'خاموش شدن موتور: موتور به طور کامل خاموش می‌شود و برای حفظ دما، تا زمانی که مجدداً دما بالا رود، خاموش می‌ماند و تغییر به حالت کم‌سرعت (کند): موتور با سرعت بسیار کم به کار خود ادامه می‌دهد تا دما را دقیق‌تر و با پایداری بیشتری حفظ کند و از نوسانات شدید دما جلوگیری شود ',
+      ),
+    ],
+  );
+}
+
+  return const SizedBox.shrink();
                 }),
               ],
             ),

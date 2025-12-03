@@ -189,8 +189,13 @@ class ReliableSocketController extends GetxController {
     'request': {key: intValue},
   };
 
-  
+  print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
+  print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
+  print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
   print(payload);
+  print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
+  print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
+  print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
 
     final dio = Dio();
     final headers = {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json; charset=utf-8'};
@@ -205,7 +210,7 @@ class ReliableSocketController extends GetxController {
       if (response.statusCode == 200) {
         final deviceData = latestDeviceDataById[deviceId];
         if (deviceData != null) {
-          deviceData[key] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
+          // deviceData[key] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
           deviceData.refresh();
           _saveLatestDeviceData();
         }
@@ -216,6 +221,68 @@ class ReliableSocketController extends GetxController {
       print('⚠️ Dio error toggling switch: $e');
     }
   }
+
+Future<void> updateDeviceSettings({
+  required String deviceId,
+  required String deviceType,
+  // required String maxPower,
+  required int selectedMode,
+  required double currentTemp,
+  required double fanSpeed,
+  double? displayTemp,
+  double? hysteresis,
+  double? pumpDelay,
+  double? targetReaction,
+}) async {
+  final payload = {
+    'deviceId': deviceId,
+    'request': {
+      'TWType': deviceType,
+      // 'maxPower': maxPower,
+      'TWMode': selectedMode,
+      'TWSP': currentTemp,
+      'TWFan': fanSpeed,
+      if (displayTemp != null) 'TWTempCP': displayTemp,
+      if (hysteresis != null) 'TWHyst': hysteresis,
+      if (pumpDelay != null) 'TWPumpTimr': pumpDelay,
+      if (targetReaction != null) 'TWDuct': targetReaction,
+    },
+  };
+
+  print("🔹 Sending device settings payload:");
+  print(payload);
+
+  final dio = Dio();
+  final headers = {
+    'Authorization': 'Bearer $authToken',
+    'Content-Type': 'application/json; charset=utf-8'
+  };
+
+  try {
+    final response = await dio.post(
+      'http://45.149.76.245:8080/api/plugins/telemetry/changeDeviceState',
+      options: Options(headers: headers),
+      data: json.encode(payload),
+    );
+
+  if (response.statusCode == 200) {
+        final deviceData = latestDeviceDataById[deviceId];
+        if (deviceData != null) {
+          // deviceData[key] = [[DateTime.now().millisecondsSinceEpoch, isOn ? 'On' : 'Off']];
+          deviceData.refresh();
+          _saveLatestDeviceData();
+        }
+      } else {
+      print('⚠️ Error updating device settings: ${response.statusMessage}');
+    }
+  } catch (e) {
+    print('⚠️ Dio error updating device settings: $e');
+  }
+}
+
+
+
+
 
   void updateSwitchState(String deviceId, String key, String value) {
     if (!latestDeviceDataById.containsKey(deviceId)) {
