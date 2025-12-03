@@ -4562,7 +4562,7 @@ Expanded(
         isExpanded: true,
         dropdownColor: Colors.white, // بک‌گراند لیست سفید
         icon: const SizedBox(), // آیکن پیش‌فرض حذف شد
-        items: ['نوع 1', 'نوع 2', 'نوع 3']
+        items: ['فن کویل', 'کولر گازی']
             .map(
               (e) => DropdownMenuItem<String>(
                 value: e,
@@ -4579,7 +4579,7 @@ Expanded(
             )
             .toList(),
         selectedItemBuilder: (context) {
-          return ['نوع 1', 'نوع 2', 'نوع 3'].map((e) {
+          return ['فن کویل', 'کولر گازی'].map((e) {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -4666,7 +4666,7 @@ Obx(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'هوشمند',
+                    'فن',
                     style: TextStyle(
                       color: selectedMode.value == 2
                           ? Colors.purple
@@ -4677,8 +4677,8 @@ Obx(
                   const SizedBox(width: 6),
                                     SvgPicture.asset(
                     'assets/svg/fan.svg',
-                    width: 40,
-                    height: 40,
+                    width: 20,
+                    height: 20,
                   )
 ,
                 ],
@@ -4712,7 +4712,7 @@ Obx(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'پرقدرت',
+                    'گرما',
                     style: TextStyle(
                       color: selectedMode.value == 1
                           ? Colors.red
@@ -4724,8 +4724,8 @@ Obx(
 
                                     SvgPicture.asset(
                     'assets/svg/heat.svg',
-                    width: 40,
-                    height: 40,
+                    width: 20,
+                    height: 20,
                   )
 ,
                 ],
@@ -4759,7 +4759,7 @@ Obx(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'نرمال',
+                    'سرما',
                     style: TextStyle(
                       color: selectedMode.value == 0
                           ? Colors.blue
@@ -4771,8 +4771,8 @@ Obx(
                   const SizedBox(width: 6),
                   SvgPicture.asset(
                     'assets/svg/cold.svg',
-                    width: 40,
-                    height: 40,
+                    width: 20,
+                    height: 20,
                   ),
                 ],
               ),
