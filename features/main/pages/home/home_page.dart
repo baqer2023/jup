@@ -24,6 +24,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'dart:ui' as ui;
+import 'package:my_app32/core/lang/lang.dart';
 
 class HomePage extends BaseView<HomeController> {
   HomePage({super.key}) {
@@ -113,81 +114,90 @@ Widget _buildMainContent(HomeController controller) {
                 const SizedBox(height: 16),
 
                 // 🔸 بخش بالایی چهار کارت
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return GridView.count(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          childAspectRatio: 2.5,
-                          children: [
-                            _infoBox(
-                              iconPath: 'assets/svg/enableSencor.svg',
-                              text: 'نیاز به اتصال سنسور دما',
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Directionality(
-                                textDirection: ui.TextDirection.ltr,
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: WeatherDisplay(
-                                        weatherFuture: controller.weatherFuture,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            StreamBuilder<DateTime>(
-                              stream: Stream.periodic(
-                                const Duration(seconds: 1),
-                                (_) => DateTime.now(),
-                              ),
-                              builder: (context, snapshot) {
-                                final now = snapshot.data ?? DateTime.now();
-                                final jalali = Jalali.fromDateTime(now);
-                                final time =
-                                    '${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
-                                final date = jalali.formatFullDate();
-                                return _infoBox(
-                                  iconPath: 'assets/svg/time.svg',
-                                  text: '$time\n$date',
-                                );
-                              },
-                            ),
-                            _infoBox(
-                              iconPath: 'assets/svg/enableDevice.svg',
-                              text: 'هنوز دستگاه فعالی نیست',
-                            ),
-                          ],
-                        );
-                      },
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16),
+  child: Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.grey.shade200,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 2.5,
+          children: [
+            _infoBox(
+              iconPath: 'assets/svg/enableSencor.svg',
+              text: Lang.t('need_temp_sensor'),
+            ),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: WeatherDisplay(
+                      weatherFuture: controller.weatherFuture,
                     ),
                   ),
-                ),
+                ],
+              ),
+            ),
+            StreamBuilder<DateTime>(
+  stream: Stream.periodic(
+    const Duration(seconds: 1),
+    (_) => DateTime.now(),
+  ),
+  builder: (context, snapshot) {
+    final now = snapshot.data ?? DateTime.now();
+    final isRtl = Lang.textDirection.value == ui.TextDirection.rtl;
+    
+    String time;
+    String date;
+    
+    if (isRtl) {
+      // انگلیسی: تاریخ میلادی
+      time = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      date = '${now.day}/${now.month}/${now.year}';
+    } else {
+      // فارسی: تاریخ جلالی
+      final jalali = Jalali.fromDateTime(now);
+      time = '${jalali.hour.toString().padLeft(2, '0')}:${jalali.minute.toString().padLeft(2, '0')}';
+      date = jalali.formatFullDate();
+    }
+    
+    return _infoBox(
+      iconPath: 'assets/svg/time.svg',
+      text: '$time\n$date',
+    );
+  },
+),
+            _infoBox(
+              iconPath: 'assets/svg/enableDevice.svg',
+              text: Lang.t('no_active_device'),
+            ),
+          ],
+        );
+      },
+    ),
+  ),
+),
 
                 const SizedBox(height: 30),
 
@@ -244,15 +254,20 @@ buildSection(
     ),
   ),
   const SizedBox(height: 20),
-  const Text(
-    'هیچ گروهی ایجاد نشده است',
-    style: TextStyle(
+Obx(() {
+  return Text(
+    Lang.t('no_groups'),
+    style: const TextStyle(
       fontSize: 16,
       color: Colors.grey,
       fontWeight: FontWeight.w500,
     ),
-    textAlign: TextAlign.center, // متن هم وسط چین بشه
-  ),
+    textAlign: Lang.textDirection.value == ui.TextDirection.rtl
+        ? TextAlign.right
+        : TextAlign.left,
+  );
+}),
+
 ],
 
                           ),
@@ -346,7 +361,6 @@ buildSection(
 
 
 Widget _buildGroupCard(dynamic group) {
-  // کارت ساده برای نمایش گروه (فعلاً داده‌ها خالی هستند)
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: Card(
@@ -369,21 +383,27 @@ Widget _buildGroupCard(dynamic group) {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'هیچ گروهی ایجاد نشده است',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-              textAlign: TextAlign.center,
-            ),
+
+            Obx(() {
+              return Text(
+                Lang.t('no_groups'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+                textAlign: Lang.textDirection.value == ui.TextDirection.rtl
+                    ? TextAlign.right
+                    : TextAlign.left,
+              );
+            }),
           ],
         ),
       ),
     ),
   );
 }
+
 
 
 
@@ -468,37 +488,58 @@ Widget _buildEnergyCard(dynamic energy) {
 }
 
 
-  Widget _infoBox({
+Widget _infoBox({
   required String iconPath,
   required String text,
 }) {
-  return Container(
-    padding: const EdgeInsets.all(6),
-    decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.7),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+  return Obx(() {
+    final isRtl = Lang.textDirection.value == ui.TextDirection.rtl;
+    
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (isRtl) ...[
+            // انگلیسی (RTL): ایکون سمت چپ + متن سمت راست
+            // SvgPicture.asset(iconPath, width: 28, height: 28),
+            // const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.left,
+              ),
             ),
-            textAlign: TextAlign.right,
-          ),
-        ),
-        const SizedBox(width: 8),
-        SvgPicture.asset(iconPath, width: 28, height: 28),
-      ],
-    ),
-  );
+            const SizedBox(width: 8),
+            SvgPicture.asset(iconPath, width: 28, height: 28),
+          ] else ...[
+            // فارسی (LTR): متن سمت چپ + ایکون سمت راست
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.right,
+              ),
+            ),
+            const SizedBox(width: 8),
+            SvgPicture.asset(iconPath, width: 28, height: 28),
+          ],
+        ],
+      ),
+    );
+  });
 }
-
-
   Widget _buildWeatherSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

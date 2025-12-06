@@ -15,20 +15,19 @@ import 'package:my_app32/app/store/user_store_service.dart';
 import 'package:my_app32/app/services/storage_service.dart';
 import 'package:my_app32/core/lang/lang.dart';
 import 'package:my_app32/features/offline/InternetWrapper.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Lang.load("fa"); // زبان پیش فرض فایل JSON
+  await Lang.load("fa"); // زبان پیش فرض فارسی (چپ‌چین)
+  await initializeDateFormatting('en', null);
   await Hive.initFlutter();
   await Hive.openBox('cache');
-
   await GetStorage.init();
-
   Get.put<UserStoreService>(UserStoreService(StorageService()), permanent: true);
   Get.put<TokenRefreshService>(TokenRefreshService(), permanent: true);
-
   runApp(const MyApp());
 }
 
@@ -42,23 +41,31 @@ class MyApp extends StatelessWidget {
       DeviceOrientation.portraitDown,
     ]);
 
-    return GetMaterialApp(
-      navigatorKey: navigatorKey,
-      title: 'app_name'.tr,
-      theme: AppTheme.themeData(),
-      initialBinding: MainBinding(),
-      translations: AppLocalization(),
-      locale: const Locale('en'),  // اپ همیشه انگلیسی
-      fallbackLocale: const Locale('en'),
-      getPages: AppPages.pages,
-      initialRoute: AppRoutes.SPLASH,
-      debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        return InternetWrapper(
-          navigatorKey: navigatorKey,
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
-    );
+    return Obx(() {
+      print("🔹 Building app with locale: ${Lang.current.value}");
+      print("🔹 TextDirection: ${Lang.textDirection.value}");
+      
+      return GetMaterialApp(
+        navigatorKey: navigatorKey,
+        title: 'app_name'.tr,
+        theme: AppTheme.themeData(),
+        initialBinding: MainBinding(),
+        translations: AppLocalization(),
+        locale: Locale(Lang.current.value), // 🔹 زبان دینامیک
+        fallbackLocale: const Locale('fa'),
+        getPages: AppPages.pages,
+        initialRoute: AppRoutes.SPLASH,
+        debugShowCheckedModeBanner: false,
+        builder: (context, child) {
+          return Directionality(
+            textDirection: Lang.textDirection.value, // 🔹 جهت دینامیک
+            child: InternetWrapper(
+              navigatorKey: navigatorKey,
+              child: child ?? const SizedBox.shrink(),
+            ),
+          );
+        },
+      );
+    });
   }
 }
