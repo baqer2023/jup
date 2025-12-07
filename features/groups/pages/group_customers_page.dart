@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
+import 'package:my_app32/core/lang/lang.dart';
 
 class GroupCustomersPage extends StatefulWidget {
   final String groupId;
@@ -32,17 +33,17 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("مشتریان گروه: ${widget.groupName}")),
+      appBar: AppBar(title: Text("${Lang.t('group_customers')}: ${widget.groupName}")), // 🔹 چندزبانه
       body: Stack(
         children: [
           Column(
             children: [
               const SizedBox(height: 8),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  "لیست مشتریان گروه",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Lang.t('group_customers_list'), // 🔹 چندزبانه
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -50,8 +51,8 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
               Expanded(
                 child: Obx(() {
                   if (controller.groupUsers.isEmpty) {
-                    return const Center(
-                      child: Text("هیچ مشتری‌ای برای این گروه ثبت نشده"),
+                    return Center(
+                      child: Text(Lang.t('no_customers_registered')), // 🔹 چندزبانه
                     );
                   }
 
@@ -77,8 +78,8 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
                                 setState(() {});
                               } else {
                                 Get.snackbar(
-                                  "خطا",
-                                  "کاربر فاقد شناسه است و نمی‌تواند حذف شود",
+                                  Lang.t('error'), // 🔹 چندزبانه
+                                  Lang.t('customer_no_id_error'), // 🔹 چندزبانه
                                   backgroundColor: Colors.red,
                                   colorText: Colors.white,
                                 );
@@ -108,9 +109,9 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
                     color: Colors.white,
                     size: 20,
                   ),
-                  label: const Text(
-                    "افزودن مشتری جدید",
-                    style: TextStyle(
+                  label: Text(
+                    Lang.t('add_new_customer'), // 🔹 چندزبانه
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -162,9 +163,9 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
               color: Colors.blue,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            child: const Text(
-              "افزودن مشتری جدید",
-              style: TextStyle(
+            child: Text(
+              Lang.t('add_new_customer'), // 🔹 چندزبانه
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 fontSize: 18,
@@ -178,19 +179,19 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildTextField(firstNameCtrl, "نام"),
+                  _buildTextField(firstNameCtrl, Lang.t('first_name')), // 🔹 چندزبانه
                   const SizedBox(height: 12),
-                  _buildTextField(lastNameCtrl, "نام خانوادگی"),
+                  _buildTextField(lastNameCtrl, Lang.t('last_name')), // 🔹 چندزبانه
                   const SizedBox(height: 12),
                   _buildTextField(
                     phoneCtrl,
-                    "شماره موبایل (با 98 یا 0)",
+                    Lang.t('phone_number_with_98'), // 🔹 چندزبانه
                     TextInputType.phone,
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: _buildTextField(codeCtrl, "کد تایید")),
+                      Expanded(child: _buildTextField(codeCtrl, Lang.t('verification_code'))), // 🔹 چندزبانه
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () async {
@@ -209,7 +210,7 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text("ارسال کد"),
+                        child: Text(Lang.t('send_code')), // 🔹 چندزبانه
                       ),
                     ],
                   ),
@@ -243,9 +244,9 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
                         ),
                       ),
                     ),
-                    child: const Text(
-                      'انصراف',
-                      style: TextStyle(
+                    child: Text(
+                      Lang.t('cancel'), // 🔹 چندزبانه
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -266,7 +267,7 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
                       );
                       if (success) {
                         Get.back();
-                        Get.snackbar("موفقیت", "مشتری جدید ثبت شد");
+                        Get.snackbar(Lang.t('success'), Lang.t('new_customer_registered')); // 🔹 چندزبانه
                         controller.fetchGroupUsers(widget.groupId);
                       }
                     },
@@ -278,9 +279,9 @@ class _GroupCustomersPageState extends State<GroupCustomersPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'ثبت',
-                      style: TextStyle(
+                    child: Text(
+                      Lang.t('submit'), // 🔹 چندزبانه
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -345,19 +346,17 @@ class _CustomerCardState extends State<CustomerCard> {
   bool isLoading = false;
 
 Future<void> _removeCustomer() async {
-  // Step 1: check if user ID exists
   final customerId = widget.user['id'];
   if (customerId == null || customerId.isEmpty) {
     Get.snackbar(
-      "خطا",
-      "کاربر فاقد شناسه است و نمی‌تواند حذف شود",
+      Lang.t('error'), // 🔹 چندزبانه
+      Lang.t('customer_no_id_error'), // 🔹 چندزبانه
       backgroundColor: Colors.red,
       colorText: Colors.white,
     );
     return;
   }
 
-  // Step 2: confirm deletion with styled dialog
   final confirm = await showDialog<bool>(
     context: context,
     builder: (ctx) {
@@ -375,10 +374,10 @@ Future<void> _removeCustomer() async {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             border: Border.all(color: Colors.blue, width: 2),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              'حذف مشتری از گروه',
-              style: TextStyle(
+              Lang.t('remove_customer_from_group'), // 🔹 چندزبانه
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
                 color: Colors.white,
@@ -386,12 +385,12 @@ Future<void> _removeCustomer() async {
             ),
           ),
         ),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           child: Text(
-            'آیا از حذف این مشتری از گروه اطمینان دارید؟',
+            Lang.t('confirm_remove_customer_from_group'), // 🔹 چندزبانه
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 15,
               color: Colors.black87,
               height: 1.5,
@@ -405,7 +404,6 @@ Future<void> _removeCustomer() async {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // دکمه انصراف
                 SizedBox(
                   width: 100,
                   height: 44,
@@ -420,14 +418,13 @@ Future<void> _removeCustomer() async {
                         side: const BorderSide(color: Color(0xFFF39530), width: 2),
                       ),
                     ),
-                    child: const Text(
-                      "انصراف",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    child: Text(
+                      Lang.t('cancel'), // 🔹 چندزبانه
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                // دکمه حذف
                 SizedBox(
                   width: 100,
                   height: 44,
@@ -442,9 +439,9 @@ Future<void> _removeCustomer() async {
                       ),
                       elevation: 2,
                     ),
-                    child: const Text(
-                      'حذف',
-                      style: TextStyle(
+                    child: Text(
+                      Lang.t('delete'), // 🔹 چندزبانه
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -461,7 +458,6 @@ Future<void> _removeCustomer() async {
 
   if (confirm != true) return;
 
-  // Step 3: call removeCustomerFromGroup safely
   setState(() => isLoading = true);
   final controller = Get.find<HomeControllerGroup>();
   final success = await controller.removeCustomerFromGroup(customerId, widget.groupId);
@@ -472,8 +468,8 @@ Future<void> _removeCustomer() async {
     SnackBar(
       content: Text(
         success
-            ? '✅ مشتری با موفقیت از گروه حذف شد'
-            : '❌ خطا در حذف مشتری از گروه',
+            ? Lang.t('customer_removed_from_group_success') // 🔹 چندزبانه
+            : Lang.t('customer_remove_from_group_error'), // 🔹 چندزبانه
       ),
       backgroundColor: success ? Colors.green : Colors.red,
     ),
@@ -481,7 +477,6 @@ Future<void> _removeCustomer() async {
 
   if (success) widget.onDeleted();
 }
-
 
   @override
   Widget build(BuildContext context) {
@@ -553,12 +548,12 @@ Future<void> _removeCustomer() async {
                           value: 0,
                           child: Row(
                             textDirection: TextDirection.rtl,
-                            children: const [
-                              Icon(Icons.delete, color: Colors.red),
-                              SizedBox(width: 8),
+                            children: [
+                              const Icon(Icons.delete, color: Colors.red),
+                              const SizedBox(width: 8),
                               Text(
-                                'حذف مشتری از گروه',
-                                style: TextStyle(color: Colors.red),
+                                Lang.t('remove_customer_from_group'), // 🔹 چندزبانه
+                                style: const TextStyle(color: Colors.red),
                               ),
                             ],
                           ),

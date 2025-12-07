@@ -62,40 +62,52 @@ Widget _buildMainContent(HomeController controller) {
     final scenarios = [];
     final energyConsumption = [];
 
-    Widget buildSection({
-      required String title,
-      required Widget child,
-    }) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        child: Material(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(16),
-          elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.1),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+Widget buildSection({
+  required String title,
+  required Widget child,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    child: Material(
+      color: Colors.grey.shade200,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Obx(() {
+          final isRtl = Lang.textDirection.value == ui.TextDirection.rtl;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment:
+                    isRtl ? Alignment.centerLeft : Alignment.centerRight,
+                child: Text(
+                  // اگر title را کلید ترجمه می‌دهی:
+                  Lang.t(title),
+
+                  // اگر از قبل ترجمه شده باشد و فقط جهت مهم است، از این استفاده کن:
+                  // title,
+
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
+                  textAlign: isRtl ? TextAlign.left : TextAlign.right,
                 ),
-                const SizedBox(height: 4),
-                child,
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+              ),
+              const SizedBox(height: 4),
+              child,
+            ],
+          );
+        }),
+      ),
+    ),
+  );
+}
+
 
     return RefreshIndicator(
       onRefresh: controller.refreshAllData,
@@ -203,7 +215,7 @@ Padding(
 
 // 🔸 بخش دستگاه‌ها
 buildSection(
-  title: 'دستگاه‌ها',
+  title:Lang.t('devices'),
   child: Padding(
     padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1), // فاصله کم از کناره‌ها و بالا/پایین
     child: devices.isEmpty
@@ -220,15 +232,19 @@ buildSection(
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'هیچ دستگاهی به داشبورد اضافه نشده است',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+Obx(() {
+  return Text(
+    Lang.t('no_devices'),
+    style: const TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+      fontWeight: FontWeight.w500,
+    ),
+    textAlign: Lang.textDirection.value == ui.TextDirection.rtl
+        ? TextAlign.left
+        : TextAlign.right,
+  );
+}),
               ],
             ),
           )
@@ -239,7 +255,7 @@ buildSection(
 
                 // 🔸 بخش گروه‌ها
                 buildSection(
-                  title: 'گروه‌ها',
+                  title: Lang.t('groups'),
                   child: groups.isEmpty
                       ? Center(
                           child: Column(
@@ -263,8 +279,8 @@ Obx(() {
       fontWeight: FontWeight.w500,
     ),
     textAlign: Lang.textDirection.value == ui.TextDirection.rtl
-        ? TextAlign.right
-        : TextAlign.left,
+        ? TextAlign.left
+        : TextAlign.right,
   );
 }),
 
@@ -582,15 +598,15 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
 return Column(
   crossAxisAlignment: CrossAxisAlignment.start,
   children: [
-    // 🔹 عنوان بالا
+    // 🔹 عنوان بالا (اگه بخوای uncomment کنی)
 // Padding(
 //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
 //   child: Align(
-//     alignment: Alignment.centerRight, // متن سمت راست بالا
-//     child: const Text(
-//       'دستگاه‌ها',
-//       textDirection:ui.TextDirection.rtl, // برای اطمینان از راست‌چینی
-//       style: TextStyle(
+//     alignment: Alignment.centerRight,
+//     child: Text(
+//       Lang.t('devices'), // 🔹 چندزبانه شد
+//       textDirection:ui.TextDirection.rtl,
+//       style: const TextStyle(
 //         fontSize: 20,
 //         fontWeight: FontWeight.bold,
 //       ),
@@ -832,7 +848,7 @@ Widget _buildSmartDeviceCard({
   final homeController = Get.find<HomeController>();
 
 return ConstrainedBox(
-  constraints: const BoxConstraints(minHeight: 310, maxHeight: 350), // فقط 10px اضافه شد
+  constraints: const BoxConstraints(minHeight: 310, maxHeight: 350),
   child: Stack(
     clipBehavior: Clip.none,
     children: [
@@ -845,12 +861,11 @@ return ConstrainedBox(
         ),
         shadowColor: Colors.black12,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 38, 12, 14), // بالا +2px، پایین +2px
+          padding: const EdgeInsets.fromLTRB(12, 38, 12, 14),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 🔹 ردیف بالایی (کلیدها + اطلاعات)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -870,7 +885,7 @@ return ConstrainedBox(
                             switchNumber: 2,
                             onToggle: onToggle,
                           ),
-                        const SizedBox(height: 4), // اضافه شد برای کمی ارتفاع
+                        const SizedBox(height: 4),
                       ],
                     ),
                   ),
@@ -879,7 +894,6 @@ return ConstrainedBox(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // وضعیت آنلاین/آفلاین و نوع کلید
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -887,7 +901,8 @@ return ConstrainedBox(
                               final lastSeen =
                                   reliableController.lastDeviceActivity[deviceId];
                               final isOnline = lastSeen != null &&
-                                  DateTime.now().difference(lastSeen) <
+    DateTime.now().difference(lastSeen!).inSeconds < 30;
+
                                       const Duration(seconds: 30);
                               return Container(
                                 padding: const EdgeInsets.symmetric(
@@ -897,7 +912,7 @@ return ConstrainedBox(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  isOnline ? "آنلاین" : "آفلاین",
+                                  isOnline ? Lang.t('online') : Lang.t('offline'), // 🔹 چندزبانه
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 10,
@@ -908,7 +923,7 @@ return ConstrainedBox(
                             }),
                             const SizedBox(width: 6),
                             Text(
-                              isSingleKey ? "کلید تک پل" : "کلید دو پل",
+                              isSingleKey ? Lang.t('single_key') : Lang.t('double_key'), // 🔹 چندزبانه
                               textAlign: TextAlign.right,
                               style: const TextStyle(
                                 fontSize: 12,
@@ -919,7 +934,6 @@ return ConstrainedBox(
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // عنوان دستگاه
                         Text(
                           title,
                           textAlign: TextAlign.right,
@@ -931,13 +945,12 @@ return ConstrainedBox(
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 16),
-                        // مکان دستگاه با آیکن
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Flexible(
                               child: Text(
-                                device.dashboardTitle ?? "بدون مکان",
+                                device.dashboardTitle ?? Lang.t('no_location'), // 🔹 چندزبانه
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                   fontSize: 13,
@@ -962,15 +975,10 @@ return ConstrainedBox(
                 ),
                 const SizedBox(height: 2),
 
-                // 🔸 ردیف پایین کارت (SVG سمت راست + سه‌نقطه + آخرین همگام‌سازی)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    
-
-                    // منوی سه‌نقطه
-                    
                     Builder(
   builder: (context) => PopupMenuButton<int>(
                       color: Colors.white,
@@ -988,11 +996,14 @@ return ConstrainedBox(
                                 initialDashboardId: device.dashboardId ?? '',
                               ));
                         }else if (value == 2) {
-      // 🔹 حذف از داشبورد
       final token = homeController.token;
       if (token == null) {
-        Get.snackbar("خطا", "توکن معتبر پیدا نشد",
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar(
+          Lang.t('error'), // 🔹 چندزبانه
+          Lang.t('token_not_found'), // 🔹 چندزبانه
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
         return;
       }
 
@@ -1012,8 +1023,8 @@ return ConstrainedBox(
         );
         if (response.statusCode == 200 || response.statusCode == 201) {
           Get.snackbar(
-            'موفقیت',
-            'دستگاه از داشبورد حذف شد',
+            Lang.t('success'), // 🔹 چندزبانه
+            Lang.t('device_removed_from_dashboard'), // 🔹 چندزبانه
             backgroundColor: Colors.green,
             colorText: Colors.white,
           );
@@ -1021,16 +1032,15 @@ return ConstrainedBox(
         }
       } catch (e) {
         Get.snackbar(
-          'خطا',
-          'مشکل در حذف از داشبورد: $e',
+          Lang.t('error'), // 🔹 چندزبانه
+          '${Lang.t('remove_error')}: $e', // 🔹 چندزبانه
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
       }
     } else if (value == 3 || value == 4) {
-        // حذف موقت یا حذف کامل
         final isPermanent = value == 4;
-        final actionText = isPermanent ? "حذف کامل" : "حذف موقت";
+        final actionText = isPermanent ? Lang.t('complete_delete') : Lang.t('temporary_delete'); // 🔹 چندزبانه
 
         await showDialog(
           context: context,
@@ -1065,7 +1075,7 @@ return ConstrainedBox(
                 children: [
                   const SizedBox(height: 8),
                   Text(
-                    'آیا از $actionText دستگاه "${device.title}" مطمئن هستید؟',
+                    '${Lang.t('confirm_delete')} $actionText ${Lang.t('device')} "${device.title}" ${Lang.t('are_you_sure')}', // 🔹 چندزبانه
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -1105,9 +1115,9 @@ return ConstrainedBox(
                           ),
                         ),
                       ),
-                      child: const Text(
-                        'انصراف',
-                        style: TextStyle(
+                      child: Text(
+                        Lang.t('cancel'), // 🔹 چندزبانه
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -1119,7 +1129,7 @@ return ConstrainedBox(
                     width: 100,
                     child: ElevatedButton(
                       onPressed: () async {
-                        Navigator.of(context).pop(); // بستن دیالوگ
+                        Navigator.of(context).pop();
                         if (isPermanent) {
                           await homeController.completeRemoveDevice(device.deviceId);
                         } else {
@@ -1127,10 +1137,10 @@ return ConstrainedBox(
                         }
                         await homeController.refreshAllData();
                         Get.snackbar(
-                          'موفقیت',
+                          Lang.t('success'), // 🔹 چندزبانه
                           isPermanent
-                              ? 'دستگاه با موفقیت حذف شد'
-                              : 'کلید از همه مکان‌ها حذف موقت شد',
+                              ? Lang.t('device_deleted_success') // 🔹 چندزبانه
+                              : Lang.t('device_temp_removed'), // 🔹 چندزبانه
                           backgroundColor: Colors.green,
                           colorText: Colors.white,
                         );
@@ -1143,9 +1153,9 @@ return ConstrainedBox(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'تأیید',
-                        style: TextStyle(
+                      child: Text(
+                        Lang.t('confirm'), // 🔹 چندزبانه
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -1169,9 +1179,9 @@ return ConstrainedBox(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "بازنشانی / پیکربندی",
-              style: TextStyle(
+            Text(
+              Lang.t('reset_config'), // 🔹 چندزبانه
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
@@ -1179,14 +1189,13 @@ return ConstrainedBox(
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
-              "می‌خواهید چه کاری انجام دهید؟",
-              style: TextStyle(fontSize: 14, color: Colors.black54),
+            Text(
+              Lang.t('choose_action'), // 🔹 چندزبانه
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
 
-            // --- گزینه پیکربندی ---
             Card(
               color: const Color(0xFFF8F9FA),
               elevation: 2,
@@ -1201,10 +1210,10 @@ return ConstrainedBox(
                 },
                 child: ListTile(
                   trailing: const Icon(Icons.settings, color: Colors.blueAccent),
-                  title: const Text(
+                  title: Text(
+                    Lang.t('go_to_config'), // 🔹 چندزبانه
                     textDirection: ui.TextDirection.rtl,
-                    "رفتن به پیکربندی",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -1216,7 +1225,6 @@ return ConstrainedBox(
 
             const SizedBox(height: 10),
 
-            // --- گزینه ریست ---
             Card(
               color: const Color(0xFFF8F9FA),
               elevation: 2,
@@ -1229,18 +1237,18 @@ return ConstrainedBox(
                   Get.back();
                   await homeController.resetDevice(device.deviceId);
                   Get.snackbar(
-                    'موفقیت',
-                    'دستگاه ریست شد',
+                    Lang.t('success'), // 🔹 چندزبانه
+                    Lang.t('device_reset_success'), // 🔹 چندزبانه
                     backgroundColor: Colors.green,
                     colorText: Colors.white,
                   );
                 },
                 child: ListTile(
                   trailing: const Icon(Icons.refresh, color: Colors.redAccent),
-                  title: const Text(
+                  title: Text(
+                    Lang.t('reset_device'), // 🔹 چندزبانه
                     textDirection: ui.TextDirection.rtl,
-                    "ریست دستگاه",
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.redAccent,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1252,7 +1260,6 @@ return ConstrainedBox(
 
             const SizedBox(height: 10),
 
-            // --- گزینه انصراف ---
             Card(
               color: const Color(0xFFF8F9FA),
               elevation: 2,
@@ -1264,10 +1271,10 @@ return ConstrainedBox(
                 onTap: () => Get.back(),
                 child: ListTile(
                   trailing: const Icon(Icons.cancel, color: Colors.amber),
-                  title: const Text(
+                  title: Text(
+                    Lang.t('cancel'), // 🔹 چندزبانه
                     textDirection: ui.TextDirection.rtl,
-                    "انصراف",
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.amber,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1284,19 +1291,6 @@ return ConstrainedBox(
 }
                       },
                       itemBuilder: (context) => [
-                        // PopupMenuItem<int>(
-                        //   value: 1,
-                        //   child: Row(
-                        //     textDirection: ui.TextDirection.rtl,
-                        //     children: [
-                        //       SvgPicture.asset('assets/svg/edit.svg',
-                        //           width: 20, height: 20, color: Colors.blueAccent),
-                        //       const SizedBox(width: 2),
-                        //       const Text('ویرایش کلید',
-                        //           style: TextStyle(color: Colors.black)),
-                        //     ],
-                        //   ),
-                        // ),
                         PopupMenuItem<int>(
                           value: 5,
                           child: Row(
@@ -1305,8 +1299,8 @@ return ConstrainedBox(
                               SvgPicture.asset('assets/svg/reset.svg',
                                   width: 20, height: 20),
                               const SizedBox(width: 2),
-                              const Text('بازنشانی / پیکربندی',
-                                  style: TextStyle(color: Colors.black)),
+                              Text(Lang.t('reset_config'), // 🔹 چندزبانه
+                                  style: const TextStyle(color: Colors.black)),
                             ],
                           ),
                         ),
@@ -1320,7 +1314,7 @@ return ConstrainedBox(
           SvgPicture.asset('assets/svg/add_dashboard.svg',
               width: 20, height: 20, color: Colors.red),
           const SizedBox(width: 4),
-          const Text('حذف از داشبورد', style: TextStyle(color: Colors.red)),
+          Text(Lang.t('remove_from_dashboard'), style: const TextStyle(color: Colors.red)), // 🔹 چندزبانه
         ],
       ),
     ),
@@ -1332,8 +1326,8 @@ return ConstrainedBox(
                               SvgPicture.asset('assets/svg/delete_temp.svg',
                                   width: 20, height: 20, color: Colors.red),
                               const SizedBox(width: 2),
-                              const Text('حذف موقت',
-                                  style: TextStyle(color: Colors.red)),
+                              Text(Lang.t('temporary_delete'), // 🔹 چندزبانه
+                                  style: const TextStyle(color: Colors.red)),
                             ],
                           ),
                         ),
@@ -1345,16 +1339,14 @@ return ConstrainedBox(
                               SvgPicture.asset('assets/svg/deleting.svg',
                                   width: 20, height: 20, color: Colors.red),
                               const SizedBox(width: 2),
-                              const Text('حذف کامل',
-                                  style: TextStyle(color: Colors.red)),
+                              Text(Lang.t('complete_delete'), // 🔹 چندزبانه
+                                  style: const TextStyle(color: Colors.red)),
                             ],
                           ),
                         ),
                       ],
                     ),
                     ),
-                    // const SizedBox(width:2),
-                    // آیکن تنظیمات LED (سمت راست)
                     GestureDetector(
                       onTap: () {
                         showLedColorDialog(device: device);
@@ -1366,11 +1358,9 @@ return ConstrainedBox(
                         color: Colors.black87,
                       ),
                     ),
-                    
 
                     const Spacer(),
 
-                    // آخرین همگام‌سازی
 Flexible(
   child: Obx(() {
     final lastSeen = reliableController.lastDeviceActivity[deviceId];
@@ -1383,11 +1373,11 @@ Flexible(
           "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
       displayText = "$formattedDate - $formattedTime";
     } else {
-      displayText = "نامشخص";
+      displayText = Lang.t('last_sync_unknown'); // 🔹 چندزبانه
     }
 
     return Padding(
-      padding: const EdgeInsets.only(right: 8.0), // کمی فاصله از لبه سمت راست
+      padding: const EdgeInsets.only(right: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -1416,7 +1406,6 @@ Flexible(
   }),
 ),
 
-
                   ],
                 ),
               ],
@@ -1424,7 +1413,6 @@ Flexible(
           ),
         ),
 
-        // 🔵 آیکن لامپ بالا وسط
         Positioned(
           top: -15,
           left: 0,
@@ -1465,7 +1453,6 @@ Flexible(
 
 
 
-
   // ------------------- ستون کلید (Switch Row) اصلاح شده -------------------
 Widget _buildSwitchRow({
   required String deviceId,
@@ -1475,7 +1462,6 @@ Widget _buildSwitchRow({
   final reliableController = Get.find<ReliableSocketController>(
     tag: 'smartDevicesController',
   );
-
   bool _safeSwitch(List<dynamic>? entries) {
     if (entries == null || entries.isEmpty) return false;
     try {
@@ -1489,7 +1475,6 @@ Widget _buildSwitchRow({
       return false;
     }
   }
-
   Color _safeColor(Map<String, dynamic>? map, bool isOn, String key) {
     if (map == null) return isOn ? Colors.lightBlueAccent : Colors.grey;
     final section = map[key]?[isOn ? 'on' : 'off'];
@@ -1501,13 +1486,10 @@ Widget _buildSwitchRow({
       (section['b'] ?? (isOn ? 255 : 128)).toInt(),
     );
   }
-
   return Obx(() {
     final deviceData = reliableController.latestDeviceDataById[deviceId];
-
     bool isOn = false;
     Map<String, dynamic>? ledMap;
-
     if (deviceData != null) {
       final keyEntries = switchNumber == 1
           ? [
@@ -1518,9 +1500,7 @@ Widget _buildSwitchRow({
               if (deviceData['TW2'] is List) ...deviceData['TW2'],
               if (deviceData['TD2'] is List) ...deviceData['TD2'],
             ];
-
       isOn = _safeSwitch(keyEntries);
-
       if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
         final ledEntry = deviceData['ledColor'][0][1];
         if (ledEntry is String) {
@@ -1534,15 +1514,12 @@ Widget _buildSwitchRow({
         }
       }
     }
-
   final Color circleColor = _safeColor(
   ledMap?["c"],
   isOn,
   switchNumber == 1 ? 't1' : 't2',
 );
-
     final Color buttonColor = isOn ? Colors.lightBlueAccent : Colors.grey.shade400;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -1565,7 +1542,6 @@ Widget _buildSwitchRow({
             ),
           ),
           const SizedBox(width: 4),
-
           // دکمه روشن/خاموش
           GestureDetector(
             onTap: () => onToggle(switchNumber, !isOn),
@@ -1584,10 +1560,9 @@ Widget _buildSwitchRow({
             ),
           ),
           const SizedBox(width: 2),
-
           // نام کلید
           Text(
-            "کلید $switchNumber",
+            Lang.t('switch_number').replaceAll('{{number}}', switchNumber.toString()), // 🔹 چندزبانه
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -1603,7 +1578,7 @@ Widget _buildSwitchRow({
 Future<void> showDeleteDeviceConfirmDialog(
     BuildContext context,
     String title,
-    Future<String?> Function() onDelete // تابع حذف برمی‌گرداند String? برای پیام خطا
+    Future<String?> Function() onDelete
   ) async {
 
   await showDialog(
@@ -1623,9 +1598,9 @@ Future<void> showDeleteDeviceConfirmDialog(
             color: Colors.blue,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: const Text(
-            'حذف دستگاه',
-            style: TextStyle(
+          child: Text(
+            Lang.t('delete_device'), // 🔹 چندزبانه
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.white,
               fontSize: 18,
@@ -1640,7 +1615,7 @@ Future<void> showDeleteDeviceConfirmDialog(
             children: [
               const SizedBox(height: 8),
               Text(
-                'آیا از حذف "$title" مطمئن هستید؟',
+                Lang.t('confirm_delete_item').replaceAll('{title}', title), // 🔹 چندزبانه
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -1681,9 +1656,9 @@ Future<void> showDeleteDeviceConfirmDialog(
                       ),
                     ),
                   ),
-                  child: const Text(
-                    'انصراف',
-                    style: TextStyle(
+                  child: Text(
+                    Lang.t('cancel'), // 🔹 چندزبانه
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -1705,20 +1680,20 @@ Future<void> showDeleteDeviceConfirmDialog(
                       await controller.refreshAllData();
 
                       Get.snackbar(
-                        'موفقیت',
-                        'عملیات حذف با موفقیت انجام شد.',
+                        Lang.t('success'), // 🔹 چندزبانه
+                        Lang.t('delete_operation_success'), // 🔹 چندزبانه
                         backgroundColor: Colors.green,
                         colorText: Colors.white,
                       );
                     } else {
-                      // ترجمه پیام خطا به فارسی
+                      // ترجمه پیام خطا
                       String errorMessage = error;
                       if (error.contains('Cannot delete dashboard: contains device configuration.')) {
-                        errorMessage = 'امکان حذف وجود ندارد؛ دستگاه‌هایی به این مکان متصل هستند.';
+                        errorMessage = Lang.t('delete_error_devices_attached'); // 🔹 چندزبانه
                       }
 
                       Get.snackbar(
-                        'خطا',
+                        Lang.t('error'), // 🔹 چندزبانه
                         errorMessage,
                         backgroundColor: Colors.red,
                         colorText: Colors.white,
@@ -1733,9 +1708,9 @@ Future<void> showDeleteDeviceConfirmDialog(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'حذف',
-                    style: TextStyle(
+                  child: Text(
+                    Lang.t('delete'), // 🔹 چندزبانه
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -1751,7 +1726,7 @@ Future<void> showDeleteDeviceConfirmDialog(
 }
 
 
-  Widget _buildLoadingDeviceCard({required String title}) {
+Widget _buildLoadingDeviceCard({required String title}) {
     return Card(
       elevation: 4,
       shadowColor: Colors.black.withOpacity(0.05),
@@ -1794,7 +1769,7 @@ Future<void> showDeleteDeviceConfirmDialog(
                     children: [
                       Expanded(
                         child: Text(
-                          'کلید ۱: در حال بارگذاری...',
+                          Lang.t('key_loading').replaceAll('{number}', '1'), // 🔹 چندزبانه
                           style: const TextStyle(fontSize: 12),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1811,7 +1786,7 @@ Future<void> showDeleteDeviceConfirmDialog(
                     children: [
                       Expanded(
                         child: Text(
-                          'کلید ۲: در حال بارگذاری...',
+                          Lang.t('key_loading').replaceAll('{number}', '2'), // 🔹 چندزبانه
                           style: const TextStyle(fontSize: 12),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1831,10 +1806,7 @@ Future<void> showDeleteDeviceConfirmDialog(
       ),
     );
   }
-
-
   
-
   Widget _buildNoDevicesFound() {
     return Center(
       child: LayoutBuilder(
@@ -1858,7 +1830,7 @@ Future<void> showDeleteDeviceConfirmDialog(
               ),
               const SizedBox(height: 24),
               Text(
-                'هیچ دستگاهی یافت نشد',
+                Lang.t('no_device_found'), // 🔹 چندزبانه
                 style: TextStyle(fontSize: 18, color: Colors.grey[600]),
               ),
             ],
@@ -1947,10 +1919,10 @@ Future<void> showDeleteDeviceConfirmDialog(
           ),
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          child: const Center(
+          child: Center(
             child: Text(
-              'تنظیمات پیشرفته',
-              style: TextStyle(
+              Lang.t('advanced_settings'), // 🔹 چندزبانه
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -1962,24 +1934,24 @@ Future<void> showDeleteDeviceConfirmDialog(
             mainAxisSize: MainAxisSize.min,
             children: [
               Obx(() => _ColorPreviewPicker(
-                    label: 'کلید ۱ روشن',
+                    label: Lang.t('single_key_on'), // 🔹 چندزبانه
                     color: touch1On.value,
                     onPick: (c) => touch1On.value = c,
                   )),
               Obx(() => _ColorPreviewPicker(
-                    label: 'کلید ۱ خاموش',
+                    label: Lang.t('single_key_off'), // 🔹 چندزبانه
                     color: touch1Off.value,
                     onPick: (c) => touch1Off.value = c,
                   )),
               if (!isSingleKey) ...[
                 const SizedBox(height: 8),
                 Obx(() => _ColorPreviewPicker(
-                      label: 'کلید ۲ روشن',
+                      label: Lang.t('double_key_on'), // 🔹 چندزبانه
                       color: touch2On.value,
                       onPick: (c) => touch2On.value = c,
                     )),
                 Obx(() => _ColorPreviewPicker(
-                      label: 'کلید ۲ خاموش',
+                      label: Lang.t('double_key_off'), // 🔹 چندزبانه
                       color: touch2Off.value,
                       onPick: (c) => touch2Off.value = c,
                     )),
@@ -2010,9 +1982,9 @@ Future<void> showDeleteDeviceConfirmDialog(
                         ),
                       ),
                     ),
-                    child: const Text(
-                      "انصراف",
-                      style: TextStyle(
+                    child: Text(
+                      Lang.t('cancel'), // 🔹 چندزبانه
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -2078,8 +2050,8 @@ Future<void> showDeleteDeviceConfirmDialog(
                         if (response.statusCode == 200) {
                           print('✅ Success: ${response.data}');
                           Get.snackbar(
-                            'موفق',
-                            'رنگ کلید با موفقیت تغییر کرد',
+                            Lang.t('success'), // 🔹 چندزبانه
+                            Lang.t('color_changed_success'), // 🔹 چندزبانه
                             backgroundColor: Colors.green,
                             colorText: Colors.white,
                             snackPosition: SnackPosition.TOP,
@@ -2088,8 +2060,8 @@ Future<void> showDeleteDeviceConfirmDialog(
                         } else {
                           print('⚠️ Response: ${response.statusCode} ${response.data}');
                           Get.snackbar(
-                            'خطا',
-                            'خطا در تغییر رنگ: ${response.data}',
+                            Lang.t('error'), // 🔹 چندزبانه
+                            '${Lang.t('color_change_error')}: ${response.data}', // 🔹 چندزبانه
                             backgroundColor: Colors.red,
                             colorText: Colors.white,
                             snackPosition: SnackPosition.TOP,
@@ -2098,8 +2070,8 @@ Future<void> showDeleteDeviceConfirmDialog(
                       } on DioException catch (e) {
                         print('❌ Dio error: ${e.message}');
                         Get.snackbar(
-                          'خطا',
-                          'خطا در ارتباط با سرور: ${e.message}',
+                          Lang.t('error'), // 🔹 چندزبانه
+                          '${Lang.t('server_error')}: ${e.message}', // 🔹 چندزبانه
                           backgroundColor: Colors.red,
                           colorText: Colors.white,
                           snackPosition: SnackPosition.TOP,
@@ -2115,9 +2087,9 @@ Future<void> showDeleteDeviceConfirmDialog(
                       ),
                       elevation: 2,
                     ),
-                    child: const Text(
-                      'ثبت',
-                      style: TextStyle(
+                    child: Text(
+                      Lang.t('submit'), // 🔹 چندزبانه
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -2132,7 +2104,6 @@ Future<void> showDeleteDeviceConfirmDialog(
     },
   );
 }
-
 }
 // ------------------- Color Picker Widget -------------------
 class _ColorPreviewPicker extends StatelessWidget {
@@ -2173,10 +2144,10 @@ class _ColorPreviewPicker extends StatelessWidget {
                       ),
                       border: Border.all(color: Colors.blue, width: 2),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Text(
-                        'تغییر رنگ کلید',
-                        style: TextStyle(
+                        Lang.t('change_key_color'), // 🔹 چندزبانه
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           color: Colors.white,
@@ -2248,9 +2219,9 @@ class _ColorPreviewPicker extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              child: const Text(
-                                "انصراف",
-                                style: TextStyle(
+                              child: Text(
+                                Lang.t('cancel'), // 🔹 چندزبانه
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
@@ -2258,7 +2229,7 @@ class _ColorPreviewPicker extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          // دکمه تایید همیشه آبی
+                          // دکمه تایید
                           SizedBox(
                             width: 100,
                             height: 44,
@@ -2273,9 +2244,9 @@ class _ColorPreviewPicker extends StatelessWidget {
                                 ),
                                 elevation: 2,
                               ),
-                              child: const Text(
-                                'تایید',
-                                style: TextStyle(
+                              child: Text(
+                                Lang.t('confirm'), // 🔹 چندزبانه
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),

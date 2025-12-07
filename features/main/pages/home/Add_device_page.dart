@@ -8,6 +8,7 @@ import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'package:my_app32/features/main/pages/home/home_controller.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
+import 'package:my_app32/core/lang/lang.dart';
 
 class AddDevicePage extends StatelessWidget {
   const AddDevicePage({super.key});
@@ -28,8 +29,8 @@ class AddDevicePage extends StatelessWidget {
 
       if (serial.isEmpty || name.isEmpty || dashboardId.isEmpty) {
         Get.snackbar(
-          'خطا',
-          'لطفاً همه فیلدها و مکان را انتخاب کنید',
+          Lang.t('error'), // 🔹 چندزبانه
+          Lang.t('select_all_fields'), // 🔹 چندزبانه
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -38,7 +39,10 @@ class AddDevicePage extends StatelessWidget {
 
       final token = await UserStoreService.to.getToken();
       if (token == null) {
-        Get.snackbar('خطا', 'توکن معتبر پیدا نشد');
+        Get.snackbar(
+          Lang.t('error'), // 🔹 چندزبانه
+          Lang.t('token_not_found'), // 🔹 چندزبانه
+        );
         return;
       }
 
@@ -62,8 +66,8 @@ class AddDevicePage extends StatelessWidget {
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           Get.snackbar(
-            'موفقیت',
-            'دستگاه با موفقیت ثبت شد',
+            Lang.t('success'), // 🔹 چندزبانه
+            Lang.t('device_registered_success'), // 🔹 چندزبانه
             backgroundColor: Colors.green,
             colorText: Colors.white,
           );
@@ -72,16 +76,16 @@ class AddDevicePage extends StatelessWidget {
           Get.offAll(() =>  HomePage());
         } else {
           Get.snackbar(
-            'خطا',
-            'ثبت دستگاه موفقیت‌آمیز نبود: ${response.statusCode}',
+            Lang.t('error'), // 🔹 چندزبانه
+            '${Lang.t('device_registration_failed')}: ${response.statusCode}', // 🔹 چندزبانه
             backgroundColor: Colors.red,
             colorText: Colors.white,
           );
         }
       } catch (e) {
         Get.snackbar(
-          'خطا',
-          'مشکل در ارتباط با سرور: $e',
+          Lang.t('error'), // 🔹 چندزبانه
+          '${Lang.t('server_error')}: $e', // 🔹 چندزبانه
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -93,7 +97,7 @@ class AddDevicePage extends StatelessWidget {
       appBar: CustomAppBar(isRefreshing: false.obs),
       body: SafeArea(
   child: Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
     child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -104,7 +108,7 @@ class AddDevicePage extends StatelessWidget {
               decoration: InputDecoration(
                 label: Align(
                   alignment: Alignment.centerRight,
-                  child: const Text('شماره سریال'),
+                  child: Text(Lang.t('serial_number')), // 🔹 چندزبانه
                 ),
                 border: const OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
@@ -121,13 +125,13 @@ TextField(
   controller: deviceNameController,
   textAlign: TextAlign.right,
   inputFormatters: [
-    LengthLimitingTextInputFormatter(8), // محدودیت ۸ کاراکتر
+    LengthLimitingTextInputFormatter(8),
   ],
   decoration: InputDecoration(
-    counterText: '', // مخفی کردن شمارنده
+    counterText: '',
     label: Align(
       alignment: Alignment.centerRight,
-      child: const Text('نام دستگاه'),
+      child: Text(Lang.t('device_name')), // 🔹 چندزبانه
     ),
     border: const OutlineInputBorder(),
     focusedBorder: OutlineInputBorder(
@@ -139,10 +143,9 @@ TextField(
   ),
 ),
             const SizedBox(height: 16),
-            // لیست مکان‌ها افقی + دکمه افزودن
-// جایگزین بخش Obx و SingleChildScrollView فعلی
+
 SizedBox(
-  height: 60, // ارتفاع مناسب برای کارت‌ها
+  height: 60,
   child: Obx(() {
     final locations = homeController.userLocations;
     return ListView(
@@ -167,11 +170,11 @@ SizedBox(
               ],
             ),
             child: Row(
-              children: const [
+              children: [
                 Icon(Icons.add, size: 18, color: Colors.black87),
                 SizedBox(width: 6),
                 Text(
-                  'افزودن',
+                  Lang.t('add'), // 🔹 چندزبانه
                   style: TextStyle(color: Colors.black87, fontSize: 14),
                 ),
               ],
@@ -180,7 +183,7 @@ SizedBox(
         ),
         // لیست مکان‌ها
 ...locations
-    .where((loc) => loc.title != "میانبر") // 🔹 فیلتر کردن میانبر
+    .where((loc) => loc.title != "میانبر")
     .map((loc) {
       final isSelected = selectedDashboardId.value == loc.id;
           return GestureDetector(
@@ -215,10 +218,10 @@ SizedBox(
       ),
     ),
     if (loc.iconIndex != null) ...[
-      const SizedBox(width: 4), // فاصله خیلی کم بین متن و آیکن
+      const SizedBox(width: 4),
       SvgPicture.asset(
-        'assets/svg/${loc.iconIndex}.svg', // مسیر درست
-        width: 28, // اندازه مناسب
+        'assets/svg/${loc.iconIndex}.svg',
+        width: 28,
         height: 28,
         fit: BoxFit.contain,
       ),
@@ -231,8 +234,7 @@ SizedBox(
       ],
     );
   }),
-)
-,
+),
             const Spacer(),
             // دکمه‌ها
             Column(
@@ -250,9 +252,9 @@ SizedBox(
                     ),
                     minimumSize: const Size.fromHeight(50),
                   ),
-                  child: const Text(
-                    'انصراف',
-                    style: TextStyle(
+                  child: Text(
+                    Lang.t('cancel'), // 🔹 چندزبانه
+                    style: const TextStyle(
                       color: Color(0xFFF39530),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -270,9 +272,9 @@ SizedBox(
                     ),
                     minimumSize: const Size.fromHeight(50),
                   ),
-                  child: const Text(
-                    'ثبت دستگاه',
-                    style: TextStyle(
+                  child: Text(
+                    Lang.t('register_device'), // 🔹 چندزبانه
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
@@ -286,9 +288,10 @@ SizedBox(
     ),
     );
   }
+
 void _showAddLocationDialog(HomeController homeController) {
   final TextEditingController nameController = TextEditingController();
-  int? selectedIconIndex; // ذخیره انتخاب آیکن در دیالوگ
+  int? selectedIconIndex;
 
   showDialog(
     context: Get.context!,
@@ -312,9 +315,9 @@ void _showAddLocationDialog(HomeController homeController) {
                     color: Colors.blue,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                   ),
-                  child: const Text(
-                    'افزودن مکان',
-                    style: TextStyle(
+                  child: Text(
+                    Lang.t('add_location'), // 🔹 چندزبانه
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         fontSize: 18),
@@ -331,7 +334,7 @@ void _showAddLocationDialog(HomeController homeController) {
                       decoration: InputDecoration(
                         label: Align(
                             alignment: Alignment.centerRight,
-                            child: const Text('نام مکان')),
+                            child: Text(Lang.t('location_name'))), // 🔹 چندزبانه
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
                         focusedBorder: OutlineInputBorder(
@@ -350,10 +353,8 @@ void _showAddLocationDialog(HomeController homeController) {
                     ),
                     const SizedBox(height: 16),
 
-                    /// لیست آیکن‌ها افقی
-/// لیست آیکن‌ها - اسکرول افقی و دایره کامل
 SizedBox(
-  height: 70, // ارتفاع کانتینر آیکن‌ها
+  height: 70,
   child: SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: Row(
@@ -373,7 +374,7 @@ SizedBox(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.circle, // 🔹 دایره کامل
+              shape: BoxShape.circle,
               border: Border.all(
                 color: isSelected
                     ? Colors.yellow.shade700
@@ -424,9 +425,9 @@ SizedBox(
                                     color: Color(0xFFF39530), width: 2),
                               ),
                             ),
-                            child: const Text(
-                              'انصراف',
-                              style: TextStyle(
+                            child: Text(
+                              Lang.t('cancel'), // 🔹 چندزبانه
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                           ),
@@ -439,8 +440,8 @@ SizedBox(
                               final name = nameController.text.trim();
                               if (name.isEmpty) {
                                 Get.snackbar(
-                                  'خطا',
-                                  'لطفاً نام مکان را وارد کنید',
+                                  Lang.t('error'), // 🔹 چندزبانه
+                                  Lang.t('enter_location_name'), // 🔹 چندزبانه
                                   backgroundColor: Colors.red,
                                   colorText: Colors.white,
                                 );
@@ -453,8 +454,8 @@ SizedBox(
                               );
                               Navigator.of(context).pop();
                               Get.snackbar(
-                                'موفق',
-                                'مکان اضافه شد',
+                                Lang.t('success'), // 🔹 چندزبانه
+                                Lang.t('location_added'), // 🔹 چندزبانه
                                 backgroundColor: Colors.green,
                                 colorText: Colors.white,
                               );
@@ -468,9 +469,9 @@ SizedBox(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              'ثبت',
-                              style: TextStyle(
+                            child: Text(
+                              Lang.t('submit'), // 🔹 چندزبانه
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                           ),

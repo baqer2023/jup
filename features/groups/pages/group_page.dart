@@ -7,6 +7,7 @@ import 'package:my_app32/features/groups/pages/group_device_page.dart';
 import 'package:my_app32/features/groups/pages/group_customers_page.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
+import 'package:my_app32/core/lang/lang.dart';
 import '../controllers/group_controller.dart';
 
 class GroupsPage extends StatefulWidget {
@@ -64,10 +65,10 @@ class _GroupsPageState extends State<GroupsPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    "تا کنون گروهی ایجاد نشده‌است، جهت ایجاد گروه جدید روی دکمه پایین صفحه کلیک کنید",
+                  Text(
+                    Lang.t('no_group_created_message'), // 🔹 چندزبانه
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),
@@ -79,10 +80,9 @@ class _GroupsPageState extends State<GroupsPage> {
           padding: const EdgeInsets.all(16),
           itemCount: controller.groups.length,
           itemBuilder: (context, index) {
-            // print(controller.groups[index]);
             final group = controller.groups[index];
             return GroupCard(
-              title: group['title'] ?? 'بدون عنوان',
+              title: group['title'] ?? Lang.t('untitled'), // 🔹 چندزبانه
               description: group['description'] ?? '',
               groupId: group['customerId'] ?? '',
               isActive: group['isActive'] ?? false,
@@ -116,79 +116,74 @@ class _GroupsPageState extends State<GroupsPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       color: Colors.blue,
-                      child: const Text(
-                        "حذف گروه",
-                        style: TextStyle(
+                      child: Text(
+                        Lang.t('delete_group'), // 🔹 چندزبانه
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    content: const Text(
-                      "آیا مطمئن هستید که می‌خواهید این گروه را حذف کنید؟",
+                    content: Text(
+                      Lang.t('confirm_delete_group'), // 🔹 چندزبانه
                     ),
-actions: [
-  Row(
-    mainAxisSize: MainAxisSize.min, // فقط به اندازه محتوا جا می‌گیرد
-    children: [
-      // 🔸 دکمه انصراف
-      SizedBox(
-        width: 100, // عرض ثابت
-        height: 44,
-        child: ElevatedButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFFF39530),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: const BorderSide(
-                color: Color(0xFFF39530),
-                width: 2,
-              ),
-            ),
-            elevation: 0,
-          ),
-          child: const Text(
-            "انصراف",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-
-      const SizedBox(width: 4), // فاصله کم بین دکمه‌ها
-
-      // 🔹 دکمه حذف
-      SizedBox(
-        width: 100, // همان عرض با دکمه انصراف
-        height: 44,
-        child: ElevatedButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text(
-            "حذف",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-    ],
-  ),
-],
-
+                    actions: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            height: 44,
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFFF39530),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: const BorderSide(
+                                    color: Color(0xFFF39530),
+                                    width: 2,
+                                  ),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                Lang.t('cancel'), // 🔹 چندزبانه
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          SizedBox(
+                            width: 100,
+                            height: 44,
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                Lang.t('delete'), // 🔹 چندزبانه
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
 
@@ -205,9 +200,9 @@ actions: [
         onPressed: () {
           Get.to(() => CreateGroupStep1Page())?.then((_) => _loadGroups());
         },
-        label: const Text(
-          "ایجاد گروه جدید",
-          style: TextStyle(color: Colors.white),
+        label: Text(
+          Lang.t('create_new_group'), // 🔹 چندزبانه
+          style: const TextStyle(color: Colors.white),
         ),
         icon: const Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.blue,
@@ -307,7 +302,7 @@ class _GroupCardState extends State<GroupCard> {
                                   children: [
                                     const SizedBox(width: 4),
                                     Text(
-                                      "دستگاه‌ها: ${widget.allocatedDevices}",
+                                      "${Lang.t('devices')}: ${widget.allocatedDevices}", // 🔹 چندزبانه
                                       style: const TextStyle(fontSize: 13),
                                     ),
                                     const SizedBox(width: 4),
@@ -324,7 +319,7 @@ class _GroupCardState extends State<GroupCard> {
                                   children: [
                                     const SizedBox(width: 4),
                                     Text(
-                                      "کاربران: ${widget.allocatedUsers}",
+                                      "${Lang.t('users')}: ${widget.allocatedUsers}", // 🔹 چندزبانه
                                       style: const TextStyle(fontSize: 13),
                                     ),
                                     const SizedBox(width: 4),
@@ -340,17 +335,7 @@ class _GroupCardState extends State<GroupCard> {
                           ),
                         ],
                       ),
-                      // const SizedBox(height: 10),
-                      // if (widget.description.isNotEmpty)
-                      //   Text(
-                      //     widget.description,
-                      //     style: const TextStyle(
-                      //       color: Colors.grey,
-                      //       fontSize: 14,
-                      //     ),
-                      //   ),
                       const SizedBox(height: 10),
-                      // 🔹 منوی پاپ‌آپ با گزینه‌های جدید
                       Align(
                         alignment: Alignment.centerLeft,
                         child: PopupMenuButton<int>(
@@ -363,7 +348,6 @@ class _GroupCardState extends State<GroupCard> {
                           onSelected: (value) {
                             if (value == 0) {
                               print(widget.description);
-                              // 🔹 ویرایش گروه
                               Get.to(
                                 () => EditGroupPage(
                                   groupId: widget.groupId,
@@ -391,7 +375,6 @@ class _GroupCardState extends State<GroupCard> {
                               widget.onDelete(widget.groupId);
                             }
                           },
-
                           itemBuilder: (context) => [
                             PopupMenuItem<int>(
                               value: 0,
@@ -405,11 +388,11 @@ class _GroupCardState extends State<GroupCard> {
                                     height: 20,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Expanded(
+                                  Expanded(
                                     child: Text(
-                                      'ویرایش گروه',
+                                      Lang.t('edit_group'), // 🔹 چندزبانه
                                       textDirection: TextDirection.rtl,
-                                      style: TextStyle(color: Colors.black),
+                                      style: const TextStyle(color: Colors.black),
                                     ),
                                   ),
                                 ],
@@ -427,11 +410,11 @@ class _GroupCardState extends State<GroupCard> {
                                     height: 20,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Expanded(
+                                  Expanded(
                                     child: Text(
-                                      'اطلاعات کاربران',
+                                      Lang.t('users_info'), // 🔹 چندزبانه
                                       textDirection: TextDirection.rtl,
-                                      style: TextStyle(color: Colors.black),
+                                      style: const TextStyle(color: Colors.black),
                                     ),
                                   ),
                                 ],
@@ -449,11 +432,11 @@ class _GroupCardState extends State<GroupCard> {
                                     height: 20,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Expanded(
+                                  Expanded(
                                     child: Text(
-                                      'اطلاعات دستگاه‌ها',
+                                      Lang.t('devices_info'), // 🔹 چندزبانه
                                       textDirection: TextDirection.rtl,
-                                      style: TextStyle(color: Colors.black),
+                                      style: const TextStyle(color: Colors.black),
                                     ),
                                   ),
                                 ],
@@ -471,11 +454,11 @@ class _GroupCardState extends State<GroupCard> {
                                     height: 20,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Expanded(
+                                  Expanded(
                                     child: Text(
-                                      'افزودن گروه به داشبورد',
+                                      Lang.t('add_group_to_dashboard'), // 🔹 چندزبانه
                                       textDirection: TextDirection.rtl,
-                                      style: TextStyle(color: Colors.black),
+                                      style: const TextStyle(color: Colors.black),
                                     ),
                                   ),
                                 ],
@@ -495,11 +478,11 @@ class _GroupCardState extends State<GroupCard> {
                                     color: Colors.red,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Expanded(
+                                  Expanded(
                                     child: Text(
-                                      'حذف گروه',
+                                      Lang.t('delete_group'), // 🔹 چندزبانه
                                       textDirection: TextDirection.rtl,
-                                      style: TextStyle(color: Colors.red),
+                                      style: const TextStyle(color: Colors.red),
                                     ),
                                   ),
                                 ],

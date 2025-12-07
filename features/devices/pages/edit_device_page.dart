@@ -7,6 +7,7 @@ import 'package:my_app32/features/main/pages/home/home_controller.dart';
 import 'package:my_app32/features/main/pages/home/home_page.dart';
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
+import 'package:my_app32/core/lang/lang.dart';
 
 class EditDevicePage extends StatelessWidget {
   final String deviceId;
@@ -38,8 +39,8 @@ class EditDevicePage extends StatelessWidget {
 
       if (name.isEmpty || dashboardId.isEmpty) {
         Get.snackbar(
-          'خطا',
-          'لطفاً همه فیلدها و مکان را پر کنید',
+          Lang.t('error'), // 🔹 چندزبانه
+          Lang.t('fill_all_fields'), // 🔹 چندزبانه
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -63,7 +64,7 @@ class EditDevicePage extends StatelessWidget {
       appBar: CustomAppBar(isRefreshing: false.obs),
       body: SafeArea(
   child: Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
     child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -75,7 +76,7 @@ class EditDevicePage extends StatelessWidget {
               decoration: InputDecoration(
                 label: Align(
                   alignment: Alignment.centerRight,
-                  child: const Text('شماره سریال'),
+                  child: Text(Lang.t('serial_number')), // 🔹 چندزبانه
                 ),
                 border: const OutlineInputBorder(),
                 filled: true,
@@ -84,19 +85,18 @@ class EditDevicePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-
 TextField(
   controller: nameController,
   textAlign: TextAlign.right,
-  maxLength: 8, // حداکثر 8 کاراکتر
+  maxLength: 8,
   inputFormatters: [
-    LengthLimitingTextInputFormatter(8), // جلوگیری از وارد کردن بیشتر از 8 کاراکتر
+    LengthLimitingTextInputFormatter(8),
   ],
   decoration: InputDecoration(
-    counterText: '', // مخفی کردن شمارنده پیش‌فرض
+    counterText: '',
     label: Align(
       alignment: Alignment.centerRight,
-      child: const Text('نام دستگاه'),
+      child: Text(Lang.t('device_name')), // 🔹 چندزبانه
     ),
     border: const OutlineInputBorder(),
     focusedBorder: OutlineInputBorder(
@@ -110,47 +110,16 @@ TextField(
 ),
 
             const SizedBox(height: 16),
-// جایگزین بخش Obx و SingleChildScrollView فعلی
+
 SizedBox(
-  height: 60, // ارتفاع مناسب برای کارت‌ها
+  height: 60,
   child: Obx(() {
     final locations = homeController.userLocations;
     return ListView(
       scrollDirection: Axis.horizontal,
       children: [
-        // // دکمه افزودن
-        // GestureDetector(
-        //   onTap: () => _showAddLocationDialog(homeController),
-        //   child: Container(
-        //     margin: const EdgeInsets.only(right: 8),
-        //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        //     decoration: BoxDecoration(
-        //       color: Colors.white,
-        //       border: Border.all(color: Colors.grey.shade300, width: 1),
-        //       borderRadius: BorderRadius.circular(30),
-        //       boxShadow: [
-        //         BoxShadow(
-        //           color: Colors.black.withOpacity(0.05),
-        //           blurRadius: 4,
-        //           offset: const Offset(0, 2),
-        //         ),
-        //       ],
-        //     ),
-        //     child: Row(
-        //       children: const [
-        //         Icon(Icons.add, size: 18, color: Colors.black87),
-        //         SizedBox(width: 6),
-        //         Text(
-        //           'افزودن',
-        //           style: TextStyle(color: Colors.black87, fontSize: 14),
-        //         ),
-        //       ],
-        //     ),
-        //   ),
-        // ),
-        // لیست مکان‌ها
 ...locations
-    .where((loc) => loc.title != "میانبر") // 🔹 فیلتر کردن میانبر
+    .where((loc) => loc.title != "میانبر")
     .map((loc) {
       final isSelected = selectedDashboardId.value == loc.id;
           return GestureDetector(
@@ -188,10 +157,10 @@ SizedBox(
       ),
     ),
     if (loc.iconIndex != null) ...[
-      const SizedBox(width: 4), // فاصله خیلی کم بین متن و آیکن
+      const SizedBox(width: 4),
       SvgPicture.asset(
-        'assets/svg/${loc.iconIndex}.svg', // مسیر درست
-        width: 28, // اندازه مناسب
+        'assets/svg/${loc.iconIndex}.svg',
+        width: 28,
         height: 28,
         fit: BoxFit.contain,
       ),
@@ -222,9 +191,9 @@ SizedBox(
                     ),
                     minimumSize: const Size.fromHeight(50),
                   ),
-                  child: const Text(
-                    'انصراف',
-                    style: TextStyle(
+                  child: Text(
+                    Lang.t('cancel'), // 🔹 چندزبانه
+                    style: const TextStyle(
                       color: Color(0xFFF39530),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -242,9 +211,9 @@ SizedBox(
                     ),
                     minimumSize: const Size.fromHeight(50),
                   ),
-                  child: const Text(
-                    'ویرایش دستگاه',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  child: Text(
+                    Lang.t('edit_device'), // 🔹 چندزبانه
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ],
@@ -255,6 +224,7 @@ SizedBox(
       ),
     );
   }
+}
 
   // void _showAddLocationDialog(HomeController homeController) {
   //   final TextEditingController nameController = TextEditingController();
@@ -402,4 +372,4 @@ SizedBox(
   //     },
   //   );
   // }
-}
+

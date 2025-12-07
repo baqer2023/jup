@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'package:my_app32/features/widgets/custom_appbar.dart';
 import 'package:my_app32/features/widgets/sidebar.dart';
+import 'package:my_app32/core/lang/lang.dart';
 
 class DeviceConfigPage extends StatefulWidget {
   final String sn;
@@ -36,7 +37,6 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
 
   bool _serialMatched = false;
 
-  // تابع ساخت دکمه آبی با متن سفید
   Widget _blueButton({required String text, required VoidCallback onPressed}) {
     return ElevatedButton(
       onPressed: onPressed,
@@ -58,7 +58,6 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
     _checkDeviceSerial();
   }
 
-  // بررسی سریال دستگاه و مقایسه با آخرین ارقام سریال نرم‌افزاری
   Future<void> _checkDeviceSerial() async {
     setState(() {
       _loading = true;
@@ -80,26 +79,26 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
         if (deviceSerial == swPart) {
           setState(() {
             _serialMatched = true;
-            _step = 1; // مرحله بعدی فعال
-            _message = "✅ سریال دستگاه مطابقت دارد.";
+            _step = 1;
+            _message = "✅ ${Lang.t('serial_matched')}"; // 🔹 چندزبانه
           });
         } else {
           setState(() {
             _serialMatched = false;
-            _message = "❌ سریال دستگاه مطابقت ندارد!";
+            _message = "❌ ${Lang.t('serial_not_matched')}"; // 🔹 چندزبانه
           });
         }
       } else {
         setState(() {
           _serialMatched = false;
-          _message = "❌ پاسخ نامعتبر از دستگاه!";
+          _message = "❌ ${Lang.t('invalid_device_response')}"; // 🔹 چندزبانه
         });
       }
     } catch (e) {
       print("خطا در دریافت سریال: $e");
       setState(() {
         _serialMatched = false;
-        _message = "❌ ارتباط برقرار نشد.";
+        _message = "❌ ${Lang.t('connection_failed')}"; // 🔹 چندزبانه
       });
     } finally {
       setState(() => _loading = false);
@@ -130,22 +129,22 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
         children: [
           SvgPicture.asset(_svgInstruction, height: 100, alignment: Alignment.centerRight),
           const SizedBox(height: 16),
-          const Text(
-            "راهنما:",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Text(
+            Lang.t('guide'), // 🔹 چندزبانه
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             textAlign: TextAlign.right,
           ),
           const SizedBox(height: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text("۱- اینترنت سیم‌کارت دستگاه خود را (در صورت روشن بودن) خاموش کنید.", style: TextStyle(fontSize: 18)),
-              SizedBox(height: 12),
-              Text("۲- از برنامه خارج شده و به تنظیمات Wi-Fi گوشی خود بروید.", style: TextStyle(fontSize: 18)),
-              SizedBox(height: 12),
-              Text("۳- در لیست شبکه‌ها، به شبکه [نام شبکه] متصل شوید.", style: TextStyle(fontSize: 18)),
-              SizedBox(height: 12),
-              Text("۴- پس از اتصال، به این برنامه بازگردید.", style: TextStyle(fontSize: 18)),
+            children: [
+              Text(Lang.t('config_step_1'), style: const TextStyle(fontSize: 18)), // 🔹 چندزبانه
+              const SizedBox(height: 12),
+              Text(Lang.t('config_step_2'), style: const TextStyle(fontSize: 18)), // 🔹 چندزبانه
+              const SizedBox(height: 12),
+              Text(Lang.t('config_step_3'), style: const TextStyle(fontSize: 18)), // 🔹 چندزبانه
+              const SizedBox(height: 12),
+              Text(Lang.t('config_step_4'), style: const TextStyle(fontSize: 18)), // 🔹 چندزبانه
             ],
           ),
           const Spacer(),
@@ -153,36 +152,35 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
             child: Column(
               children: [
                 _blueButton(
-                  text: "تلاش مجدد برای بررسی سریال",
+                  text: Lang.t('retry_serial_check'), // 🔹 چندزبانه
                   onPressed: _checkDeviceSerial,
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
-  onPressed: _serialMatched ? () => setState(() => _step = 1) : null,
-  style: ButtonStyle(
-    backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-      if (states.contains(MaterialState.disabled)) {
-        return Colors.grey.shade300; // وقتی غیرفعال است
-      }
-      return Colors.blue; // وقتی فعال است
-    }),
-    foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-      if (states.contains(MaterialState.disabled)) {
-        return Colors.black; // متن مشکی وقتی غیرفعال است
-      }
-      return Colors.white; // متن سفید وقتی فعال است
-    }),
-    padding: MaterialStateProperty.all(
-        const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
-    shape: MaterialStateProperty.all(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-  ),
-  child: const Text(
-    "اتصال برقرار شد، ادامه دهید",
-    style: TextStyle(fontSize: 16),
-  ),
-),
-
+                  onPressed: _serialMatched ? () => setState(() => _step = 1) : null,
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(MaterialState.disabled)) {
+                        return Colors.grey.shade300;
+                      }
+                      return Colors.blue;
+                    }),
+                    foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(MaterialState.disabled)) {
+                        return Colors.black;
+                      }
+                      return Colors.white;
+                    }),
+                    padding: MaterialStateProperty.all(
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
+                    shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  ),
+                  child: Text(
+                    Lang.t('connection_established_continue'), // 🔹 چندزبانه
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
               ],
             ),
           ),
@@ -205,10 +203,10 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
         _loading
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 12),
-                  Text("در حال بررسی اتصال به دستگاه...", style: TextStyle(fontSize: 16)),
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 12),
+                  Text(Lang.t('checking_device_connection'), style: const TextStyle(fontSize: 16)), // 🔹 چندزبانه
                 ],
               )
             : Column(
@@ -220,12 +218,12 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
                       child: Text(_message!, style: const TextStyle(fontSize: 16, color: Colors.red), textAlign: TextAlign.center),
                     ),
                   _blueButton(
-                    text: "تلاش مجدد",
+                    text: Lang.t('retry'), // 🔹 چندزبانه
                     onPressed: _checkDeviceSerial,
                   ),
                   const SizedBox(height: 12),
                   _blueButton(
-                    text: "ادامه به مرحله تنظیم وای‌فای",
+                    text: Lang.t('continue_to_wifi_setup'), // 🔹 چندزبانه
                     onPressed: () => setState(() => _step = 2),
                   ),
                 ],
@@ -250,7 +248,7 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
               Text(_message!, textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: _message!.contains("✅") ? Colors.green : Colors.red)),
             const SizedBox(height: 30),
             _blueButton(
-              text: "شروع استفاده از برنامه",
+              text: Lang.t('start_using_app'), // 🔹 چندزبانه
               onPressed: () {
                 Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) =>  HomePage()));
               },
@@ -268,17 +266,17 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
             const SizedBox(height: 16),
             TextField(
               controller: _ssidController,
-              decoration: const InputDecoration(labelText: "SSID وای‌فای"),
+              decoration: InputDecoration(labelText: Lang.t('wifi_ssid')), // 🔹 چندزبانه
             ),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: "Password وای‌فای"),
+              decoration: InputDecoration(labelText: Lang.t('wifi_password')), // 🔹 چندزبانه
               obscureText: true,
             ),
             const SizedBox(height: 24),
             _loading
                 ? const SizedBox(height: 150, child: Center(child: CircularProgressIndicator()))
-                : _blueButton(text: "ذخیره و اتصال نهایی", onPressed: _onSubmitWiFiForm),
+                : _blueButton(text: Lang.t('save_and_connect'), onPressed: _onSubmitWiFiForm), // 🔹 چندزبانه
             const SizedBox(height: 16),
             if (_message != null)
               Column(
@@ -311,11 +309,11 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
     final ssid = _ssidController.text.trim();
     final pass = _passwordController.text.trim();
     if (ssid.isEmpty) {
-      setState(() => _message = "❌ لطفا SSID را وارد کنید.");
+      setState(() => _message = "❌ ${Lang.t('enter_ssid')}"); // 🔹 چندزبانه
       return false;
     }
     if (pass.length < 8) {
-      setState(() => _message = "❌ پسورد باید حداقل ۸ کاراکتر باشد.");
+      setState(() => _message = "❌ ${Lang.t('password_min_8_chars')}"); // 🔹 چندزبانه
       return false;
     }
     setState(() => _message = null);
@@ -337,7 +335,7 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
       _showOverlay = false;
       _currentOverlaySVG = null;
       _step = 3;
-      _message = "✅ اطلاعات ارسال شد.\nدستگاه در حال اتصال به وای‌فای جدید است.";
+      _message = "✅ ${Lang.t('credentials_sent')}"; // 🔹 چندزبانه
     });
 
     await _sendCredentials(_ssidController.text.trim(), _passwordController.text.trim());
@@ -355,7 +353,7 @@ class _DeviceConfigPageState extends State<DeviceConfigPage> {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) {
-        setState(() => _message = "❌ ارسال اطلاعات ناموفق (کد: ${response.statusCode})");
+        setState(() => _message = "❌ ${Lang.t('send_failed')} (${Lang.t('code')}: ${response.statusCode})"); // 🔹 چندزبانه
       }
     } catch (_) {
       // ignore
