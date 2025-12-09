@@ -21,6 +21,7 @@ class AddDevicePage extends StatelessWidget {
 
     final homeController = Get.find<HomeController>();
     final dio = Dio();
+    final isEnglish = Lang.current.value == 'en';
 
     Future<void> submitDevice() async {
       final serial = serialController.text.trim();
@@ -102,23 +103,27 @@ class AddDevicePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            TextField(
-              controller: serialController,
-              textAlign: TextAlign.right,
-              decoration: InputDecoration(
-                label: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(Lang.t('serial_number')), // 🔹 چندزبانه
-                ),
-                border: const OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-                ),
-              ),
-            ),
+
+
+TextField(
+  controller: deviceNameController,
+  textAlign: isEnglish ? TextAlign.left : TextAlign.right,
+  inputFormatters: [LengthLimitingTextInputFormatter(8)],
+  decoration: InputDecoration(
+    counterText: '',
+    label: Align(
+      alignment: isEnglish ? Alignment.centerLeft : Alignment.centerRight,
+      child: Text(Lang.t('device_name')),
+    ),
+    border: const OutlineInputBorder(),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+    ),
+  ),
+),
             const SizedBox(height: 16),
 
 TextField(

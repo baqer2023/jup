@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -81,7 +83,9 @@ class _GroupsPageState extends State<GroupsPage> {
           itemCount: controller.groups.length,
           itemBuilder: (context, index) {
             final group = controller.groups[index];
+            final isRtl = Lang.textDirection.value == TextDirection.rtl;
             return GroupCard(
+              
               title: group['title'] ?? Lang.t('untitled'), // 🔹 چندزبانه
               description: group['description'] ?? '',
               groupId: group['customerId'] ?? '',
@@ -191,7 +195,7 @@ class _GroupsPageState extends State<GroupsPage> {
                   await controller.deleteGroup(customerId);
                   _loadGroups();
                 }
-              },
+              }, 
             );
           },
         );
@@ -253,6 +257,8 @@ class _GroupCardState extends State<GroupCard> {
   Widget build(BuildContext context) {
     Color borderColor = _isActive ? Colors.blue.shade400 : Colors.grey.shade400;
 
+    bool isRtl = Lang.textDirection.value == TextDirection.rtl;
+;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Center(
@@ -337,159 +343,228 @@ class _GroupCardState extends State<GroupCard> {
                       ),
                       const SizedBox(height: 10),
                       Align(
-                        alignment: Alignment.centerLeft,
+                        
+                        alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
                         child: PopupMenuButton<int>(
-                          color: Colors.white,
-                          icon: const Icon(
-                            Icons.more_vert,
-                            size: 20,
-                            color: Colors.black87,
-                          ),
-                          onSelected: (value) {
-                            if (value == 0) {
-                              print(widget.description);
-                              Get.to(
-                                () => EditGroupPage(
-                                  groupId: widget.groupId,
-                                  initialTitle: widget.title,
-                                  initialDescription: widget.description,
-                                ),
-                              );
-                            } else if (value == 1) {
-                              widget.onUserInfo(
-                                widget.groupId,
-                                widget.title,
-                                widget.description,
-                              );
-                            } else if (value == 2) {
-                              widget.onDeviceInfo(
-                                widget.groupId,
-                                widget.title,
-                                widget.description,
-                              );
-                            } else if (value == 3) {
-                              print(
-                                'افزودن گروه به داشبورد: ${widget.groupId}',
-                              );
-                            } else if (value == 4) {
-                              widget.onDelete(widget.groupId);
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem<int>(
-                              value: 0,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  const SizedBox(width: 8),
-                                  SvgPicture.asset(
-                                    'assets/svg/edit_group.svg',
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      Lang.t('edit_group'), // 🔹 چندزبانه
-                                      textDirection: TextDirection.rtl,
-                                      style: const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem<int>(
-                              value: 1,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  const SizedBox(width: 8),
-                                  SvgPicture.asset(
-                                    'assets/svg/custommers_info_froup.svg',
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      Lang.t('users_info'), // 🔹 چندزبانه
-                                      textDirection: TextDirection.rtl,
-                                      style: const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem<int>(
-                              value: 2,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  const SizedBox(width: 8),
-                                  SvgPicture.asset(
-                                    'assets/svg/device_info_group.svg',
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      Lang.t('devices_info'), // 🔹 چندزبانه
-                                      textDirection: TextDirection.rtl,
-                                      style: const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem<int>(
-                              value: 3,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  const SizedBox(width: 8),
-                                  SvgPicture.asset(
-                                    'assets/svg/add_dashboard.svg',
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      Lang.t('add_group_to_dashboard'), // 🔹 چندزبانه
-                                      textDirection: TextDirection.rtl,
-                                      style: const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem<int>(
-                              value: 4,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  const SizedBox(width: 8),
-                                  SvgPicture.asset(
-                                    'assets/svg/deleting.svg',
-                                    width: 20,
-                                    height: 20,
-                                    color: Colors.red,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      Lang.t('delete_group'), // 🔹 چندزبانه
-                                      textDirection: TextDirection.rtl,
-                                      style: const TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+  color: Colors.white,
+  icon: const Icon(
+    Icons.more_vert,
+    size: 20,
+    color: Colors.black87,
+  ),
+  onSelected: (value) async {
+    if (value == 0) {
+      // ویرایش گروه
+      Get.to(
+        () => EditGroupPage(
+          groupId: widget.groupId,
+          initialTitle: widget.title,
+          initialDescription: widget.description,
+        ),
+      );
+    } else if (value == 1) {
+      widget.onUserInfo(widget.groupId, widget.title, widget.description);
+    } else if (value == 2) {
+      widget.onDeviceInfo(widget.groupId, widget.title, widget.description);
+    } else if (value == 3) {
+      print('افزودن گروه به داشبورد: ${widget.groupId}');
+    } else if (value == 4) {
+      // دیالوگ تأیید حذف
+      final confirmDelete = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            titlePadding: EdgeInsets.zero,
+            title: Obx(() {
+              final _ = Lang.current.value; // reactive trigger
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Text(
+                  Lang.t('delete_group'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                ),
+              );
+            }),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Obx(() {
+                    final _ = Lang.current.value;
+                    return Text(
+                      Lang.t('confirm_delete_group', params: {'title': widget.title}),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 15, color: Colors.grey.shade800),
+                    );
+                  }),
+                  const SizedBox(height: 20),
+                  const Icon(Icons.warning_amber_rounded, color: Colors.blue, size: 50),
+                ],
+              ),
+            ),
+            actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFFF39530),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(color: Color(0xFFF39530), width: 2),
                         ),
+                      ),
+                      child: Obx(() => Text(
+                        Lang.t('cancel'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      )),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Obx(() => Text(
+                        Lang.t('delete'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      )),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmDelete == true) {
+        widget.onDelete(widget.groupId);
+      }
+    }
+  },
+  itemBuilder: (context) {
+    final isEnglish = Lang.current.value == 'en';
+    return [
+      PopupMenuItem<int>(
+        value: 0,
+        child: Row(
+          textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+          children: [
+            SvgPicture.asset('assets/svg/edit_group.svg', width: 20, height: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                Lang.t('edit_group'),
+                textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+      ),
+      PopupMenuItem<int>(
+        value: 1,
+        child: Row(
+          textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+          children: [
+            SvgPicture.asset('assets/svg/custommers_info_froup.svg', width: 20, height: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                Lang.t('users_info'),
+                textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+      ),
+      PopupMenuItem<int>(
+        value: 2,
+        child: Row(
+          textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+          children: [
+            SvgPicture.asset('assets/svg/device_info_group.svg', width: 20, height: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                Lang.t('devices_info'),
+                textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+      ),
+      PopupMenuItem<int>(
+        value: 3,
+        child: Row(
+          textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+          children: [
+            SvgPicture.asset('assets/svg/add_dashboard.svg', width: 20, height: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                Lang.t('add_group_to_dashboard'),
+                textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const PopupMenuDivider(),
+      PopupMenuItem<int>(
+        value: 4,
+        child: Row(
+          textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+          children: [
+            SvgPicture.asset('assets/svg/deleting.svg', width: 20, height: 20, color: Colors.red),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                Lang.t('delete_group'),
+                textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+  },
+)
+,
                       ),
                     ],
                   ),

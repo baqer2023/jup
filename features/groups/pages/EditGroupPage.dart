@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_app32/features/groups/controllers/group_controller.dart';
 import 'package:my_app32/features/groups/pages/group_page.dart';
+import 'package:my_app32/core/lang/lang.dart';
 import '../../widgets/custom_appbar.dart';
 import '../../widgets/sidebar.dart';
 
@@ -27,6 +28,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
   final HomeControllerGroup controller = Get.find();
   bool isSubmitting = false;
 
+   final isEnglish = Lang.current.value == 'en';
+
   @override
   void initState() {
     super.initState();
@@ -50,8 +53,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
       controller.fetchGroups();
     } else {
       Get.snackbar(
-        'خطا',
-        'به‌روزرسانی گروه موفق نبود',
+        Lang.t('error'), // 🔹 چندزبانه
+        Lang.t('group_update_failed'), // 🔹 چندزبانه
         snackPosition: SnackPosition.BOTTOM,
       );
     }
@@ -61,43 +64,61 @@ class _EditGroupPageState extends State<EditGroupPage> {
   Widget build(BuildContext context) {
     
 return Scaffold(
-  appBar: AppBar(title: const Text("ویرایش گروه")),
+  appBar: AppBar(title: Text(Lang.t('edit_group'))), // 🔹 چندزبانه
   body: SafeArea(
   child: Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
     child: Column(
       children: [
-        TextField(
-  textAlign: TextAlign.right,
+TextField(
   controller: nameController,
+  textAlign: isEnglish ? TextAlign.left : TextAlign.right,
   decoration: InputDecoration(
     label: Align(
-      alignment: Alignment.centerRight,
-      child: const Text("نام گروه"),
+      alignment:
+          isEnglish ? Alignment.centerLeft : Alignment.centerRight,
+      child: Text(
+        Lang.t('group_name'),
+      ),
     ),
     border: const OutlineInputBorder(),
-    focusedBorder: OutlineInputBorder(
+    focusedBorder: const OutlineInputBorder(
       borderSide: BorderSide(color: Colors.blue, width: 2),
     ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.grey.shade400,
+        width: 1,
+      ),
+    ),
   ),
 ),
 
-        const SizedBox(height: 16),
-        TextField(
-  textAlign: TextAlign.right, // متن راست‌چین
+const SizedBox(height: 16),
+
+TextField(
   controller: descController,
+  textAlign: isEnglish ? TextAlign.left : TextAlign.right,
   decoration: InputDecoration(
     label: Align(
-      alignment: Alignment.centerRight, // لیبل راست‌چین
-      child: const Text("توضیحات"),
+      alignment:
+          isEnglish ? Alignment.centerLeft : Alignment.centerRight,
+      child: Text(
+        Lang.t('description'),
+      ),
     ),
     border: const OutlineInputBorder(),
-    focusedBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.blue, width: 2), // حاشیه آبی هنگام فوکوس
+    focusedBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.blue, width: 2),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.grey.shade400,
+        width: 1,
+      ),
     ),
   ),
 ),
-
         const Spacer(),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -115,9 +136,9 @@ return Scaffold(
                 ),
                 minimumSize: const Size.fromHeight(50),
               ),
-              child: const Text(
-                'انصراف',
-                style: TextStyle(
+              child: Text(
+                Lang.t('cancel'), // 🔹 چندزبانه
+                style: const TextStyle(
                   color: Color(0xFFF39530),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -144,9 +165,9 @@ return Scaffold(
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text(
-                      "به‌روزرسانی",
-                      style: TextStyle(
+                  : Text(
+                      Lang.t('update'), // 🔹 چندزبانه
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,

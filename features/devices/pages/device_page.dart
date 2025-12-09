@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -490,361 +491,263 @@ class DevicesPage extends BaseView<HomeController> {
                             ),
                           ),
                           leading: PopupMenuButton<String>(
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: Colors.black87,
-                            ),
-                            onSelected: (value) async {
-                              // 👈 اینجا async اضافه کن
-                              if (value == 'edit') {
-                                Navigator.pop(context);
-                                _showSingleLocationEditDialog(context, loc);
-                              } else if (value == 'up') {
-                                Navigator.pop(context);
-                              } else if (value == 'down') {
-                                Navigator.pop(context);
-                              } else if (value == 'delete') {
-                                await showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      elevation: 8,
-                                      titlePadding: EdgeInsets.zero,
-                                      title: Obx(() {
-                                        final _ = Lang
-                                            .current
-                                            .value; // ⚡ reactive trigger
-                                        return Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 16,
-                                          ),
-                                          decoration: const BoxDecoration(
-                                            color: Colors
-                                                .blue, // رنگ هشدار یا رنگ دلخواه
-                                            borderRadius: BorderRadius.vertical(
-                                              top: Radius.circular(20),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            Lang.t(
-                                              'delete_location',
-                                            ), // کلید ترجمه
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                              fontSize: 18,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        );
-                                      }),
-
-                                      content: SizedBox(
-                                        width: double.maxFinite,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(height: 8),
-                                            Obx(() {
-                                              final _ = Lang
-                                                  .current
-                                                  .value; // ⚡ reactive trigger
-                                              return Text(
-                                                Lang.t(
-                                                  'confirm_delete_location',
-                                                  params: {'title': loc.title},
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.grey.shade800,
-                                                ),
-                                              );
-                                            }),
-
-                                            const SizedBox(height: 20),
-                                            const Icon(
-                                              Icons.warning_amber_rounded,
-                                              color: Colors.blue,
-                                              size: 50,
-                                            ),
-                                            const SizedBox(height: 8),
-                                          ],
-                                        ),
-                                      ),
-                                      actionsPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 8,
-                                          ),
-                                      actionsAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      actions: [
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            // 🔸 دکمه انصراف
-                                            SizedBox(
-                                              width: 100,
-                                              child: Obx(() {
-                                                final _ = Lang
-                                                    .current
-                                                    .value; // ⚡ reactive trigger
-                                                return ElevatedButton(
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).pop(),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        Colors.white,
-                                                    foregroundColor:
-                                                        const Color(0xFFF39530),
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 12,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            12,
-                                                          ),
-                                                      side: const BorderSide(
-                                                        color: Color(
-                                                          0xFFF39530,
-                                                        ),
-                                                        width: 2,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    Lang.t(
-                                                      'cancel',
-                                                    ), // ⚡ متن از فایل زبان گرفته می‌شود
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                );
-                                              }),
-                                            ),
-                                            const SizedBox(width: 4),
-
-                                            // 🔹 دکمه حذف
-                                            SizedBox(
-                                              width: 100,
-                                              child: Obx(() {
-                                                final _ = Lang
-                                                    .current
-                                                    .value; // ⚡ reactive trigger
-                                                return ElevatedButton(
-                                                  onPressed: () async {
-                                                    Navigator.of(
-                                                      context,
-                                                    ).pop(); // بستن دیالوگ
-                                                    String?
-                                                    error = await controller
-                                                        .deleteDashboardItem(
-                                                          id: loc.id,
-                                                          title: loc.title,
-                                                          displayOrder: 1,
-                                                          iconIndex:
-                                                              loc.iconIndex,
-                                                        );
-
-                                                    if (error == null) {
-                                                      await controller
-                                                          .refreshAllData();
-                                                      controller
-                                                              .selectedLocationId
-                                                              .value =
-                                                          '';
-
-                                                      Get.snackbar(
-                                                        Lang.t(
-                                                          'delete_success_title',
-                                                        ),
-                                                        Lang.t(
-                                                          'delete_success_message',
-                                                          params: {
-                                                            'location':
-                                                                loc.title,
-                                                          },
-                                                        ),
-                                                        snackPosition:
-                                                            SnackPosition
-                                                                .BOTTOM,
-                                                        backgroundColor: Colors
-                                                            .green
-                                                            .shade600,
-                                                        colorText: Colors.white,
-                                                        duration:
-                                                            const Duration(
-                                                              seconds: 2,
-                                                            ),
-                                                        margin:
-                                                            const EdgeInsets.all(
-                                                              12,
-                                                            ),
-                                                        borderRadius: 10,
-                                                      );
-
-                                                      Get.offAll(
-                                                        () => DevicesPage(),
-                                                      );
-                                                    } else {
-                                                      String errorMessage =
-                                                          error;
-                                                      if (error.contains(
-                                                        'Cannot delete dashboard: contains device configuration.',
-                                                      )) {
-                                                        errorMessage = Lang.t(
-                                                          'delete_error_devices_attached',
-                                                        );
-                                                      }
-
-                                                      Get.snackbar(
-                                                        Lang.t('error'),
-                                                        errorMessage,
-                                                        snackPosition:
-                                                            SnackPosition
-                                                                .BOTTOM,
-                                                        backgroundColor:
-                                                            Colors.red.shade600,
-                                                        colorText: Colors.white,
-                                                        duration:
-                                                            const Duration(
-                                                              seconds: 4,
-                                                            ),
-                                                        margin:
-                                                            const EdgeInsets.all(
-                                                              12,
-                                                            ),
-                                                        borderRadius: 10,
-                                                      );
-                                                    }
-                                                  },
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        Colors.blue,
-                                                    foregroundColor:
-                                                        Colors.white,
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 12,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            12,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    Lang.t('delete'),
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                );
-                                              }),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              }
-                            },
-
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  textDirection: TextDirection.rtl,
-                                  children: [
-                                    SvgPicture.asset(
-                                      'assets/svg/edit.svg',
-                                      width: 20,
-                                      height: 20,
-                                      color: Colors.black87,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Obx(() {
-                                      final _ = Lang
-                                          .current
-                                          .value; // ⚡ reactive trigger
-                                      return Text(
-                                        Lang.t('edit_locations'),
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                              // PopupMenuItem(
-                              //   value: 'up',
-                              //   child: Row(
-                              //     textDirection: TextDirection.rtl,
-                              //     children: [
-                              //       SvgPicture.asset('assets/svg/arrow_up.svg', width: 20, height: 20, color: Colors.black87),
-                              //       const SizedBox(width: 8),
-                              //       const Text('بالا بردن', style: TextStyle(color: Colors.black)),
-                              //     ],
-                              //   ),
-                              // ),
-                              // PopupMenuItem(
-                              //   value: 'down',
-                              //   child: Row(
-                              //     textDirection: TextDirection.rtl,
-                              //     children: [
-                              //       SvgPicture.asset('assets/svg/arrow_down.svg', width: 20, height: 20, color: Colors.black87),
-                              //       const SizedBox(width: 8),
-                              //       const Text('پایین آوردن', style: TextStyle(color: Colors.black)),
-                              //     ],
-                              //   ),
-                              // ),
-                              const PopupMenuDivider(),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  textDirection: TextDirection.rtl,
-                                  children: [
-                                    SvgPicture.asset(
-                                      'assets/svg/deleting.svg',
-                                      width: 20,
-                                      height: 20,
-                                      color: Colors.red,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Obx(() {
-                                      final _ = Lang
-                                          .current
-                                          .value; // ⚡ reactive trigger
-                                      return Text(
-                                        Lang.t('delete_location'),
-                                        style: const TextStyle(
-                                          color: Colors.red,
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            color: Colors.white,
+  icon: const Icon(
+    Icons.more_vert,
+    color: Colors.black87,
+  ),
+  onSelected: (value) async {
+    if (value == 'edit') {
+      Navigator.pop(context);
+      _showSingleLocationEditDialog(context, loc);
+    } else if (value == 'up') {
+      Navigator.pop(context);
+    } else if (value == 'down') {
+      Navigator.pop(context);
+    } else if (value == 'delete') {
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 8,
+            titlePadding: EdgeInsets.zero,
+            title: Obx(() {
+              final _ = Lang.current.value; // ⚡ reactive trigger
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                ),
+                child: Text(
+                  Lang.t('delete_location'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Obx(() {
+                    final _ = Lang.current.value; // ⚡ reactive trigger
+                    return Text(
+                      Lang.t(
+                        'confirm_delete_location',
+                        params: {'title': loc.title},
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey.shade800,
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 20),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.blue,
+                    size: 50,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+            actionsPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 🔸 دکمه انصراف
+                  SizedBox(
+                    width: 100,
+                    child: Obx(() {
+                      final _ = Lang.current.value; // ⚡ reactive trigger
+                      return ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFFF39530),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
                           ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                              color: Color(0xFFF39530),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          Lang.t('cancel'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(width: 4),
+
+                  // 🔹 دکمه حذف
+                  SizedBox(
+                    width: 100,
+                    child: Obx(() {
+                      final _ = Lang.current.value; // ⚡ reactive trigger
+                      return ElevatedButton(
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          String? error = await controller.deleteDashboardItem(
+                            id: loc.id,
+                            title: loc.title,
+                            displayOrder: 1,
+                            iconIndex: loc.iconIndex,
+                          );
+
+                          if (error == null) {
+                            await controller.refreshAllData();
+                            controller.selectedLocationId.value = '';
+
+                            Get.snackbar(
+                              Lang.t('delete_success_title'),
+                              Lang.t(
+                                'delete_success_message',
+                                params: {'location': loc.title},
+                              ),
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.green.shade600,
+                              colorText: Colors.white,
+                              duration: const Duration(seconds: 2),
+                              margin: const EdgeInsets.all(12),
+                              borderRadius: 10,
+                            );
+
+                            Get.offAll(() => DevicesPage());
+                          } else {
+                            String errorMessage = error;
+                            if (error.contains(
+                              'Cannot delete dashboard: contains device configuration.',
+                            )) {
+                              errorMessage = Lang.t('delete_error_devices_attached');
+                            }
+
+                            Get.snackbar(
+                              Lang.t('error'),
+                              errorMessage,
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.red.shade600,
+                              colorText: Colors.white,
+                              duration: const Duration(seconds: 4),
+                              margin: const EdgeInsets.all(12),
+                              borderRadius: 10,
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          Lang.t('delete'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+    }
+  },
+  itemBuilder: (context) {
+    final isEnglish = Lang.current.value == 'en';
+    return [
+      PopupMenuItem(
+        value: 'edit',
+        child: Row(
+          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/edit.svg',
+              width: 20,
+              height: 20,
+              color: Colors.black87,
+            ),
+            const SizedBox(width: 8),
+            Obx(() {
+              final _ = Lang.current.value; // ⚡ reactive trigger
+              return Text(
+                Lang.t('edit_locations'),
+                style: const TextStyle(
+                  color: Colors.black,
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+      const PopupMenuDivider(),
+      PopupMenuItem(
+        value: 'delete',
+        child: Row(
+          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/deleting.svg',
+              width: 20,
+              height: 20,
+              color: Colors.red,
+            ),
+            const SizedBox(width: 8),
+            Obx(() {
+              final _ = Lang.current.value; // ⚡ reactive trigger
+              return Text(
+                Lang.t('delete_location'),
+                style: const TextStyle(
+                  color: Colors.red,
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    ];
+  },
+  color: Colors.white,
+),
                         ),
                       );
                     },
@@ -932,6 +835,7 @@ class DevicesPage extends BaseView<HomeController> {
       text: loc.title,
     );
 
+    final isEnglish = Lang.current.value == 'en';
     showDialog(
       context: context,
       builder: (context) {
@@ -941,18 +845,26 @@ class DevicesPage extends BaseView<HomeController> {
             borderRadius: BorderRadius.circular(20),
           ),
           elevation: 10,
-          title: Obx(() {
-            final _ = Lang.current.value; // ⚡ reactive trigger
-            return Text(
-              Lang.t('edit_location'),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                fontSize: 18,
+          title: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Obx(() {
+                  final _ = Lang.current.value; // ⚡ reactive trigger
+                  return Text(
+                    Lang.t('edit_location'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                    textAlign: TextAlign.center,
+                  );
+                }),
               ),
-              textAlign: TextAlign.center,
-            );
-          }),
 
           content: StatefulBuilder(
             builder: (context, setState) {
@@ -962,48 +874,45 @@ class DevicesPage extends BaseView<HomeController> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
-                      controller: nameController,
-                      textAlign: TextAlign.right,
-                      decoration: InputDecoration(
-                        label: Align(
-                          alignment: Alignment.centerRight,
-                          child: Obx(() {
-                            final _ = Lang.current.value; // ⚡ reactive trigger
-                            return Text(
-                              Lang.t('location_name'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            );
-                          }),
-                        ),
-                        hintText:
-                            null, // hintText مستقیم نمی‌ذاریم، از suffix استفاده می‌کنیم
-                        // استفاده از Obx برای hintText
-                        hintStyle: const TextStyle(
+                  controller: nameController,
+                  textAlign: isEnglish ? TextAlign.left : TextAlign.right,
+                  decoration: InputDecoration(
+                    label: Align(
+                      alignment: isEnglish
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: Text(
+                        Lang.t('location_name'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                        hintTextDirection: TextDirection.rtl,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Colors.blue,
-                            width: 2,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.grey.shade400,
-                            width: 1,
-                          ),
                         ),
                       ),
+                    ),
+                    hintText: Lang.t('enter_location_name'),
+                    hintStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 2,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade400,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  maxLength: 50,
                       buildCounter:
                           (
                             BuildContext context, {
@@ -1026,19 +935,17 @@ class DevicesPage extends BaseView<HomeController> {
                     ),
 
                     const SizedBox(height: 16),
-                    Obx(() {
-                      final _ = Lang.current.value; // ⚡ reactive trigger
-                      return Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          Lang.t('select_location_icon'), // کلید ترجمه
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                      );
-                    }),
+                Align(
+                  alignment:
+                      isEnglish ? Alignment.centerLeft : Alignment.centerRight,
+                  child: Text(
+                    Lang.t('select_location_icon'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ),
 
                     const SizedBox(height: 8),
                     _buildIconSelector(setState, selectedIconIndex),
@@ -1699,610 +1606,507 @@ class DevicesPage extends BaseView<HomeController> {
                       // PopupMenuButton (سه نقطه)
                       Builder(
                         builder: (context) => PopupMenuButton<int>(
-                          color: Colors.white,
-                          icon: const Icon(
-                            Icons.more_vert,
-                            size: 20,
+  color: Colors.white,
+  icon: const Icon(
+    Icons.more_vert,
+    size: 20,
+    color: Colors.black87,
+  ),
+  onSelected: (value) async {
+    if (value == 1) {
+      Get.to(
+        () => EditDevicePage(
+          deviceId: device.deviceId,
+          serialNumber: device.sn,
+          initialName: device.title ?? '',
+          initialDashboardId: device.dashboardId ?? '',
+        ),
+      );
+    } else if (value == 0) {
+      // showLedColorDialog(device);
+    } else if (value == 2) {
+      // افزودن به داشبورد
+      if (!homeController.dashboardDevices.any(
+        (d) => d.deviceId == device.deviceId,
+      )) {
+        final token = homeController.token;
+        if (token == null) {
+          Get.snackbar(
+            "خطا",
+            "توکن معتبر پیدا نشد",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
+        final headers = {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        };
+        final data = {"deviceId": device.deviceId};
+        try {
+          final dio = Dio();
+          final response = await dio.post(
+            'http://45.149.76.245:8080/api/shortcut/addDevice',
+            data: data,
+            options: Options(headers: headers),
+          );
+          if (response.statusCode == 200 ||
+              response.statusCode == 201) {
+            Get.snackbar(
+              'موفقیت',
+              'دستگاه به داشبورد اضافه شد',
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+            );
+            homeController.dashboardDevices.add(device);
+          } else {
+            Get.snackbar(
+              'خطا',
+              'افزودن دستگاه موفق نبود: ${response.statusCode}',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        } catch (e) {
+          Get.snackbar(
+            'خطا',
+            'مشکل در ارتباط با سرور: $e',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      } else {
+        Get.snackbar(
+          'توجه',
+          'این دستگاه قبلاً به داشبورد اضافه شده است',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      }
+    } else if (value == 3 || value == 4) {
+      final isPermanent = value == 4;
+
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 8,
+          titlePadding: EdgeInsets.zero,
+          title: Obx(() {
+            final _ = Lang.current.value; // reactive trigger
+            final actionText = isPermanent
+                ? Lang.t("complete_delete")
+                : Lang.t("temporary_delete");
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                vertical: 16,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: Text(
+                actionText,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }),
+          content: Obx(() {
+            final _ = Lang.current.value;
+            final actionText = isPermanent
+                ? Lang.t("complete_delete")
+                : Lang.t("temporary_delete");
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Text(
+                  '${Lang.t("confirm_delete")} "$actionText" ${device.title}؟',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.blue,
+                  size: 50,
+                ),
+                const SizedBox(height: 8),
+              ],
+            );
+          }),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 100,
+                  child: Obx(() {
+                    final _ = Lang.current.value;
+                    return ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFFF39530),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(
+                            color: Color(0xFFF39530),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        Lang.t("cancel"),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 100,
+                  child: Obx(() {
+                    final _ = Lang.current.value;
+                    return ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        if (isPermanent) {
+                          await homeController.completeRemoveDevice(
+                            device.deviceId,
+                          );
+                        } else {
+                          await homeController.removeFromAllDashboard(
+                            device.deviceId,
+                          );
+                        }
+                        await homeController.refreshAllData();
+                        Get.snackbar(
+                          Lang.t("success"),
+                          isPermanent
+                              ? Lang.t("device_deleted_success")
+                              : Lang.t("device_temp_removed"),
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        Lang.t("confirm"),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else if (value == 5) {
+      final isEnglish = Lang.current.value == 'en';
+      
+      Get.dialog(
+        Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(() {
+                  final _ = Lang.current.value; // reactive trigger
+                  return Text(
+                    Lang.t('reset_config'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  );
+                }),
+                const SizedBox(height: 8),
+                Obx(() {
+                  final _ = Lang.current.value; // reactive trigger
+                  return Text(
+                    Lang.t('choose_action'),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                    textAlign: TextAlign.center,
+                  );
+                }),
+                const SizedBox(height: 20),
+
+                // --- گزینه پیکربندی ---
+                Card(
+                  color: const Color(0xFFF8F9FA),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => DeviceConfigPage(sn: device.sn));
+                    },
+                    child: Obx(() {
+                      final _ = Lang.current.value;
+                      final isEnglish = Lang.current.value == 'en';
+                      return ListTile(
+                        leading: isEnglish ? const Icon(Icons.settings, color: Colors.blueAccent) : null,
+                        trailing: isEnglish ? null : const Icon(Icons.settings, color: Colors.blueAccent),
+                        title: Text(
+                          Lang.t('go_to_config'),
+                          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
                             color: Colors.black87,
                           ),
-                          onSelected: (value) async {
-                            if (value == 1) {
-                              Get.to(
-                                () => EditDevicePage(
-                                  deviceId: device.deviceId,
-                                  serialNumber: device.sn,
-                                  initialName: device.title ?? '',
-                                  initialDashboardId: device.dashboardId ?? '',
-                                ),
-                              );
-                            } else if (value == 0) {
-                              // showLedColorDialog(device);
-                            } else if (value == 2) {
-                              // افزودن به داشبورد
-                              if (!homeController.dashboardDevices.any(
-                                (d) => d.deviceId == device.deviceId,
-                              )) {
-                                final token = homeController.token;
-                                if (token == null) {
-                                  Get.snackbar(
-                                    "خطا",
-                                    "توکن معتبر پیدا نشد",
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                  );
-                                  return;
-                                }
-                                final headers = {
-                                  'Authorization': 'Bearer $token',
-                                  'Content-Type': 'application/json',
-                                };
-                                final data = {"deviceId": device.deviceId};
-                                try {
-                                  final dio = Dio();
-                                  final response = await dio.post(
-                                    'http://45.149.76.245:8080/api/shortcut/addDevice',
-                                    data: data,
-                                    options: Options(headers: headers),
-                                  );
-                                  if (response.statusCode == 200 ||
-                                      response.statusCode == 201) {
-                                    Get.snackbar(
-                                      'موفقیت',
-                                      'دستگاه به داشبورد اضافه شد',
-                                      backgroundColor: Colors.green,
-                                      colorText: Colors.white,
-                                    );
-                                    homeController.dashboardDevices.add(device);
-                                  } else {
-                                    Get.snackbar(
-                                      'خطا',
-                                      'افزودن دستگاه موفق نبود: ${response.statusCode}',
-                                      backgroundColor: Colors.red,
-                                      colorText: Colors.white,
-                                    );
-                                  }
-                                } catch (e) {
-                                  Get.snackbar(
-                                    'خطا',
-                                    'مشکل در ارتباط با سرور: $e',
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                  );
-                                }
-                              } else {
-                                Get.snackbar(
-                                  'توجه',
-                                  'این دستگاه قبلاً به داشبورد اضافه شده است',
-                                  backgroundColor: Colors.orange,
-                                  colorText: Colors.white,
-                                );
-                              }
-                            } else if (value == 3 || value == 4) {
-                              final isPermanent = value == 4;
-
-                              await showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  backgroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  elevation: 8,
-                                  titlePadding: EdgeInsets.zero,
-                                  title: Obx(() {
-                                    final _ =
-                                        Lang.current.value; // reactive trigger
-                                    final actionText = isPermanent
-                                        ? Lang.t("complete_delete")
-                                        : Lang.t("temporary_delete");
-                                    return Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(20),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        actionText,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    );
-                                  }),
-                                  content: Obx(() {
-                                    final _ = Lang.current.value;
-                                    final actionText = isPermanent
-                                        ? Lang.t("complete_delete")
-                                        : Lang.t("temporary_delete");
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          '${Lang.t("confirm_delete")} "$actionText" ${device.title}؟',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.grey.shade800,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        const Icon(
-                                          Icons.warning_amber_rounded,
-                                          color: Colors.blue,
-                                          size: 50,
-                                        ),
-                                        const SizedBox(height: 8),
-                                      ],
-                                    );
-                                  }),
-                                  actionsPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  actionsAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  actions: [
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SizedBox(
-                                          width: 100,
-                                          child: Obx(() {
-                                            final _ = Lang.current.value;
-                                            return ElevatedButton(
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.white,
-                                                foregroundColor: const Color(
-                                                  0xFFF39530,
-                                                ),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 12,
-                                                    ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  side: const BorderSide(
-                                                    color: Color(0xFFF39530),
-                                                    width: 2,
-                                                  ),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                Lang.t("cancel"),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            );
-                                          }),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        SizedBox(
-                                          width: 100,
-                                          child: Obx(() {
-                                            final _ = Lang.current.value;
-                                            return ElevatedButton(
-                                              onPressed: () async {
-                                                Navigator.of(context).pop();
-                                                if (isPermanent) {
-                                                  await homeController
-                                                      .completeRemoveDevice(
-                                                        device.deviceId,
-                                                      );
-                                                } else {
-                                                  await homeController
-                                                      .removeFromAllDashboard(
-                                                        device.deviceId,
-                                                      );
-                                                }
-                                                await homeController
-                                                    .refreshAllData();
-                                                Get.snackbar(
-                                                  Lang.t("success"),
-                                                  isPermanent
-                                                      ? Lang.t(
-                                                          "device_deleted_success",
-                                                        )
-                                                      : Lang.t(
-                                                          "device_temp_removed",
-                                                        ),
-                                                  backgroundColor: Colors.green,
-                                                  colorText: Colors.white,
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.blue,
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 12,
-                                                    ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                Lang.t("confirm"),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            );
-                                          }),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            // else if (value == 4) {
-                            //   // حذف کامل
-                            //   await showDeleteDeviceConfirmDialog(
-                            //     context,
-                            //     device.title,
-                            //     () async {
-                            //       await homeController.completeRemoveDevice(device.deviceId);
-                            //       await homeController.refreshAllData();
-                            //     },
-                            //   );
-                            // }
-                            else if (value == 5) {
-                              Get.dialog(
-                                Dialog(
-                                  backgroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Obx(() {
-                                          final _ = Lang
-                                              .current
-                                              .value; // reactive trigger
-                                          return Text(
-                                            Lang.t('reset_config'),
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          );
-                                        }),
-
-                                        const SizedBox(height: 8),
-                                        Obx(() {
-                                          final _ = Lang
-                                              .current
-                                              .value; // reactive trigger
-                                          return Text(
-                                            Lang.t('choose_action'),
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black54,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          );
-                                        }),
-
-                                        const SizedBox(height: 20),
-
-                                        // --- گزینه پیکربندی ---
-                                        Card(
-                                          color: const Color(0xFFF8F9FA),
-                                          elevation: 2,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            onTap: () {
-                                              Get.back();
-                                              Get.to(
-                                                () => DeviceConfigPage(
-                                                  sn: device.sn,
-                                                ),
-                                              );
-                                            },
-                                            child: ListTile(
-                                              trailing: const Icon(
-                                                Icons.settings,
-                                                color: Colors.blueAccent,
-                                              ),
-                                              title: Obx(() {
-                                                final _ = Lang
-                                                    .current
-                                                    .value; // reactive trigger
-                                                return Text(
-                                                  Lang.t('go_to_config'),
-                                                  textDirection:
-                                                      TextDirection.rtl,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.black87,
-                                                  ),
-                                                );
-                                              }),
-
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-
-                                        const SizedBox(height: 10),
-
-                                        // --- گزینه ریست ---
-                                        Card(
-                                          color: const Color(0xFFF8F9FA),
-                                          elevation: 2,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            onTap: () async {
-                                              Get.back();
-                                              await homeController.resetDevice(
-                                                device.deviceId,
-                                              );
-                                              Get.snackbar(
-                                                'موفقیت',
-                                                'دستگاه ریست شد',
-                                                backgroundColor: Colors.green,
-                                                colorText: Colors.white,
-                                              );
-                                            },
-                                            child: ListTile(
-                                              trailing: const Icon(
-                                                Icons.refresh,
-                                                color: Colors.redAccent,
-                                              ),
-                                              title: Obx(() {
-                                                final _ = Lang
-                                                    .current
-                                                    .value; // reactive trigger
-                                                return Text(
-                                                  Lang.t('reset_device'),
-                                                  textDirection:
-                                                      TextDirection.rtl,
-                                                  style: const TextStyle(
-                                                    color: Colors.redAccent,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                );
-                                              }),
-
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-
-                                        const SizedBox(height: 10),
-
-                                        // --- گزینه انصراف ---
-                                        Card(
-                                          color: const Color(0xFFF8F9FA),
-                                          elevation: 2,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            onTap: () => Get.back(),
-                                            child: ListTile(
-                                              trailing: const Icon(
-                                                Icons.cancel,
-                                                color: Colors.amber,
-                                              ),
-                                              title: Obx(() {
-                                                final _ = Lang
-                                                    .current
-                                                    .value; // reactive trigger
-                                                return Text(
-                                                  Lang.t('cancel'),
-                                                  textDirection:
-                                                      TextDirection.rtl,
-                                                  style: const TextStyle(
-                                                    color: Colors.amber,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                );
-                                              }),
-
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem<int>(
-                              value: 1,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  SvgPicture.asset(
-                                    'assets/svg/edit.svg',
-                                    width: 20,
-                                    height: 20,
-                                    color: Colors.blueAccent,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Obx(() {
-                                    final _ =
-                                        Lang.current.value; // reactive trigger
-                                    return Text(
-                                      Lang.t('edit_key'),
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                            // PopupMenuItem<int>(
-                            //   value: 0,
-                            //   child: Row(
-                            //     textDirection: TextDirection.rtl,
-                            //     children: [
-                            //       SvgPicture.asset(
-                            //         'assets/svg/settings.svg',
-                            //         width: 20,
-                            //         height: 20,
-                            //       ),
-                            //       const SizedBox(width: 2),
-                            //       const Text('تنظیمات پیشرفته',
-                            //           style: TextStyle(color: Colors.black)),
-                            //     ],
-                            //   ),
-                            // ),
-                            if (!homeController.dashboardDevices.any(
-                              (d) => d.deviceId == device.deviceId,
-                            ))
-                              PopupMenuItem<int>(
-                                value: 2,
-                                child: Row(
-                                  textDirection: TextDirection.rtl,
-                                  children: [
-                                    SvgPicture.asset(
-                                      'assets/svg/add_dashboard.svg',
-                                      width: 20,
-                                      height: 20,
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Obx(() {
-                                      final _ = Lang
-                                          .current
-                                          .value; // reactive trigger
-                                      return Text(
-                                        Lang.t('add_to_dashboard'),
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                            PopupMenuItem<int>(
-                              value: 5,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  SvgPicture.asset(
-                                    'assets/svg/reset.svg',
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Obx(() {
-                                    final _ =
-                                        Lang.current.value; // reactive trigger
-                                    return Text(
-                                      Lang.t('reset_config'),
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem<int>(
-                              value: 3,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  SvgPicture.asset(
-                                    'assets/svg/delete_temp.svg',
-                                    width: 20,
-                                    height: 20,
-                                    color: Colors.red,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Obx(() {
-                                    final _ =
-                                        Lang.current.value; // reactive trigger
-                                    return Text(
-                                      Lang.t('temporary_delete'),
-                                      style: const TextStyle(color: Colors.red),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem<int>(
-                              value: 4,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                children: [
-                                  SvgPicture.asset(
-                                    'assets/svg/deleting.svg',
-                                    width: 20,
-                                    height: 20,
-                                    color: Colors.red,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Obx(() {
-                                    final _ =
-                                        Lang.current.value; // reactive trigger
-                                    return Text(
-                                      Lang.t('complete_delete'),
-                                      style: const TextStyle(color: Colors.red),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                          ],
                         ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // --- گزینه ریست ---
+                Card(
+                  color: const Color(0xFFF8F9FA),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () async {
+                      Get.back();
+                      await homeController.resetDevice(device.deviceId);
+                      Get.snackbar(
+                        'موفقیت',
+                        'دستگاه ریست شد',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
+                    },
+                    child: Obx(() {
+                      final _ = Lang.current.value;
+                      final isEnglish = Lang.current.value == 'en';
+                      return ListTile(
+                        leading: isEnglish ? const Icon(Icons.refresh, color: Colors.redAccent) : null,
+                        trailing: isEnglish ? null : const Icon(Icons.refresh, color: Colors.redAccent),
+                        title: Text(
+                          Lang.t('reset_device'),
+                          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // --- گزینه انصراف ---
+                Card(
+                  color: const Color(0xFFF8F9FA),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => Get.back(),
+                    child: Obx(() {
+                      final _ = Lang.current.value;
+                      final isEnglish = Lang.current.value == 'en';
+                      return ListTile(
+                        leading: isEnglish ? const Icon(Icons.cancel, color: Colors.amber) : null,
+                        trailing: isEnglish ? null : const Icon(Icons.cancel, color: Colors.amber),
+                        title: Text(
+                          Lang.t('cancel'),
+                          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+                          style: const TextStyle(
+                            color: Colors.amber,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+  },
+  itemBuilder: (context) {
+    final isEnglish = Lang.current.value == 'en';
+    return [
+      PopupMenuItem<int>(
+        value: 1,
+        child: Row(
+          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/edit.svg',
+              width: 20,
+              height: 20,
+              color: Colors.blueAccent,
+            ),
+            const SizedBox(width: 2),
+            Obx(() {
+              final _ = Lang.current.value; // reactive trigger
+              return Text(
+                Lang.t('edit_key'),
+                style: const TextStyle(color: Colors.black),
+              );
+            }),
+          ],
+        ),
+      ),
+      if (!homeController.dashboardDevices.any(
+        (d) => d.deviceId == device.deviceId,
+      ))
+        PopupMenuItem<int>(
+          value: 2,
+          child: Row(
+            textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+            children: [
+              SvgPicture.asset(
+                'assets/svg/add_dashboard.svg',
+                width: 20,
+                height: 20,
+              ),
+              const SizedBox(width: 2),
+              Obx(() {
+                final _ = Lang.current.value; // reactive trigger
+                return Text(
+                  Lang.t('add_to_dashboard'),
+                  style: const TextStyle(color: Colors.black),
+                );
+              }),
+            ],
+          ),
+        ),
+      PopupMenuItem<int>(
+        value: 5,
+        child: Row(
+          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/reset.svg',
+              width: 20,
+              height: 20,
+            ),
+            const SizedBox(width: 2),
+            Obx(() {
+              final _ = Lang.current.value; // reactive trigger
+              return Text(
+                Lang.t('reset_config'),
+                style: const TextStyle(color: Colors.black),
+              );
+            }),
+          ],
+        ),
+      ),
+      const PopupMenuDivider(),
+      PopupMenuItem<int>(
+        value: 3,
+        child: Row(
+          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/delete_temp.svg',
+              width: 20,
+              height: 20,
+              color: Colors.red,
+            ),
+            const SizedBox(width: 2),
+            Obx(() {
+              final _ = Lang.current.value; // reactive trigger
+              return Text(
+                Lang.t('temporary_delete'),
+                style: const TextStyle(color: Colors.red),
+              );
+            }),
+          ],
+        ),
+      ),
+      PopupMenuItem<int>(
+        value: 4,
+        child: Row(
+          textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+          children: [
+            SvgPicture.asset(
+              'assets/svg/deleting.svg',
+              width: 20,
+              height: 20,
+              color: Colors.red,
+            ),
+            const SizedBox(width: 2),
+            Obx(() {
+              final _ = Lang.current.value; // reactive trigger
+              return Text(
+                Lang.t('complete_delete'),
+                style: const TextStyle(color: Colors.red),
+              );
+            }),
+          ],
+        ),
+      ),
+    ];
+  },
+),
                       ),
                       const SizedBox(width: 6),
                       // SVG تنظیمات/LED
@@ -3674,7 +3478,7 @@ class DevicesPage extends BaseView<HomeController> {
   void _showAddLocationDialog() {
     final TextEditingController nameController = TextEditingController();
     int? selectedIconIndex; // 👈 برای ذخیره انتخاب کاربر
-
+     final isEnglish = Lang.current.value == 'en';
     showDialog(
       context: Get.context!,
       builder: (context) {
@@ -3713,66 +3517,71 @@ class DevicesPage extends BaseView<HomeController> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Obx(() {
-                        final _ = Lang.current.value; // ⚡ reactive trigger
-                        return TextField(
-                          controller: nameController,
-                          textAlign: TextAlign.right,
-                          decoration: InputDecoration(
-                            label: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                Lang.t('location_name'),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            hintText: Lang.t('enter_location_name'),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.blue,
-                                width: 2,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade400,
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
+                TextField(
+                  controller: nameController,
+                  textAlign: isEnglish ? TextAlign.left : TextAlign.right,
+                  decoration: InputDecoration(
+                    label: Align(
+                      alignment: isEnglish
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: Text(
+                        Lang.t('location_name'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    hintText: Lang.t('enter_location_name'),
+                    hintStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 2,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade400,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  maxLength: 50,
+                  buildCounter: (
+                    BuildContext context, {
+                    int? currentLength,
+                    int? maxLength,
+                    bool? isFocused,
+                  }) {
+                    return null; // حذف counter داخلی
+                  },
+                ),
 
                       const SizedBox(height: 20),
 
                       /// عنوان بخش آیکن‌ها
-                      Obx(() {
-                        final _ = Lang.current.value; // ⚡ reactive trigger
-                        return Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            Lang.t(
-                              'select_location_icon',
-                            ), // کلید ترجمه در فایل JSON
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                        );
-                      }),
+
+                Align(
+                  alignment:
+                      isEnglish ? Alignment.centerLeft : Alignment.centerRight,
+                  child: Text(
+                    Lang.t('select_location_icon'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ),
 
                       const SizedBox(height: 10),
 

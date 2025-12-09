@@ -5,6 +5,8 @@ import 'package:my_app32/features/groups/controllers/group_controller.dart';
 import 'package:my_app32/features/groups/pages/group_page.dart';
 import 'package:my_app32/features/main/models/home/device_item_model.dart';
 import 'CreateGroupStep3Page.dart';
+import 'package:my_app32/core/lang/lang.dart';
+
 
 class CreateGroupStep2Page extends StatefulWidget {
   final String groupName;
@@ -30,6 +32,7 @@ class _CreateGroupStep2PageState extends State<CreateGroupStep2Page> {
 
   /// id دستگاه‌های موجود در گروه
   RxSet<String> groupDeviceIds = <String>{}.obs;
+   final isEnglish = Lang.current.value == 'en';
 
   @override
   void initState() {
@@ -38,268 +41,324 @@ class _CreateGroupStep2PageState extends State<CreateGroupStep2Page> {
   }
 
   Future<void> initializeData() async {
-    // 1. دریافت id دستگاه‌های گروه
-    final customerDevices = await controller.fetchCustomerDeviceInfos(widget.groupId);
+    final customerDevices =
+        await controller.fetchCustomerDeviceInfos(widget.groupId);
     groupDeviceIds.value = customerDevices.map((d) => d.id).toSet();
 
-    // 2. دریافت لوکیشن‌ها
     await controller.fetchUserLocationsGroup();
-
-    // 3. بار اول همه دستگاه‌ها
     await controller.fetchAllDevicesGroup();
   }
 
   String getDeviceStepType(DeviceItem device) {
     switch (device.deviceTypeName) {
       case 'key-1':
-        return 'تک‌پل';
+        return Lang.t('single_pole');
       case 'key-2':
-        return 'دوپل';
+        return Lang.t('double_pole');
       default:
-        return 'نامشخص';
+        return Lang.t('unknown');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("ایجاد گروه - مرحله ۲")),
+      appBar: AppBar(title: Text(Lang.t('create_group_step2'))),
       body: SafeArea(
-  child: Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), // 🔹 پایینش کمی فاصله بیشتر داره
-    child: Column(
-          children: [
-            const Text("دستگاه‌هایی که می‌خواهید اضافه کنید را انتخاب کنید:"),
-            const SizedBox(height: 16),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            children: [
+              Text(Lang.t('select_devices_to_add')),
+              const SizedBox(height: 16),
 
-            /// فیلتر لوکیشن‌ها
-            /// فیلتر لوکیشن‌ها با سبک جدید
-Obx(() {
-  final locations = controller.userLocationsGroup
-      .where((loc) => loc.title != "میانبر")
-      .toList();
-  final selectedId = controller.selectedLocationIdGroup.value;
-
-  return SizedBox(
-    height: 50,
-    child: ListView.separated(
-      scrollDirection: Axis.horizontal,
-      separatorBuilder: (_, __) => const SizedBox(width: 8),
-      itemCount: locations.length,
-      itemBuilder: (context, index) {
-        final loc = locations[index];
-        final isSelected = selectedId.isNotEmpty && selectedId == loc.id;
-
-        return GestureDetector(
-          onTap: () async {
-            // ریست و انتخاب دوباره برای انیمیشن
-            controller.selectedLocationIdGroup.value = '';
-            await Future.delayed(const Duration(milliseconds: 10));
-            controller.selectedLocationIdGroup.value = loc.id;
-
-            // fetch دستگاه‌ها بر اساس لوکیشن
-            await controller.fetchDevicesByLocationGroup(loc.id);
-          },
-          child: Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                color: isSelected ? Colors.yellow : Colors.grey.shade300,
-                width: isSelected ? 2 : 1,
-              ),
-              borderRadius: BorderRadius.circular(30), // کامل گرد
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-                          child: Row(
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    Text(
-      loc.title,
-      style: TextStyle(
-        color: isSelected ? Colors.yellow.shade700 : Colors.grey,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        fontSize: 14,
-      ),
-    ),
-    if (loc.iconIndex != null) ...[
-      const SizedBox(width: 4), // فاصله خیلی کم بین متن و آیکن
-      SvgPicture.asset(
-        'assets/svg/${loc.iconIndex}.svg', // مسیر درست
-        width: 28, // اندازه مناسب
-        height: 28,
-        fit: BoxFit.contain,
-      ),
-    ],
-  ],
-),
-          ),
-        );
-      },
-    ),
-  );
-})
-,
-
-            const SizedBox(height: 16),
-
-            /// لیست دستگاه‌ها
-            Expanded(
-              child: Obx(() {
-                final allDevices = controller.deviceListGroup;
-                final selectedLocationId = controller.selectedLocationIdGroup.value;
-
-                final filteredByLocation = selectedLocationId == 'all'
-                    ? allDevices
-                    : allDevices.where((d) => d.dashboardId == selectedLocationId).toList();
-
-                // فقط دستگاه‌هایی که جزو گروه نیستند
-                final devicesNotInGroup = filteredByLocation
-                    .where((d) => !groupDeviceIds.contains(d.deviceId))
+              /// فیلتر لوکیشن‌ها
+              Obx(() {
+                final locations = controller.userLocationsGroup
+                    .where((loc) => loc.title != "میانبر")
                     .toList();
 
-                if (devicesNotInGroup.isEmpty) {
-                  return const Center(child: Text("هیچ دستگاهی برای اضافه کردن وجود ندارد"));
-                }
+                final selectedId = controller.selectedLocationIdGroup.value;
 
-                return SingleChildScrollView(
-  child: Padding(
-    padding: const EdgeInsets.only(right: 16, top: 12), // 🔹 فاصله از بالا اضافه شد
-    child: Column(
+                return SizedBox(
+                  height: 50,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(width: 8),
+                    itemCount: locations.length,
+                    itemBuilder: (context, index) {
+                      final loc = locations[index];
+                      final isSelected =
+                          selectedId.isNotEmpty && selectedId == loc.id;
 
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: devicesNotInGroup.map((device) {
-                        final locationTitle = device.dashboardTitle.isNotEmpty
-                            ? device.dashboardTitle
-                            : "نامشخص";
-                        final isSelected = selectedDevices.contains(device);
+                      return GestureDetector(
+                        onTap: () async {
+                          controller.selectedLocationIdGroup.value = '';
+                          await Future.delayed(
+                              const Duration(milliseconds: 10));
+                          controller.selectedLocationIdGroup.value = loc.id;
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: DeviceCardSimple(
-  device: device,
-  deviceType: getDeviceStepType(device),
-  locationTitle: locationTitle,
-  selectedDevices: selectedDevices, // اینجا لیست Rx را پاس بده
-)
-,
-                        );
-                      }).toList(),
-                    ),
+                          await controller
+                              .fetchDevicesByLocationGroup(loc.id);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.yellow
+                                  : Colors.grey.shade300,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black
+                                    .withOpacity(0.05),
+                                blurRadius: 4,
+                                offset:
+                                    const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                loc.title,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.yellow
+                                          .shade700
+                                      : Colors.grey,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              if (loc.iconIndex !=
+                                  null) ...[
+                                const SizedBox(width: 4),
+                                SvgPicture.asset(
+                                  'assets/svg/${loc.iconIndex}.svg',
+                                  width: 28,
+                                  height: 28,
+                                  fit: BoxFit.contain,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               }),
-            ),
 
-            // دکمه‌ها
+              const SizedBox(height: 16),
 
-Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    // دکمه انصراف پایین سمت چپ
-    SizedBox(
-      width: 100,
-      height: 44,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          backgroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: const BorderSide(
-              color: Color(0xFFF39530),
-              width: 2,
-            ),
-          ),
-        ),
-        onPressed: () {
-          // برگرد به GroupsPage و دوباره گروه‌ها رو لود کن
-          Get.offAll(() => GroupsPage());
-          final controller = Get.find<HomeControllerGroup>();
-          controller.fetchGroups();
-        },
-        child: const Text(
-          "انصراف",
-          style: TextStyle(
-            color: Color(0xFFF39530),
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+              /// لیست دستگاه‌ها
+              Expanded(
+                child: Obx(() {
+                  final allDevices =
+                      controller.deviceListGroup;
+                  final selectedLocationId =
+                      controller.selectedLocationIdGroup
+                          .value;
+
+                  final filteredByLocation =
+                      selectedLocationId == 'all'
+                          ? allDevices
+                          : allDevices
+                              .where((d) =>
+                                  d.dashboardId ==
+                                  selectedLocationId)
+                              .toList();
+
+                  final devicesNotInGroup =
+                      filteredByLocation
+                          .where((d) =>
+                              !groupDeviceIds
+                                  .contains(d.deviceId))
+                          .toList();
+
+                  if (devicesNotInGroup.isEmpty) {
+                    return Center(
+                        child: Text(
+                            Lang.t(
+                                'no_devices_to_add')));
+                  }
+
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          right: 16, top: 12),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.end,
+                        children: devicesNotInGroup
+                            .map((device) {
+                          final locationTitle =
+                              device.dashboardTitle
+                                      .isNotEmpty
+                                  ? device.dashboardTitle
+                                  : Lang.t(
+                                      'unknown');
+
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(
+                                    bottom: 12),
+                            child: DeviceCardSimple(
+                              device: device,
+                              deviceType:
+                                  getDeviceStepType(
+                                      device),
+                              locationTitle:
+                                  locationTitle,
+                              selectedDevices:
+                                  selectedDevices,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+
+              /// دکمه‌ها
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    height: 44,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets
+                            .symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(8),
+                          side: const BorderSide(
+                            color: Color(0xFFF39530),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      onPressed: () {
+                        Get.offAll(
+                            () => GroupsPage());
+                        final controller =
+                            Get.find<
+                                HomeControllerGroup>();
+                        controller.fetchGroups();
+                      },
+                      child: Text(
+                        Lang.t('cancel'),
+                        style: const TextStyle(
+                          color: Color(0xFFF39530),
+                          fontWeight:
+                              FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(
+                    width: 100,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (selectedDevices
+                            .isEmpty) {
+                          Get.to(() =>
+                              CreateGroupStep3Page(
+                                groupName: widget
+                                    .groupName,
+                                groupDescription:
+                                    widget
+                                        .groupDescription,
+                                groupId:
+                                    widget.groupId,
+                              ));
+                          return;
+                        }
+
+                        final success = await controller
+                            .assignDevicesPayload(
+                          selectedDevices,
+                          widget.groupId,
+                        );
+
+                        if (success) {
+                          Get.to(() =>
+                              CreateGroupStep3Page(
+                                groupName: widget
+                                    .groupName,
+                                groupDescription:
+                                    widget
+                                        .groupDescription,
+                                groupId:
+                                    widget.groupId,
+                              ));
+                        }
+                      },
+                      style: ElevatedButton
+                          .styleFrom(
+                        backgroundColor:
+                            Colors.blue,
+                        foregroundColor:
+                            Colors.white,
+                        padding:
+                            const EdgeInsets.symmetric(
+                                vertical: 12),
+                        shape:
+                            RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(
+                                  8),
+                        ),
+                      ),
+                      child: Text(
+                        Lang.t(
+                            'save_and_next'),
+                        style: const TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-    ),
-
-    // دکمه ثبت / بعدی
-    SizedBox(
-      width: 100,
-      height: 44,
-      child: ElevatedButton(
-        onPressed: () async {
-          if (selectedDevices.isEmpty) {
-            Get.to(() => CreateGroupStep3Page(
-                  groupName: widget.groupName,
-                  groupDescription: widget.groupDescription,
-                  groupId: widget.groupId,
-                ));
-            return;
-          }
-
-          final success = await controller.assignDevicesPayload(
-            selectedDevices,
-            widget.groupId,
-          );
-
-          if (success) {
-            Get.to(() => CreateGroupStep3Page(
-                  groupName: widget.groupName,
-                  groupDescription: widget.groupDescription,
-                  groupId: widget.groupId,
-                ));
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: const Text(
-          "ثبت / بعدی",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-      ),
-    ),
-  ],
-),
-
-
-          ],
-        ),
-      ),
-    ),
     );
   }
 }
 
 /// کارت دستگاه با تاگل و SVG
 /// کارت دستگاه با تاگل و SVG (اصلاح‌شده)
+
 class DeviceCardSimple extends StatefulWidget {
   final DeviceItem device;
   final String deviceType;
   final String locationTitle;
-  final RxList<DeviceItem> selectedDevices; // اضافه شد
+  final RxList<DeviceItem> selectedDevices;
   final VoidCallback? onTap;
 
   const DeviceCardSimple({
@@ -321,7 +380,6 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
   @override
   void initState() {
     super.initState();
-    // مقدار اولیه بر اساس اینکه دستگاه در selectedDevices هست یا نه
     isActive = widget.selectedDevices.contains(widget.device);
   }
 
@@ -335,7 +393,6 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
       widget.selectedDevices.remove(widget.device);
     }
 
-    // فراخوانی callback اختیاری
     if (widget.onTap != null) widget.onTap!();
   }
 
@@ -373,7 +430,7 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
                   children: [
                     Switch(
                       value: isActive,
-                      onChanged: (val) => toggleSelection(), // هماهنگ با کارت
+                      onChanged: (val) => toggleSelection(),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -381,20 +438,47 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
+                          // 🔹 عنوان دستگاه (اگر از بک‌اند میاد دست نخورده میمونه)
                           Text(
                             widget.device.title,
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(height: 4),
+
+                          // 🔹 نوع دستگاه - چندزبانه
                           Text(
-                            widget.deviceType,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            Lang.t(widget.deviceType),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
                           const SizedBox(height: 4),
+
+                          // 🔹 مکان دستگاه - چندزبانه
                           Text(
-                            widget.locationTitle,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            Lang.t(widget.locationTitle),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // 🔹 وضعیت فعال/غیرفعال - چندزبانه (اضافه‌شده بدون تغییر در منطق)
+                          Text(
+                            isActive
+                                ? Lang.t('active')
+                                : Lang.t('inactive'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isActive ? Colors.blue : Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -417,7 +501,9 @@ class _DeviceCardSimpleState extends State<DeviceCardSimple> {
                   ),
                   child: ClipOval(
                     child: SvgPicture.asset(
-                      isActive ? 'assets/svg/on.svg' : 'assets/svg/off.svg',
+                      isActive
+                          ? 'assets/svg/on.svg'
+                          : 'assets/svg/off.svg',
                       fit: BoxFit.cover,
                     ),
                   ),

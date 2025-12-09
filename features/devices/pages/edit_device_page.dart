@@ -33,6 +33,8 @@ class EditDevicePage extends StatelessWidget {
 
     final homeController = Get.find<HomeController>();
 
+    final isEnglish = Lang.current.value == 'en';
+
     Future<void> updateDevice() async {
       final name = nameController.text.trim();
       final dashboardId = selectedDashboardId.value;
@@ -69,25 +71,26 @@ class EditDevicePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            TextField(
-              controller: serialController,
-              enabled: false,
-              textAlign: TextAlign.right,
-              decoration: InputDecoration(
-                label: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(Lang.t('serial_number')), // 🔹 چندزبانه
-                ),
-                border: const OutlineInputBorder(),
-                filled: true,
-                fillColor: Colors.grey.shade200,
-              ),
-            ),
-            const SizedBox(height: 16),
+TextField(
+  controller: serialController,
+  enabled: false,
+  textAlign: isEnglish ? TextAlign.left : TextAlign.right,
+  decoration: InputDecoration(
+    label: Align(
+      alignment: isEnglish ? Alignment.centerLeft : Alignment.centerRight,
+      child: Text(Lang.t('serial_number')), // 🔹 چندزبانه
+    ),
+    border: const OutlineInputBorder(),
+    filled: true,
+    fillColor: Colors.grey.shade200,
+  ),
+),
+
+const SizedBox(height: 16),
 
 TextField(
   controller: nameController,
-  textAlign: TextAlign.right,
+  textAlign: isEnglish ? TextAlign.left : TextAlign.right,
   maxLength: 8,
   inputFormatters: [
     LengthLimitingTextInputFormatter(8),
@@ -95,7 +98,7 @@ TextField(
   decoration: InputDecoration(
     counterText: '',
     label: Align(
-      alignment: Alignment.centerRight,
+      alignment: isEnglish ? Alignment.centerLeft : Alignment.centerRight,
       child: Text(Lang.t('device_name')), // 🔹 چندزبانه
     ),
     border: const OutlineInputBorder(),
@@ -103,8 +106,7 @@ TextField(
       borderSide: BorderSide(color: Colors.blue, width: 2),
     ),
     enabledBorder: OutlineInputBorder(
-      borderSide:
-          BorderSide(color: Colors.grey.shade400, width: 1),
+      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
     ),
   ),
 ),
