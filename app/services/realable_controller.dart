@@ -224,12 +224,12 @@ class ReliableSocketController extends GetxController {
 
 Future<void> updateDeviceSettings({
   required String deviceId,
-  required String deviceType,
+  required int deviceType,
   // required String maxPower,
   required int selectedMode,
   required double currentTemp,
   required double fanSpeed,
-  double? displayTemp,
+  int? key_lock,
   double? hysteresis,
   double? pumpDelay,
   double? targetReaction,
@@ -242,7 +242,7 @@ Future<void> updateDeviceSettings({
       'TWMode': selectedMode,
       'TWSP': currentTemp,
       'TWFan': fanSpeed,
-      if (displayTemp != null) 'TWTempCP': displayTemp,
+      if (key_lock != null) 'TWKeyLock': key_lock,
       if (hysteresis != null) 'TWHyst': hysteresis,
       if (pumpDelay != null) 'TWPumpTimr': pumpDelay,
       if (targetReaction != null) 'TWDuct': targetReaction,
