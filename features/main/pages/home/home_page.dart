@@ -25,6 +25,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'dart:ui' as ui;
 import 'package:my_app32/core/lang/lang.dart';
+import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 class HomePage extends BaseView<HomeController> {
   HomePage({super.key}) {
@@ -568,15 +569,14 @@ Widget _infoBox({
     );
   }
 
-  // ------------------- Smart Devices Grid (اصلاح شده) -------------------
+
+// ------------------- Smart Devices Grid (با پشتیبانی ترموستات) -------------------
 Widget _buildSmartDevicesGrid(HomeController controller) {
   return Obx(() {
     final devices = controller.dashboardDevices;
     if (devices.isEmpty) {
       return _buildNoDevicesFound();
     }
-
-    print(devices);
 
     final reliableController =
         Get.isRegistered<ReliableSocketController>(
@@ -595,234 +595,283 @@ Widget _buildSmartDevicesGrid(HomeController controller) {
     reliableController.updateDeviceList(
       devices.map((d) => d.deviceId).toList(),
     );
-return Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    // 🔹 عنوان بالا (اگه بخوای uncomment کنی)
-// Padding(
-//   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//   child: Align(
-//     alignment: Alignment.centerRight,
-//     child: Text(
-//       Lang.t('devices'), // 🔹 چندزبانه شد
-//       textDirection:ui.TextDirection.rtl,
-//       style: const TextStyle(
-//         fontSize: 20,
-//         fontWeight: FontWeight.bold,
-//       ),
-//     ),
-//   ),
-// ),
-    // 🔹 اسلایدر دستگاه‌ها
-    SizedBox(
-      height: 280,
-      child: Builder(
-        builder: (context) {
-          final pageController = PageController(viewportFraction: 0.85);
-          final currentPage = 0.obs;
 
-          pageController.addListener(() {
-            if (pageController.page != null) {
-              currentPage.value = pageController.page!.round();
-            }
-          });
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 280,
+          child: Builder(
+            builder: (context) {
+              final pageController = PageController(viewportFraction: 0.85);
+              final currentPage = 0.obs;
 
-          return Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: pageController,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: devices.length,
-                  clipBehavior: Clip.none,
-                  itemBuilder: (context, index) {
-                    final device = devices[index];
+              pageController.addListener(() {
+                if (pageController.page != null) {
+                  currentPage.value = pageController.page!.round();
+                }
+              });
 
-                    return AnimatedBuilder(
-                      animation: pageController,
-                      builder: (context, child) {
-                        double scale = 1.0;
-                        double opacity = 1.0;
+              return Column(
+                children: [
+                  Expanded(
+                    child: PageView.builder(
+                      controller: pageController,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: devices.length,
+                      clipBehavior: Clip.none,
+                      itemBuilder: (context, index) {
+                        final device = devices[index];
 
-                        if (pageController.position.haveDimensions) {
-                          final page = pageController.page ?? 0.0;
-                          final diff = (index - page).abs();
-                          scale = (1 - (diff * 0.1)).clamp(0.9, 1.0);
-                          opacity = (1 - (diff * 0.5)).clamp(0.5, 1.0);
-                        }
+                        return AnimatedBuilder(
+                          animation: pageController,
+                          builder: (context, child) {
+                            double scale = 1.0;
+                            double opacity = 1.0;
 
-                        return Opacity(
-                          opacity: opacity,
-                          child: Transform.scale(
-                            scale: scale,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8)
-                                  .copyWith(top: 25),
-                              child: SizedBox(
-                                width: 280,
-                                child: Obx(() {
-                                  final deviceData = reliableController
-                                          .latestDeviceDataById[device.deviceId];
+                            if (pageController.position.haveDimensions) {
+                              final page = pageController.page ?? 0.0;
+                              final diff = (index - page).abs();
+                              scale = (1 - (diff * 0.1)).clamp(0.9, 1.0);
+                              opacity = (1 - (diff * 0.5)).clamp(0.5, 1.0);
+                            }
 
-                                  bool switch1On = false;
-                                  bool switch2On = false;
-                                  Color iconColor1 = Colors.grey;
-                                  Color iconColor2 = Colors.grey;
+                            return Opacity(
+                              opacity: opacity,
+                              child: Transform.scale(
+                                scale: scale,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8)
+                                      .copyWith(top: 25),
+                                  child: SizedBox(
+                                    width: 280,
+                                    child: Obx(() {
+                                      final deviceData = reliableController
+                                              .latestDeviceDataById[device.deviceId];
 
-                                  if (deviceData != null) {
-                                    // بررسی TW1 و TD1
-                                    final key1Entries = [
-                                      if (deviceData['TW1'] is List)
-                                        ...deviceData['TW1'],
-                                      if (deviceData['TD1'] is List)
-                                        ...deviceData['TD1'],
-                                    ];
-                                    if (key1Entries.isNotEmpty) {
-                                      key1Entries.sort((a, b) =>
-                                          (b[0] as int).compareTo(a[0] as int));
-                                      final val = key1Entries.first[1];
-                                      switch1On = val is Map
-                                          ? val['c']
-                                                  ?.toString()
-                                                  .contains('On') ??
-                                              false
-                                          : val.toString().contains('On');
-                                    }
+                                      // ✅ چک کردن نوع دستگاه: ترموستات یا کلید معمولی
+                                      final hasDeviceS =
+                                          deviceData != null &&
+                                          (deviceData.containsKey('TDDeviceS') ||
+                                              deviceData.containsKey('TWDeviceS'));
 
-                                    // بررسی TW2 و TD2
-                                    final key2Entries = [
-                                      if (deviceData['TW2'] is List)
-                                        ...deviceData['TW2'],
-                                      if (deviceData['TD2'] is List)
-                                        ...deviceData['TD2'],
-                                    ];
-                                    if (key2Entries.isNotEmpty) {
-                                      key2Entries.sort((a, b) =>
-                                          (b[0] as int).compareTo(a[0] as int));
-                                      final val = key2Entries.first[1];
-                                      switch2On = val is Map
-                                          ? val['c']
-                                                  ?.toString()
-                                                  .contains('On') ??
-                                              false
-                                          : val.toString().contains('On');
-                                    }
+                                      if (hasDeviceS) {
+                                        // 🔹 ترموستات
+                                        Map<String, dynamic> readLatestDeviceValues(Map deviceData) {
+                                          final Map<String, dynamic> result = {};
+                                          final Map<String, Map<String, dynamic>> latestPairs = {};
 
-                                    // بررسی رنگ LED
-                                    if (deviceData['ledColor'] is List &&
-                                        deviceData['ledColor'].isNotEmpty) {
-                                      final ledEntry =
-                                          deviceData['ledColor'][0][1];
-                                      Map<String, dynamic> ledMap;
-                                      if (ledEntry is String) {
-                                        try {
-                                          ledMap = jsonDecode(ledEntry);
-                                        } catch (e) {
-                                          ledMap = {};
+                                          for (var key in deviceData.keys) {
+                                            final dataList = deviceData[key];
+                                            if (dataList is! List || dataList.isEmpty) continue;
+
+                                            dataList.sort((a, b) {
+                                              int tsA = (a is List && a.isNotEmpty) ? int.tryParse(a[0].toString()) ?? 0 : 0;
+                                              int tsB = (b is List && b.isNotEmpty) ? int.tryParse(b[0].toString()) ?? 0 : 0;
+                                              return tsB.compareTo(tsA);
+                                            });
+
+                                            final latestItem = dataList.first;
+                                            if (latestItem is! List || latestItem.length < 2) continue;
+
+                                            int ts = int.tryParse(latestItem[0].toString()) ?? 0;
+                                            var value = latestItem[1];
+
+                                            if (value is String) {
+                                              try {
+                                                value = jsonDecode(value);
+                                              } catch (_) {}
+                                            }
+
+                                            if (value is Map && value.containsKey('c')) {
+                                              value = value['c'];
+                                            }
+
+                                            if (key.startsWith('TD') || key.startsWith('TW')) {
+                                              final typeKey = key.substring(2);
+                                              if (!latestPairs.containsKey(typeKey) || ts > latestPairs[typeKey]!['ts']) {
+                                                latestPairs[typeKey] = {'key': key, 'value': value, 'ts': ts};
+                                              }
+                                            } else {
+                                              result[key] = value;
+                                            }
+                                          }
+
+                                          for (var pair in latestPairs.values) {
+                                            result[pair['key']] = pair['value'];
+                                          }
+
+                                          return result;
                                         }
-                                      } else if (ledEntry
-                                          is Map<String, dynamic>) {
-                                        ledMap = ledEntry;
+
+                                        Map<String, dynamic> thermostatData = readLatestDeviceValues(deviceData as Map);
+
+                                        String powerKey = thermostatData.containsKey('TWPower') ? 'TWPower' : 'TDPower';
+                                        dynamic powerValue = thermostatData[powerKey];
+
+                                        bool powerState = false;
+                                        if (powerValue is int) {
+                                          powerState = powerValue != 0;
+                                        } else if (powerValue is String) {
+                                          powerState = powerValue.toLowerCase() != 'off';
+                                        } else if (powerValue is bool) {
+                                          powerState = powerValue;
+                                        }
+
+                                        return _buildSmartDeviceSCard(
+                                          title: device.title ?? "بدون عنوان",
+                                          deviceId: device.deviceId,
+                                          device: device,
+                                          switch1On: powerState,
+                                          onToggle: (value) async {
+                                            await reliableController.toggleSwitchS(
+                                              value,
+                                              device.deviceId,
+                                            );
+                                          },
+                                          data_T: {thermostatData},
+                                        );
                                       } else {
-                                        ledMap = {};
+                                        // 🔹 کلید معمولی
+                                        bool switch1On = false;
+                                        bool switch2On = false;
+                                        Color iconColor1 = Colors.grey;
+                                        Color iconColor2 = Colors.grey;
+
+                                        if (deviceData != null) {
+                                          final key1Entries = [
+                                            if (deviceData['TW1'] is List) ...deviceData['TW1'],
+                                            if (deviceData['TD1'] is List) ...deviceData['TD1'],
+                                          ];
+                                          if (key1Entries.isNotEmpty) {
+                                            key1Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+                                            final val = key1Entries.first[1];
+                                            switch1On = val is Map
+                                                ? val['c']?.toString().contains('On') ?? false
+                                                : val.toString().contains('On');
+                                          }
+
+                                          final key2Entries = [
+                                            if (deviceData['TW2'] is List) ...deviceData['TW2'],
+                                            if (deviceData['TD2'] is List) ...deviceData['TD2'],
+                                          ];
+                                          if (key2Entries.isNotEmpty) {
+                                            key2Entries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
+                                            final val = key2Entries.first[1];
+                                            switch2On = val is Map
+                                                ? val['c']?.toString().contains('On') ?? false
+                                                : val.toString().contains('On');
+                                          }
+
+                                          if (deviceData['ledColor'] is List && deviceData['ledColor'].isNotEmpty) {
+                                            final ledEntry = deviceData['ledColor'][0][1];
+                                            Map<String, dynamic> ledMap;
+                                            if (ledEntry is String) {
+                                              try {
+                                                ledMap = jsonDecode(ledEntry);
+                                              } catch (e) {
+                                                ledMap = {};
+                                              }
+                                            } else if (ledEntry is Map<String, dynamic>) {
+                                              ledMap = ledEntry;
+                                            } else {
+                                              ledMap = {};
+                                            }
+
+                                            if (ledMap.isNotEmpty) {
+                                              iconColor1 = switch1On
+                                                  ? Color.fromARGB(
+                                                      255,
+                                                      ledMap['c']['t1']['on']['r'],
+                                                      ledMap['c']['t1']['on']['g'],
+                                                      ledMap['c']['t1']['on']['b'],
+                                                    )
+                                                  : Color.fromARGB(
+                                                      255,
+                                                      ledMap['c']['t1']['off']['r'],
+                                                      ledMap['c']['t1']['off']['g'],
+                                                      ledMap['c']['t1']['off']['b'],
+                                                    );
+
+                                              iconColor2 = switch2On
+                                                  ? Color.fromARGB(
+                                                      255,
+                                                      ledMap['c']['t2']['on']['r'],
+                                                      ledMap['c']['t2']['on']['g'],
+                                                      ledMap['c']['t2']['on']['b'],
+                                                    )
+                                                  : Color.fromARGB(
+                                                      255,
+                                                      ledMap['c']['t2']['off']['r'],
+                                                      ledMap['c']['t2']['off']['g'],
+                                                      ledMap['c']['t2']['off']['b'],
+                                                    );
+                                            }
+                                          }
+                                        }
+
+                                        final isSingleKey = device.deviceTypeName == 'key-1';
+
+                                        return _buildSmartDeviceCard(
+                                          title: device.title,
+                                          deviceId: device.deviceId,
+                                          switch1On: switch1On,
+                                          switch2On: switch2On,
+                                          iconColor1: iconColor1,
+                                          iconColor2: iconColor2,
+                                          onToggle: (switchNumber, value) async {
+                                            await reliableController.toggleSwitch(
+                                              value,
+                                              switchNumber,
+                                              device.deviceId,
+                                            );
+                                          },
+                                          isSingleKey: isSingleKey,
+                                          device: device,
+                                        );
                                       }
-
-                                      if (ledMap.isNotEmpty) {
-                                        iconColor1 = switch1On
-                                            ? Color.fromARGB(
-                                                255,
-                                                ledMap['c']['t1']['on']['r'],
-                                                ledMap['c']['t1']['on']['g'],
-                                                ledMap['c']['t1']['on']['b'],
-                                              )
-                                            : Color.fromARGB(
-                                                255,
-                                                ledMap['c']['t1']['off']['r'],
-                                                ledMap['c']['t1']['off']['g'],
-                                                ledMap['c']['t1']['off']['b'],
-                                              );
-
-                                        iconColor2 = switch2On
-                                            ? Color.fromARGB(
-                                                255,
-                                                ledMap['c']['t2']['on']['r'],
-                                                ledMap['c']['t2']['on']['g'],
-                                                ledMap['c']['t2']['on']['b'],
-                                              )
-                                            : Color.fromARGB(
-                                                255,
-                                                ledMap['c']['t2']['off']['r'],
-                                                ledMap['c']['t2']['off']['g'],
-                                                ledMap['c']['t2']['off']['b'],
-                                              );
-                                      }
-                                    }
-                                  }
-
-                                  final isSingleKey =
-                                      device.deviceTypeName == 'key-1';
-
-                                  return _buildSmartDeviceCard(
-                                    title: device.title,
-                                    deviceId: device.deviceId,
-                                    switch1On: switch1On,
-                                    switch2On: switch2On,
-                                    iconColor1: iconColor1,
-                                    iconColor2: iconColor2,
-                                    onToggle: (switchNumber, value) async {
-                                      await reliableController.toggleSwitch(
-                                        value,
-                                        switchNumber,
-                                        device.deviceId,
-                                      );
-                                    },
-                                    isSingleKey: isSingleKey,
-                                    device: device,
-                                  );
-                                }),
+                                    }),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
-              ),
-
-              // 🔹 نقطه‌های نشانگر پایین
-              Obx(() {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 2),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      devices.length,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: currentPage.value == index ? 12 : 8,
-                        height: currentPage.value == index ? 12 : 8,
-                        decoration: BoxDecoration(
-                          color: currentPage.value == index
-                              ? Colors.blueAccent
-                              : Colors.grey.shade400,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
                     ),
                   ),
-                );
-              }),
-            ],
-          );
-        },
-      ),
-    ),
-  ],
-);
 
-
+                  // نقطه‌های نشانگر
+                  Obx(() {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          devices.length,
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: currentPage.value == index ? 12 : 8,
+                            height: currentPage.value == index ? 12 : 8,
+                            decoration: BoxDecoration(
+                              color: currentPage.value == index
+                                  ? Colors.blueAccent
+                                  : Colors.grey.shade400,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
   });
 }
 
@@ -1577,6 +1626,1568 @@ Widget _buildSwitchRow({
     );
   });
 }
+
+
+
+
+
+
+// ------------------- Smart Device S Card (ترموستات) -------------------
+Widget _buildSmartDeviceSCard({
+  required String title,
+  required String deviceId,
+  required bool switch1On,
+  required Set<Map<String, dynamic>> data_T,
+  required Function(bool value) onToggle,
+  required DeviceItem device,
+}) {
+  final reliableController = Get.find<ReliableSocketController>(
+    tag: 'smartDevicesController',
+  );
+
+  bool anySwitchOn = switch1On;
+  Color borderColor = anySwitchOn ? Colors.blue.shade400 : Colors.grey.shade400;
+  final homeController = Get.find<HomeController>();
+
+  return ConstrainedBox(
+    constraints: const BoxConstraints(minHeight: 310, maxHeight: 350),
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Card(
+          color: Colors.white,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: borderColor, width: 2),
+          ),
+          shadowColor: Colors.black12,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 8, 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildDeviceSSwitch(
+                            deviceId: deviceId,
+                            onToggle: onToggle,
+                            switch1On: anySwitchOn,
+                            fanSpeed: 0,
+                            operationMode: 0,
+                            currentTemp: 22,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Obx(() {
+                              final lastSeen = reliableController.lastDeviceActivity[deviceId];
+                              final isOnline = lastSeen != null &&
+                                  DateTime.now().difference(lastSeen).inSeconds < 30;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isOnline ? Colors.blue : Colors.grey,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  isOnline ? Lang.t('online') : Lang.t('offline'),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          title,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                device.dashboardTitle ?? Lang.t('no_location'),
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            SvgPicture.asset(
+                              'assets/svg/location.svg',
+                              width: 24,
+                              height: 24,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    PopupMenuButton<int>(
+                      color: Colors.white,
+                      icon: const Icon(Icons.more_vert, size: 20, color: Colors.black87),
+                      onSelected: (value) {
+                        // منوی پاپ‌آپ (مشابه devices_page)
+                      },
+                      itemBuilder: (context) => [],
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        showSettingsDialog(device: device, data_T: data_T);
+                      },
+                      child: SvgPicture.asset(
+                        'assets/svg/advanced_settings.svg',
+                        width: 15,
+                        height: 15,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const Spacer(),
+                    Flexible(
+                      child: Obx(() {
+                        final lastSeen = reliableController.lastDeviceActivity[deviceId];
+                        String displayText;
+                        if (lastSeen != null) {
+                          final formattedDate =
+                              "${lastSeen.year}/${lastSeen.month.toString().padLeft(2, '0')}/${lastSeen.day.toString().padLeft(2, '0')}";
+                          final formattedTime =
+                              "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}:${lastSeen.second.toString().padLeft(2, '0')}";
+                          displayText = "$formattedDate - $formattedTime";
+                        } else {
+                          displayText = Lang.t('last_sync_unknown');
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  displayText,
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Icons.access_time, color: Colors.grey[600], size: 14),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          top: -15,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: anySwitchOn ? Colors.blue.shade400 : Colors.grey.shade400,
+                  width: 3,
+                ),
+                boxShadow: [
+                  if (anySwitchOn)
+                    BoxShadow(
+                      color: Colors.blue.shade200.withOpacity(0.5),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                    ),
+                ],
+              ),
+              child: ClipOval(
+                child: SvgPicture.asset(
+                  anySwitchOn
+                      ? 'assets/svg/air-conditioner-on.svg'
+                      : 'assets/svg/air-conditioner.svg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// ------------------- Device S Switch (ترموستات) -------------------
+Widget _buildDeviceSSwitch({
+  required String deviceId,
+  required bool switch1On,
+  required Function(bool value) onToggle,
+  required int fanSpeed,
+  required int operationMode,
+  required double currentTemp,
+}) {
+  final reliableController = Get.find<ReliableSocketController>(
+    tag: 'smartDevicesController',
+  );
+  bool anySwitchOn = switch1On;
+
+  Color getModeColor() {
+    switch (operationMode) {
+      case 1:
+        return Colors.blue.shade400;
+      case 2:
+        return Colors.red.shade400;
+      case 3:
+        return Colors.purple.shade400;
+      default:
+        return Colors.grey.shade400;
+    }
+  }
+
+  Color getTempBorderColor() {
+    switch (operationMode) {
+      case 1:
+        return Colors.blue.shade300;
+      case 2:
+        return Colors.red.shade300;
+      case 3:
+        return Colors.grey.shade400;
+      default:
+        return Colors.grey.shade400;
+    }
+  }
+
+  Color getTempTextColor() {
+    switch (operationMode) {
+      case 1:
+        return Colors.blue.shade600;
+      case 2:
+        return Colors.red.shade600;
+      case 3:
+        return Colors.grey.shade600;
+      default:
+        return Colors.grey.shade600;
+    }
+  }
+
+  String getModeIcon() {
+    switch (operationMode) {
+      case 1:
+        return 'assets/svg/cold.svg';
+      case 2:
+        return 'assets/svg/heat.svg';
+      case 3:
+        return 'assets/svg/fan.svg';
+      default:
+        return 'assets/svg/fan.svg';
+    }
+  }
+
+  Widget buildFanSpeedLines() {
+    if (fanSpeed == 0) return const SizedBox.shrink();
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(fanSpeed == 4 ? 0 : fanSpeed, (index) {
+        return Container(
+          width: 2,
+          height: 8,
+          margin: const EdgeInsets.symmetric(vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade600,
+            borderRadius: BorderRadius.circular(1),
+          ),
+        );
+      }),
+    );
+  }
+
+  return Obx(() {
+    final deviceData = reliableController.latestDeviceDataById[deviceId];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => onToggle(!anySwitchOn),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: anySwitchOn ? Colors.lightBlueAccent : Colors.grey.shade400,
+                  ),
+                  child: const Icon(
+                    Icons.power_settings_new,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Obx(() {
+                final _ = Lang.current.value;
+                return Text(
+                  anySwitchOn ? "روشن" : "خاموش",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              }),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: fanSpeed == 0 ? Colors.grey.shade200 : Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: fanSpeed == 0 ? Colors.grey.shade400 : Colors.orange.shade400,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/svg/fan.svg',
+                        width: 16,
+                        height: 16,
+                        colorFilter: ColorFilter.mode(
+                          fanSpeed == 0 ? Colors.grey.shade500 : Colors.orange.shade600,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      if (fanSpeed == 4)
+                        Text(
+                          'A',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange.shade600,
+                          ),
+                        )
+                      else
+                        buildFanSpeedLines(),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                width: 30,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: operationMode == 1
+                      ? Colors.blue.shade50
+                      : operationMode == 2
+                          ? Colors.red.shade50
+                          : Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: getModeColor(),
+                    width: 2.5,
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        getModeIcon(),
+                        width: 20,
+                        height: 20,
+                        colorFilter: ColorFilter.mode(
+                          getModeColor(),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Obx(() {
+                        final _ = Lang.current.value;
+                        return Text(
+                          operationMode == 1 ? 'سرما' : operationMode == 2 ? 'گرما' : 'فن',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: getModeColor(),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: getTempBorderColor(),
+                  boxShadow: [
+                    BoxShadow(
+                      color: getTempBorderColor().withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: getTempBorderColor().withOpacity(0.2),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${currentTemp.toStringAsFixed(0)}°',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: getTempTextColor(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  });
+}
+
+
+void showSettingsDialog({
+  required DeviceItem device,
+  required Set<Map<String, dynamic>> data_T,
+}) {
+  final RxInt selectedTab = 0.obs;
+  final RxString deviceType = 'نوع 1'.obs;
+  final RxString maxPower = ''.obs;
+  final RxInt selectedMode = 0.obs; // 0: آبی | 1: قرمز | 2: بنفش
+  const double minTemp = 16;
+  const double maxTemp = 40;
+  final RxDouble currentTemp = 22.0.obs; // دمای اولیه
+  final RxDouble fanSpeed = 1.0.obs;
+
+  showDialog(
+    context: Get.context!,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        titlePadding: EdgeInsets.zero,
+
+        // 🔹 HEADER
+        title: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+            border: Border.all(color: Colors.blue, width: 2),
+          ),
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Obx(() {
+              final _ = Lang.current.value;
+              return Text(
+                Lang.t('settings_dialog'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            }),
+          ),
+        ),
+
+        // 🔹 BODY
+        content: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                /// 🔹 TABS
+                Obx(() => Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => selectedTab.value = 0,
+                            child: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: selectedTab.value == 0
+                                    ? Colors.blue.shade100
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  Lang.t('basic_settings'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: selectedTab.value == 0
+                                        ? Colors.blue
+                                        : Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => selectedTab.value = 1,
+                            child: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: selectedTab.value == 1
+                                    ? Colors.blue.shade100
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  Lang.t('advanced_settings'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: selectedTab.value == 1
+                                        ? Colors.blue
+                                        : Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )),
+
+                const SizedBox(height: 20),
+
+                /// 🔹 CONTENT
+                Obx(() {
+                  if (selectedTab.value == 0) {
+                    return Column(
+                      children: [
+                        /// ✅ نوع دستگاه + حداکثر توان
+Row(
+  textDirection: ui.TextDirection.rtl, // کل Row راست‌چین
+  children: [
+    /// حداکثر توان
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end, // راست‌چین متن‌ها
+        children: [
+          const Text(
+            'حداکثر توان (W)',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: Colors.blue.shade200,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              textDirection: ui.TextDirection.rtl, // آیکن راست، متن چپ
+              children: [
+                const Icon(Icons.bolt, color: Colors.blue),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    textAlign: TextAlign.right, // متن داخل فیلد راست‌چین
+                    keyboardType: TextInputType.number,
+                    onChanged: (val) => maxPower.value = val,
+                    style: const TextStyle(color: Colors.black), // متن مشکی
+                    decoration: const InputDecoration(
+                      hintText: 'مثلاً 1000',
+                      suffixText: 'W',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(color: Colors.blueGrey),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+
+    const SizedBox(width: 12),
+
+    /// نوع دستگاه
+Expanded(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      const Text(
+        'نوع دستگاه',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blueGrey,
+        ),
+      ),
+      const SizedBox(height: 6),
+
+      Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: Colors.blueAccent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          textDirection: ui.TextDirection.rtl,
+          children: [
+            const SizedBox(width: 8),
+
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: Obx(() {
+                  // ---- خط بسیار مهم برای جلوگیری از ارور ----
+                  final items = ['فن کویل', 'کولر گازی'];
+                  if (!items.contains(deviceType.value)) {
+                    deviceType.value = items.first;
+                  }
+                  // --------------------------------------------------
+
+                  return DropdownButton<String>(
+                    value: deviceType.value,
+                    isExpanded: true,
+                    dropdownColor: Colors.white,
+                    icon: const SizedBox(),
+
+                    // --- لیست ---
+                    items: items
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              e,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+
+                    // --- نمایش مقدار انتخاب‌شده ---
+                    selectedItemBuilder: (context) {
+                      return items.map((e) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Icon(Icons.arrow_drop_down,
+                                color: Colors.blue),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  deviceType.value,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList();
+                    },
+
+                    onChanged: (val) {
+                      if (val != null) deviceType.value = val;
+                    },
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+)
+
+,
+
+  ],
+),
+
+
+
+                        const SizedBox(height: 25),
+
+                        /// 🔹 حالت عملکرد
+                        const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'حالت عملکرد',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blueGrey,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+Obx(
+  () => SizedBox(
+    height: 55,
+    child: Row(
+      children: [
+        // 🟣 هوشمند
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () => selectedMode.value = 2,
+            child: Container(
+              height: 55,
+              decoration: BoxDecoration(
+                color: selectedMode.value == 2
+                    ? Colors.purple.shade50
+                    : Colors.purple.shade50, // بک‌گراند ملایم
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: selectedMode.value == 2
+                      ? Colors.purple // فقط border پر رنگ
+                      : Colors.purple.shade100,
+                  width: 3,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'فن',
+                    style: TextStyle(
+                      color: selectedMode.value == 2
+                          ? Colors.purple
+                          : Colors.purple.shade400,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                                    SvgPicture.asset(
+                    'assets/svg/fan.svg',
+                    width: 20,
+                    height: 20,
+                  )
+,
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // 🔴 پرقدرت
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () => selectedMode.value = 1,
+            child: Container(
+              height: 55,
+              decoration: BoxDecoration(
+                color: selectedMode.value == 1
+                    ? Colors.red.shade50
+                    : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: selectedMode.value == 1
+                      ? Colors.red
+                      : Colors.red.shade100,
+                  width: 3,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'گرما',
+                    style: TextStyle(
+                      color: selectedMode.value == 1
+                          ? Colors.red
+                          : Colors.red.shade400,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+
+                                    SvgPicture.asset(
+                    'assets/svg/heat.svg',
+                    width: 20,
+                    height: 20,
+                  )
+,
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // 🔵 نرمال
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () => selectedMode.value = 0,
+            child: Container(
+              height: 55,
+              decoration: BoxDecoration(
+                color: selectedMode.value == 0
+                    ? Colors.blue.shade50
+                    : Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: selectedMode.value == 0
+                      ? Colors.blue
+                      : Colors.blue.shade100,
+                  width: 3,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'سرما',
+                    style: TextStyle(
+                      color: selectedMode.value == 0
+                          ? Colors.blue
+                          : Colors.blue.shade400,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+,
+                  const SizedBox(width: 6),
+                  SvgPicture.asset(
+                    'assets/svg/cold.svg',
+                    width: 20,
+                    height: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+)
+
+,
+
+                        const SizedBox(height: 25),
+
+                        /// 🔹 دمای مطلوب
+Column(
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    const Text(
+      'دمای مطلوب',
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.blueGrey,
+      ),
+    ),
+    const SizedBox(height: 12),
+
+    SizedBox(
+      height: 250,
+      width: 250,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+
+          // عدد 16 سمت چپ
+          const Positioned(
+            left: -1,
+            top: 105,
+            child: Text(
+              '16°',
+              style: TextStyle(
+                color: Colors.blueGrey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          // عدد 40 سمت راست
+          const Positioned(
+            right: -1,
+            top: 105,
+            child: Text(
+              '40°',
+              style: TextStyle(
+                color: Colors.blueGrey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          // 👇 نیم دایره (پایین تر از قبل)
+          Obx(
+            () => SleekCircularSlider(
+              min: minTemp,
+              max: maxTemp,
+              initialValue: currentTemp.value,
+              appearance: CircularSliderAppearance(
+                size: 200,
+                startAngle: 180,
+                angleRange: 180, // نیم دایره بالا
+                customWidths: CustomSliderWidths(
+                  trackWidth: 12,
+                  progressBarWidth: 14,
+                  shadowWidth: 20,
+                ),
+                customColors: CustomSliderColors(
+                  trackColor: Colors.blue.shade100,
+                  progressBarColors: [
+                    Colors.blue, // دنباله
+                    Colors.white, // نوک سفید
+                  ],
+                  shadowColor: Colors.blue.withOpacity(0.2),
+                  dotColor: Colors.white, // سر سفید
+                ),
+                infoProperties: InfoProperties(
+                  mainLabelStyle: const TextStyle(color: Colors.transparent),
+                ),
+              ),
+              onChange: (value) => currentTemp.value = value,
+            ),
+          ),
+
+          // ⭕ دایره وسط (سفید + عدد آبی)
+          Obx(
+            () => Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.35),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  "${currentTemp.value.toInt()}°",
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+
+                        const SizedBox(height: 25),
+
+                        
+
+Column(
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    const Align(
+      alignment: Alignment.centerRight,
+      child: Text(
+        'سرعت فن',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blueGrey,
+        ),
+      ),
+    ),
+    const SizedBox(height: 12),
+    SizedBox(
+      height: 60,
+      width: MediaQuery.of(context).size.width * 0.8,
+      child: Row(
+        children: [
+          // دکمه اتوماتیک با رنگ واکنشی
+          Obx(() {
+            final isAuto = fanSpeed.value == 4;
+            return GestureDetector(
+              onTap: () {
+                fanSpeed.value = 4; // فعال کردن اتوماتیک
+              },
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: isAuto ? Colors.deepOrange : Colors.orange,
+                  shape: BoxShape.circle,
+                  boxShadow: isAuto
+                      ? [
+                          BoxShadow(
+                            color: Colors.deepOrange.withOpacity(0.5),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : [],
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'A',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+            );
+          }),
+          const SizedBox(width: 12), // فاصله بین دکمه و اسلایدر
+          // اسلایدر
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+
+                const double min = 1;
+                const double max = 3;
+                const double thumbRadius = 18;
+                const double iconSize = 36;
+
+                return Stack(
+                  children: [
+                    // پس زمینه
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.orange.shade100,
+                            Colors.orange.shade400,
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // محتوای داخلی با پدینگ دقیق
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: thumbRadius),
+                      child: Stack(
+                        children: [
+                          // Slider
+                          Obx(() => SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 60,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: thumbRadius),
+                                  overlayShape:
+                                      const RoundSliderOverlayShape(overlayRadius: 0),
+                                  thumbColor: Colors.orange,
+                                  activeTrackColor: Colors.transparent,
+                                  inactiveTrackColor: Colors.transparent,
+                                ),
+                                child: Slider(
+                                  value: fanSpeed.value > 3 ? 3 : fanSpeed.value,
+                                  min: min,
+                                  max: max,
+                                  divisions: 2,
+                                  onChanged: (value) => fanSpeed.value = value,
+                                ),
+                              )),
+
+                          // آیکن قفل شده روی مرکز thumb
+                          Obx(() {
+                            final displayValue = fanSpeed.value > 3 ? 3 : fanSpeed.value;
+                            final percent = (displayValue - min) / (max - min);
+                            final usableWidth = width - (thumbRadius * 2);
+                            final left = percent * (usableWidth - iconSize);
+
+                            return AnimatedPositioned(
+                              duration: const Duration(milliseconds: 200),
+                              left: left,
+                              top: (60 - iconSize) / 2,
+                              child: const Icon(
+                                Icons.air,
+                                size: iconSize,
+                                color: Colors.black,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    ),
+    const SizedBox(height: 8),
+    Obx(() => Text(
+          'سرعت: ${fanSpeed.value == 1 ? 'کم' : fanSpeed.value == 2 ? 'متوسط' : fanSpeed.value == 3 ? 'زیاد' : 'اتوماتیک'}',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange,
+          ),
+        )),
+  ],
+)
+
+,
+
+                        const SizedBox(height: 20),
+
+                        /// نمایش مقدار انتخاب شده
+                        Obx(
+                          () => Text(
+                            'انتخاب شما: ${deviceType.value} | ${maxPower.value} W',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.blueGrey.shade400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+if (selectedTab.value == 1) {
+  final RxDouble displayTemp = 22.0.obs;
+  final RxDouble hysteresis = 2.0.obs;
+  final RxDouble pumpDelay = 5.0.obs;
+  final RxInt targetReaction = 0.obs; // برای دراپ‌داون
+
+  Widget buildNumericField({
+    required String label,
+    required RxDouble value,
+    required String helpText,
+    double step = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.blueGrey,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: () => value.value -= step,
+              icon: const Icon(Icons.remove_circle_outline, color: Colors.blue),
+            ),
+            Container(
+              width: 80,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Obx(() => Text(
+                    value.value.toStringAsFixed(0),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  )),
+            ),
+            IconButton(
+              onPressed: () => value.value += step,
+              icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
+            ),
+          ],
+        ),
+        GestureDetector(
+          onTap: () {
+            Get.defaultDialog(
+              title: label,
+              middleText: helpText,
+              confirmTextColor: Colors.white,
+              onConfirm: () => Get.back(),
+              backgroundColor: Colors.white,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.info_outline, size: 18, color: Colors.blueGrey),
+                SizedBox(width: 4),
+                Text(
+                  'راهنمای تنظیم',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+Widget buildDropdownField({
+  required String label,
+  required RxInt value,
+  required String helpText,
+}) {
+  const options = [
+    {'label': 'خاموش کردن موتور', 'value': 0},
+    {'label': 'کند کردن موتور', 'value': 1},
+  ];
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blueGrey,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Obx(() => GestureDetector(
+            onTap: () {
+              // نمایش دیالوگ انتخاب گزینه‌ها با بک‌گراند سفید و RTL
+              Get.defaultDialog(
+                backgroundColor: Colors.white,
+                title: label,
+                content: Column(
+                  children: options
+                      .map((opt) => ListTile(
+                            title: Text(
+                              opt['label'] as String,
+                              textAlign: TextAlign.right, // متن راست‌چین
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                            trailing: (value.value ==
+                                    (opt['value'] as int)) // نمایش تیک در سمت چپ
+                                ? const Icon(Icons.check, color: Colors.blue)
+                                : null,
+                            onTap: () {
+                              value.value = opt['value'] as int;
+                              Get.back();
+                            },
+                          ))
+                      .toList(),
+                ),
+                confirm: Container(),
+              );
+            },
+            child: Container(
+              width: 180,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                textDirection: ui.TextDirection.rtl, // راست‌چین کردن Row
+                children: [
+                  Expanded(
+                    child: Text(
+                      options
+                          .firstWhere((opt) => opt['value'] == value.value)['label']
+                          .toString(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right, // متن راست‌چین
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                ],
+              ),
+            ),
+          )),
+      GestureDetector(
+        onTap: () {
+          Get.defaultDialog(
+            title: label,
+            middleText: helpText,
+            confirmTextColor: Colors.white,
+            onConfirm: () => Get.back(),
+            backgroundColor: Colors.white,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.info_outline, size: 18, color: Colors.blueGrey),
+              SizedBox(width: 4),
+              Text(
+                'راهنمای تنظیم',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+    ],
+  );
+}
+
+
+  return Column(
+    children: [
+      buildNumericField(
+        label: 'دمای نمایشگر',
+        value: displayTemp,
+        helpText: 'در صورت وجود اختلاف بین دمای نمایش داده شده و دمای واقعی محیط، می‌توانید مقدار اختلاف را در این بخش وارد کنید. دستگاه با استفاده از این عدد، دمای خوانده شده را برای عملکرد دقیق‌تر، تصحیح می‌کند.',
+      ),
+      buildNumericField(
+        label: 'هیسترزیس',
+        value: hysteresis,
+        helpText: 'مدت زمانی است که پمپ آب قبل از روشن شدن فن، جهت خیس شدن کامل پدهای سرمایشی کار می‌کند و مقدار آن بر اساس نوع پدها تنظیم می‌شود ',
+      ),
+      buildNumericField(
+        label: 'تاخیر پمپ',
+        value: pumpDelay,
+        helpText: 'این تنظیم، حداکثر افزایش دمای مجاز برای موتور دستگاه است و در صورت تجاوز دمای موتور از این حد، سیستم به طور خودکار موتور را خاموش می‌کند تا از آسیب‌های احتمالی و سوختن آن جلوگیری شود. این یک ویژگی ایمنی حیاتی است ',
+      ),
+      buildDropdownField(
+        label: 'واکنش پس از رسیدن به دمای هدف',
+        value: targetReaction,
+        helpText: 'خاموش شدن موتور: موتور به طور کامل خاموش می‌شود و برای حفظ دما، تا زمانی که مجدداً دما بالا رود، خاموش می‌ماند و تغییر به حالت کم‌سرعت (کند): موتور با سرعت بسیار کم به کار خود ادامه می‌دهد تا دما را دقیق‌تر و با پایداری بیشتری حفظ کند و از نوسانات شدید دما جلوگیری شود ',
+      ),
+    ],
+  );
+}
+
+  return const SizedBox.shrink();
+                }),
+              ],
+            ),
+          ),
+        ),
+
+        // 🔹 BUTTONS
+        actions: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 100,
+                  height: 44,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFFF39530),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(
+                          color: Color(0xFFF39530),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Obx(() {
+                      final _ = Lang.current.value;
+                      return Text(
+                        Lang.t('cancel'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 100,
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      print(
+                        '✅ ثبت شد => نوع: ${deviceType.value}, توان: ${maxPower.value}W, دما: ${currentTemp.value.toInt()}°',
+                      );
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Obx(() {
+                      final _ = Lang.current.value;
+                      return Text(
+                        Lang.t('submit'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+
+
+
+
 
 
 Future<void> showDeleteDeviceConfirmDialog(

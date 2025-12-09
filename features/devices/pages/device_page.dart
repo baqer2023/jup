@@ -1110,75 +1110,8 @@ class DevicesPage extends BaseView<HomeController> {
                     deviceData!.containsKey('TWDeviceS');
 
                 if (hasDeviceS) {
-                  // bool switch1On22 = deviceData["TDPower"][0][1]["c"] == "1";
-                  // Map<String, dynamic> data =
-                  //     Map<String, dynamic>.from(deviceData is List ? deviceData[0] : deviceData);
 
-                  // bool switch1On22 =
-                  //     (deviceData["TDPower"]);
-
-                  // print(switch1On22);
-                  // print("device.deviceId");
-                  // print("device.deviceId");
-                  // print("device.deviceId");
-                  // print(deviceData["TDPower"][0][1]);
                   bool switch1On22 = false;
-// bool readLatestPowerSwitchbool(Map deviceData, bool previousValue) {
-//   final List<List<dynamic>> powerKeys = [];
-
-//   try {
-//     if (deviceData["TDPower"] is List) {
-//       powerKeys.addAll(List.from(deviceData["TDPower"]));
-//     }
-//     if (deviceData["TWPower"] is List) {
-//       powerKeys.addAll(List.from(deviceData["TWPower"]));
-//     }
-
-//     if (powerKeys.isEmpty) return previousValue;
-
-//     int getTimestamp(dynamic v) {
-//       if (v is int) return v;
-//       if (v is String) return int.tryParse(v) ?? 0;
-//       return 0;
-//     }
-
-//     powerKeys.sort(
-//       (a, b) => getTimestamp(b[0]).compareTo(getTimestamp(a[0])),
-//     );
-
-//     final latestItem = powerKeys.first;
-
-//     if (latestItem.length < 2) return previousValue;
-
-//     var value = latestItem[1];
-
-//     if (value is String) {
-//       value = jsonDecode(value);
-//     }
-
-//     if (value is! Map) {
-//       print(value);
-//       return previousValue;
-//     }
-
-//     final cVal = value["c"];
-//     if (cVal == null) return previousValue; // اگر کلید "c" نبود، از مقدار قبلی استفاده کن
-
-//     final cStr = cVal.toString().trim().toLowerCase();
-//     return cStr == "1" || cStr.contains("on");
-//   } catch (e, stackTrace) {
-//     print("Error parsing power switch data: $e\n$stackTrace");
-//     return previousValue; // در صورت هر خطا، مقدار قبلی برگردانده می‌شود
-//   }
-// }
-
-
-// switch1On22 = readLatestPowerSwitchbool(
-//   deviceData as Map,
-//   switch1On22,  // اینجا مقدار قبلی رو میدیم
-// );
-//                   print("device.deviceId");
-//                   print(switch1On22); // false
 
                  Map<String, dynamic> readLatestDeviceValues(Map deviceData) {
   final Map<String, dynamic> result = {};
@@ -1259,34 +1192,7 @@ class DevicesPage extends BaseView<HomeController> {
     powerState = powerValue;
   }
 
-  // نتیجه
-  // print('کلید موجود: $powerKey');
-  // print('حالت روشن/خاموش (true/false): $powerState');
-                  
 
-
-                  
-                  print("device.deviceaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaId");
-                  // print(switch1On222);
-
-
-                  
-
-                  // ✅ دیتای فیک ولی منطقی برای S-Device
-                  // final bool fakeSwitch1On = false;
-                  // final bool? fakeSwitch2On =
-                  //     device.deviceTypeName == 'key-1' ? null : false;
-
-                  // final Color fakeIconColor1 =
-                  //     fakeSwitch1On ? Colors.blue : Colors.grey;
-
-                  // final Color? fakeIconColor2 =
-                  //     fakeSwitch2On == null
-                  //         ? null
-                  //         : (fakeSwitch2On ? Colors.blue : Colors.grey);
-
-                  // final bool fakeIsSingleKey =
-                  //     device.deviceTypeName == 'key-1';
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -2355,7 +2261,7 @@ class DevicesPage extends BaseView<HomeController> {
                               // switchNumber: 1,
                               // color: iconColor1,
                               onToggle: onToggle,
-                              switch1On: anySwitchOn,
+                              switch1On: anySwitchOn, fanSpeed: 0, operationMode: 0, currentTemp: 22,
                             ),
                             // if (!isSingleKey)
                             //   _buildDeviceSSwitch(
@@ -3176,140 +3082,281 @@ class DevicesPage extends BaseView<HomeController> {
   }
 
   // ------------------- Device S Switch اصلاح شده -------------------
-  Widget _buildDeviceSSwitch({
-    required String deviceId,
-    // required int switchNumber,
-    // required Color color,
-    required bool switch1On,
-    required Function(bool value) onToggle,
-  }) {
-    final reliableController = Get.find<ReliableSocketController>(
-      tag: 'smartDevicesController',
+Widget _buildDeviceSSwitch({
+  required String deviceId,
+  required bool switch1On,
+  required Function(bool value) onToggle,
+  required int fanSpeed, // 0 تا 4
+  required int operationMode, // 1=سرما، 2=گرما، 3=فن
+  required double currentTemp, // دمای محیط
+}) {
+  final reliableController = Get.find<ReliableSocketController>(
+    tag: 'smartDevicesController',
+  );
+  bool anySwitchOn = switch1On;
+  
+  // تعیین رنگ بر اساس حالت عملکرد
+  Color getModeColor() {
+    switch (operationMode) {
+      case 1: return Colors.blue.shade400; // سرما
+      case 2: return Colors.red.shade400; // گرما
+      case 3: return Colors.purple.shade400; // فن
+      default: return Colors.grey.shade400;
+    }
+  }
+  
+  // تعیین رنگ دایره دما
+  Color getTempCircleColor() {
+    switch (operationMode) {
+      case 1: return Colors.blue.shade50; // سرما
+      case 2: return Colors.red.shade50; // گرما
+      case 3: return Colors.grey.shade200; // فن
+      default: return Colors.grey.shade200;
+    }
+  }
+  
+  Color getTempBorderColor() {
+    switch (operationMode) {
+      case 1: return Colors.blue.shade300; // سرما
+      case 2: return Colors.red.shade300; // گرما
+      case 3: return Colors.grey.shade400; // فن
+      default: return Colors.grey.shade400;
+    }
+  }
+  
+  Color getTempTextColor() {
+    switch (operationMode) {
+      case 1: return Colors.blue.shade600; // سرما
+      case 2: return Colors.red.shade600; // گرما
+      case 3: return Colors.grey.shade600; // فن
+      default: return Colors.grey.shade600;
+    }
+  }
+  
+  // تعیین آیکون حالت عملکرد
+  String getModeIcon() {
+    switch (operationMode) {
+      case 1: return 'assets/svg/cold.svg'; // سرما
+      case 2: return 'assets/svg/heat.svg'; // گرما
+      case 3: return 'assets/svg/fan.svg'; // فن
+      default: return 'assets/svg/fan.svg';
+    }
+  }
+  
+  // ساخت خطوط سرعت فن
+  Widget buildFanSpeedLines() {
+    if (fanSpeed == 0) return const SizedBox.shrink();
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(fanSpeed == 4 ? 0 : fanSpeed, (index) {
+        return Container(
+          width: 2,
+          height: 8,
+          margin: const EdgeInsets.symmetric(vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade600,
+            borderRadius: BorderRadius.circular(1),
+          ),
+        );
+      }),
     );
-
-    bool anySwitchOn = switch1On;
-    return Obx(() {
-      final deviceData = reliableController.latestDeviceDataById[deviceId];
-      // bool isOn = false;
-
-      // if (deviceData != null) {
-      //   final keyEntries = switchNumber == 1
-      //       ? [
-      //           if (deviceData['TW1'] is List) ...deviceData['TW1'],
-      //           if (deviceData['TD1'] is List) ...deviceData['TD1'],
-      //         ]
-      //       : [
-      //           if (deviceData['TW2'] is List) ...deviceData['TW2'],
-      //           if (deviceData['TD2'] is List) ...deviceData['TD2'],
-      //         ];
-
-      //   if (keyEntries.isNotEmpty) {
-      //     keyEntries.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
-      //     isOn = keyEntries.first[1].toString().contains('On');
-      //   }
-      // }
-      // bool readLatestPowerSwitch(Map deviceData) {
-      //   final List<List<dynamic>> powerKeys = [];
-
-      //   if (deviceData["TDPower"] is List) {
-      //     powerKeys.addAll(List.from(deviceData["TDPower"]));
-      //   }
-      //   if (deviceData["TWPower"] is List) {
-      //     powerKeys.addAll(List.from(deviceData["TWPower"]));
-      //   }
-
-      //   // if (powerKeys.isEmpty) return false;
-
-      //   // مرتب‌سازی بر اساس timestamp (جدیدترین اول)
-      //   powerKeys.sort((a, b) => (b[0] as int).compareTo(a[0] as int));
-
-      //   final latestItem = powerKeys.first;
-      //   if (latestItem is List && latestItem.length > 1) {
-      //     final value = latestItem[1];
-
-      //     // اگر Map بود و کلید c داشت
-      //     if (value is Map && value.containsKey("c")) {
-      //       final cValue = value["c"];
-      //       if (cValue is int) return cValue == 1;
-      //       if (cValue is String)
-      //         return cValue == "1" || cValue.toLowerCase().contains("on");
-      //     }
-
-      //     // اگر مستقیم int باشد
-      //     if (value is int) return value == 1;
-
-      //     // اگر مستقیم String باشد
-      //     if (value is String) return value.toLowerCase().contains("on");
-      //   }
-
-      //   return false;
-      // }
-
-      // bool switch1On22 = readLatestPowerSwitch(deviceData as Map);
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 10,
-        ), // فاصله بیشتر بین کلیدها
-        child: Row(
-          children: [
-            // // دایره رنگ وضعیت (بزرگتر)
-            // Container(
-            //   width: 20,
-            //   height: 20,
-            //   decoration: BoxDecoration(
-            //     shape: BoxShape.circle,
-            //     color: color,
-            //     boxShadow: [
-            //       if (isOn)
-            //         BoxShadow(
-            //           color: color.withOpacity(0.6),
-            //           blurRadius: 6,
-            //           spreadRadius: 2,
-            //         ),
-            //     ],
-            //   ),
-            // ),
-            // const SizedBox(width: 8),
-
-            // دکمه روشن/خاموش (بزرگتر)
-            GestureDetector(
-              onTap: () => onToggle(!anySwitchOn),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: anySwitchOn
-                      ? Colors.lightBlueAccent
-                      : Colors.grey.shade400,
-                ),
-                child: const Icon(
-                  Icons.power_settings_new,
-                  color: Colors.white,
-                  size: 20, // آیکون کمی بزرگتر
+  }
+  
+  return Obx(() {
+    final deviceData = reliableController.latestDeviceDataById[deviceId];
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ردیف اول: دکمه روشن/خاموش + متن
+          Row(
+            children: [
+              // دکمه روشن/خاموش
+              GestureDetector(
+                onTap: () => onToggle(!anySwitchOn),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: anySwitchOn
+                        ? Colors.lightBlueAccent
+                        : Colors.grey.shade400,
+                  ),
+                  child: const Icon(
+                    Icons.power_settings_new,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
+              const SizedBox(width: 10),
+              // اسم کلید
+              Obx(() {
+                final _ = Lang.current.value;
+                return Text(
+                  anySwitchOn ? "روشن" : "خاموش",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              }),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // ردیف دوم: دو بیضی + دایره
+Row(
+  children: [
+    // بیضی اول: سرعت فن
+    Container(
+      width: 30,
+      height: 55,
+      decoration: BoxDecoration(
+        color: fanSpeed == 0 ? Colors.grey.shade200 : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: fanSpeed == 0 ? Colors.grey.shade400 : Colors.orange.shade400,
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // آیکون فن
+            SvgPicture.asset(
+              'assets/svg/fan.svg',
+              width: 16,
+              height: 16,
+              colorFilter: ColorFilter.mode(
+                fanSpeed == 0 ? Colors.grey.shade500 : Colors.orange.shade600,
+                BlendMode.srcIn,
+              ),
             ),
-            const SizedBox(width: 10),
-
-            // اسم کلید (فونت بزرگتر)
+            const SizedBox(height: 2),
+            // خطوط سرعت یا A
+            if (fanSpeed == 4)
+              Text(
+                'A',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade600,
+                ),
+              )
+            else
+              buildFanSpeedLines(),
+          ],
+        ),
+      ),
+    ),
+    
+    const SizedBox(width: 10),
+    
+    // بیضی دوم: حالت عملکرد
+    Container(
+      width: 30,
+      height: 55,
+      decoration: BoxDecoration(
+        color: operationMode == 1 
+            ? Colors.blue.shade50 
+            : operationMode == 2 
+                ? Colors.red.shade50 
+                : Colors.purple.shade50,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: getModeColor(),
+          width: 2.5,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              getModeIcon(),
+              width: 20,
+              height: 20,
+              colorFilter: ColorFilter.mode(
+                getModeColor(),
+                BlendMode.srcIn,
+              ),
+            ),
+            const SizedBox(height: 2),
             Obx(() {
-              final _ = Lang.current.value; // ⚡ reactive trigger
+              final _ = Lang.current.value;
               return Text(
-                anySwitchOn ? "روشن" : "خاموش",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                operationMode == 1 ? 'سرما' : operationMode == 2 ? 'گرما' : 'فن',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  color: getModeColor(),
                 ),
               );
             }),
           ],
         ),
-      );
-    });
-  }
-
+      ),
+    ),
+    
+    const SizedBox(width: 10),
+    
+    // دایره: دمای محیط با دایره داخلی سفید
+    Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: getTempBorderColor(),
+        boxShadow: [
+          BoxShadow(
+            color: getTempBorderColor().withOpacity(0.3),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: getTempBorderColor().withOpacity(0.2),
+                blurRadius: 6,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              '${currentTemp.toStringAsFixed(0)}°',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: getTempTextColor(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ],
+),
+        ],
+      ),
+    );
+  });
+}
   Future<void> showDeleteDeviceConfirmDialog(
     BuildContext context,
     String title,
@@ -4348,14 +4395,15 @@ Expanded(
         ),
       ),
       const SizedBox(height: 6),
+
       Container(
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white, // بک‌گراند سفید
+          color: Colors.white,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: Colors.blue.shade200,
+            color: Colors.blueAccent,
             width: 1.5,
           ),
         ),
@@ -4363,67 +4411,80 @@ Expanded(
           textDirection: TextDirection.rtl,
           children: [
             const SizedBox(width: 8),
-Expanded(
-  child: DropdownButtonHideUnderline(
-    child: Obx(
-      () => DropdownButton<String>(
-        value: deviceType.value,
-        isExpanded: true,
-        dropdownColor: Colors.white, // بک‌گراند لیست سفید
-        icon: const SizedBox(), // آیکن پیش‌فرض حذف شد
-        items: ['فن کویل', 'کولر گازی']
-            .map(
-              (e) => DropdownMenuItem<String>(
-                value: e,
-                alignment: Alignment.centerRight, // راست‌چین کردن آیتم‌ها
-                child: Text(
-                  e,
-                  textAlign: TextAlign.right, // متن داخل آیتم‌ها راست‌چین
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            )
-            .toList(),
-        selectedItemBuilder: (context) {
-          return ['فن کویل', 'کولر گازی'].map((e) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Icon(Icons.arrow_drop_down, color: Colors.blue), // فلش سمت چپ
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight, // متن سمت راست
-                    child: Text(
-                      deviceType.value,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }).toList();
-        },
-        onChanged: (val) {
-          if (val != null) deviceType.value = val;
-        },
-      ),
-    ),
-  ),
-)
 
-,
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: Obx(() {
+                  // ---- خط بسیار مهم برای جلوگیری از ارور ----
+                  final items = ['فن کویل', 'کولر گازی'];
+                  if (!items.contains(deviceType.value)) {
+                    deviceType.value = items.first;
+                  }
+                  // --------------------------------------------------
+
+                  return DropdownButton<String>(
+                    value: deviceType.value,
+                    isExpanded: true,
+                    dropdownColor: Colors.white,
+                    icon: const SizedBox(),
+
+                    // --- لیست ---
+                    items: items
+                        .map(
+                          (e) => DropdownMenuItem<String>(
+                            value: e,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              e,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+
+                    // --- نمایش مقدار انتخاب‌شده ---
+                    selectedItemBuilder: (context) {
+                      return items.map((e) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Icon(Icons.arrow_drop_down,
+                                color: Colors.blue),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  deviceType.value,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList();
+                    },
+
+                    onChanged: (val) {
+                      if (val != null) deviceType.value = val;
+                    },
+                  );
+                }),
+              ),
+            ),
           ],
         ),
       ),
     ],
   ),
 )
+
 ,
 
   ],
